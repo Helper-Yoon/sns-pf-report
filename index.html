@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS센터 시스템</title>
+    <title>SNS센터 실적보고</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0a0a0a;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,22 +22,22 @@
         
         .container {
             text-align: center;
-            background: white;
+            background: #1a1a1a;
             padding: 60px 40px;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             max-width: 500px;
             width: 90%;
         }
         
         h1 {
-            color: #333;
+            color: #ffffff;
             margin-bottom: 20px;
             font-size: 32px;
         }
         
         .subtitle {
-            color: #666;
+            color: #8a8a8a;
             margin-bottom: 40px;
             font-size: 14px;
         }
@@ -65,25 +65,34 @@
         }
         
         .btn-counselor {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #1E6FFF;
         }
         
         .btn-dashboard {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
+            background: #1E6FFF;
         }
         
         .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(30,111,255,0.3);
+        }
+        
+        .btn-counselor:hover {
+            background: #1859d6;
+        }
+        
+        .btn-dashboard:hover {
+            background: #1859d6;
         }
         
         .status {
             margin-top: 30px;
             padding: 10px;
-            background: #f0f0f0;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
             border-radius: 10px;
             font-size: 12px;
-            color: #666;
+            color: #8a8a8a;
         }
         
         .status-dot {
@@ -119,7 +128,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏢 SNS센터 시스템</h1>
+        <h1>💵 SNS센터 실적보고</h1>
         <p class="subtitle">실시간 실적관리 통합 플랫폼</p>
         
         <div class="button-group">
