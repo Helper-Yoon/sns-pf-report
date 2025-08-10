@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS센터 실시간 대시보드</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: #1a1a1a;
+            color: #E0E0E0;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1f3a5f, #2E7CD6);
+            padding: 25px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 13px;
+            color: #B0B0B0;
+        }
+
+        .control-panel {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary { background: #4A9EFF; }
+        .btn-success { background: #4CAF50; }
+        .btn-warning { background: #FF9800; }
+        .btn-danger { background: #E57373; }
+        .btn-info { background: #00BCD4; }
+        .btn-purple { background: #9C27B0; }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 10px;
+            background: #3a3a3a;
+            border-radius: 5px;
+        }
+
+        .date-selector input {
+            background: transparent;
+            border: none;
+            color: #E0E0E0;
+            font-size: 13px;
+            padding: 3px;
+        }
+
+        .summary-section {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .metrics-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .metric-item {
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 120px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .metric-item:hover {
+            transform: scale(1.05);
+        }
+
+        .metric-name {
+            font-size: 11px;
+            color: #B0B0B0;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* 메트릭 색상 - 실적량에 따른 동적 색상 */
+        .metric-level-0 { 
+            background: #3a3a3a;
+            color: #B0B0B0;
+        }
+        .metric-level-1 { 
+            background: #2a3f5f;
+            color: #87CEEB;
+        }
+        .metric-level-2 { 
+            background: #3a5f3a;
+            color: #98FB98;
+        }
+        .metric-level-3 { 
+            background: #5f5f2a;
+            color: #FFFFE0;
+        }
+        .metric-level-4 { 
+            background: #5f3a2a;
+            color: #FFA07A;
+        }
+        .metric-level-5 { 
+            background: #5f2a2a;
+            color: #FFB6C1;
+        }
+
+        .team-section {
+            background: #2d2d2d;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .team-header {
+            background: linear-gradient(135deg, #1f3a5f, #2a4a6f);
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .team-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .team-table th {
+            background: #3a3a3a;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid #404040;
+        }
+
+        .team-table td {
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid #404040;
+            background: #2d2d2d;
+        }
+
+        .team-table tr:hover td {
+            background: #3a3a3a;
+        }
+
+        .team-total {
+            background: #FFD700 !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+
+        .bottom-summary {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .summary-label {
+            width: 120px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .summary-values {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .summary-item {
+            font-size: 12px;
+        }
+
+        .achievement-status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 3px;
+        }
+
+        .achievement-success {
+            background: #C8E6C9;
+            color: darkgreen;
+        }
+
+        .achievement-fail {
+            background: #FFCDD2;
+            color: darkred;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #B0B0B0;
+        }
+
+        .modal-close:hover {
+            color: #E0E0E0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            background: #3a3a3a;
+            color: #E0E0E0;
+            border: 1px solid #404040;
+            border-radius: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #3a3a3a;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .checkbox-item:hover {
+            background: #4a4a4a;
+        }
+
+        .checkbox-item input {
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #404040;
+            border-top-color: #4A9EFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .auto-refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: rgba(74, 158, 255, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4ADE80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 10px;
+            }
+
+            .control-panel {
+                padding: 15px;
+            }
+
+            .btn {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+
+            .metric-item {
+                min-width: 100px;
+                padding: 10px;
+            }
+
+            .team-table {
+                font-size: 10px;
+            }
+
+            .team-table th,
+            .team-table td {
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // Supabase 클라이언트 초기화
+        const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        function DashboardApp() {
+            const [teams, setTeams] = useState({});
+            const [visibleMetrics, setVisibleMetrics] = useState([]);
+            const [metricToDb, setMetricToDb] = useState({});
+            const [allMetrics, setAllMetrics] = useState([]);
+            const [dailyTargets, setDailyTargets] = useState({});
+            const [performanceData, setPerformanceData] = useState({});
+            const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+            const [isLoading, setIsLoading] = useState(true);
+            const [lastUpdate, setLastUpdate] = useState(new Date());
+            const [autoRefresh, setAutoRefresh] = useState(true);
+            const [showMetricsModal, setShowMetricsModal] = useState(false);
+            const [showTargetModal, setShowTargetModal] = useState(false);
+            const [showTeamModal, setShowTeamModal] = useState(false);
+
+            // 설정 로드
+            const loadConfig = useCallback(async () => {
+                try {
+                    // 팀 정보
+                    const { data: teamsData } = await supabase
+                        .from('config')
+                        .select('*')
+                        .eq('type', 'teams')
+                        .single();
+
+                    if (teamsData) {
+                        setTeams(teamsData.data);
+                    }
+
+                    // 메트릭 정보
+                    const { data: metricsData } = await supabase
+                        .from('config')
+                        .select('*')
+                        .eq('type', 'metrics')
+                        .single();
+
+                    if (metricsData) {
+                        const mapping = {};
+                        const metrics = [];
+                        metricsData.data.items.forEach(item => {
+                            mapping[item.name] = item.db_column;
+                            metrics.push(item.name);
+                        });
+                        setMetricToDb(mapping);
+                        setAllMetrics(metrics);
+                    }
+
+                    // 설정
+                    const { data: settingsData } = await supabase
+                        .from('config')
+                        .select('*')
+                        .eq('type', 'settings')
+                        .single();
+
+                    if (settingsData) {
+                        setVisibleMetrics(settingsData.data.visible_metrics || []);
+                        setDailyTargets(settingsData.data.daily_targets || {});
+                    }
+                } catch (error) {
+                    console.error('설정 로드 오류:', error);
+                }
+            }, []);
+
+            // 실적 데이터 로드
+            const loadPerformanceData = useCallback(async () => {
+                try {
+                    const { data } = await supabase
+                        .from('performance')
+                        .select('*')
+                        .eq('date', selectedDate);
+
+                    const dataMap = {};
+                    if (data) {
+                        data.forEach(record => {
+                            const key = `${record.team}_${record.name}`;
+                            dataMap[key] = record;
+                        });
+                    }
+                    setPerformanceData(dataMap);
+                    setLastUpdate(new Date());
+                } catch (error) {
+                    console.error('데이터 로드 오류:', error);
+                } finally {
+                    setIsLoading(false);
+                }
+            }, [selectedDate]);
+
+            // 메트릭 색상 레벨 계산
+            const getMetricLevel = (value, metric) => {
+                if (value === 0) return 'metric-level-0';
+                
+                if (metric === '제휴카드') {
+                    // 제휴카드는 30개 기준
+                    if (value < 30) return 'metric-level-1';
+                    if (value < 90) return 'metric-level-2';
+                    if (value < 150) return 'metric-level-3';
+                    if (value < 210) return 'metric-level-4';
+                    return 'metric-level-5';
+                } else {
+                    // 일반 항목은 10개 기준
+                    if (value < 10) return 'metric-level-1';
+                    if (value < 30) return 'metric-level-2';
+                    if (value < 50) return 'metric-level-3';
+                    if (value < 70) return 'metric-level-4';
+                    return 'metric-level-5';
+                }
+            };
+
+            // 전체 합계 계산
+            const calculateTotals = () => {
+                const totals = {};
+                visibleMetrics.forEach(metric => {
+                    totals[metric] = 0;
+                });
+
+                Object.values(performanceData).forEach(data => {
+                    visibleMetrics.forEach(metric => {
+                        const dbColumn = metricToDb[metric];
+                        totals[metric] += data[dbColumn] || 0;
+                    });
+                });
+
+                return totals;
+            };
+
+            // 팀별 합계 계산
+            const calculateTeamTotals = (teamName) => {
+                const totals = {};
+                visibleMetrics.forEach(metric => {
+                    totals[metric] = 0;
+                });
+
+                const teamInfo = teams[teamName];
+                if (teamInfo) {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = performanceData[key];
+                        if (data) {
+                            visibleMetrics.forEach(metric => {
+                                const dbColumn = metricToDb[metric];
+                                totals[metric] += data[dbColumn] || 0;
+                            });
+                        }
+                    });
+                }
+
+                return totals;
+            };
+
+            // 엑셀 내보내기
+            const exportToExcel = () => {
+                const wb = XLSX.utils.book_new();
+                const wsData = [
+                    [`SNS센터 실적보고 - ${selectedDate}`],
+                    [],
+                    ['소속', '이름', '근속기간', ...visibleMetrics]
+                ];
+
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach((member, idx) => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = performanceData[key] || {};
+                        
+                        const row = [
+                            idx === 0 ? `${teamName}` : '',
+                            member.name,
+                            member.tenure,
+                            ...visibleMetrics.map(metric => {
+                                const dbColumn = metricToDb[metric];
+                                return data[dbColumn] || 0;
+                            })
+                        ];
+                        wsData.push(row);
+                    });
+
+                    // 팀 총합
+                    const teamTotals = calculateTeamTotals(teamName);
+                    wsData.push([
+                        `${teamName} 총합`,
+                        '',
+                        '',
+                        ...visibleMetrics.map(metric => teamTotals[metric])
+                    ]);
+                    wsData.push([]); // 빈 줄
+                });
+
+                // 전체 총합
+                const grandTotals = calculateTotals();
+                wsData.push([
+                    '센터 총합',
+                    '',
+                    '',
+                    ...visibleMetrics.map(metric => grandTotals[metric])
+                ]);
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, '실적');
+                XLSX.writeFile(wb, `SNS센터_실적_${selectedDate.replace(/-/g, '')}.xlsx`);
+            };
+
+            // JPG 내보내기
+            const exportToJPG = async () => {
+                const element = document.getElementById('dashboard-content');
+                const canvas = await html2canvas(element, {
+                    backgroundColor: '#ffffff',
+                    scale: 2
+                });
+                
+                const link = document.createElement('a');
+                link.download = `SNS센터_실적_${selectedDate.replace(/-/g, '')}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+            };
+
+            // 설정 저장
+            const saveSettings = async () => {
+                try {
+                    const settingsData = {
+                        visible_metrics: visibleMetrics,
+                        daily_targets: dailyTargets
+                    };
+
+                    await supabase
+                        .from('config')
+                        .update({ data: settingsData })
+                        .eq('type', 'settings');
+
+                    alert('설정이 저장되었습니다.');
+                } catch (error) {
+                    console.error('설정 저장 오류:', error);
+                    alert('설정 저장 중 오류가 발생했습니다.');
+                }
+            };
+
+            // useEffect
+            useEffect(() => {
+                loadConfig();
+            }, [loadConfig]);
+
+            useEffect(() => {
+                loadPerformanceData();
+                
+                if (autoRefresh) {
+                    const interval = setInterval(loadPerformanceData, 60000); // 1분마다
+                    return () => clearInterval(interval);
+                }
+            }, [loadPerformanceData, autoRefresh]);
+
+            if (isLoading) {
+                return (
+                    <div className="dashboard-container">
+                        <div className="loading">
+                            <div className="spinner"></div>
+                            <p>데이터를 불러오는 중...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            const grandTotals = calculateTotals();
+
+            return (
+                <div className="dashboard-container">
+                    <div className="header">
+                        <h1>SNS센터 실시간 대시보드</h1>
+                        <div className="header-info">
+                            <span>조회 날짜: {selectedDate}</span>
+                            <span>🟢 서버 연결됨</span>
+                            <span>마지막 업데이트: {lastUpdate.toLocaleTimeString('ko-KR')}</span>
+                            {autoRefresh && (
+                                <div className="auto-refresh-indicator">
+                                    <span className="pulse"></span>
+                                    자동 새로고침
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="control-panel">
+                        <button className="btn btn-primary" onClick={loadPerformanceData}>
+                            🔄 새로고침
+                        </button>
+                        <button className="btn btn-info" onClick={() => setShowMetricsModal(true)}>
+                            ⚙️ 항목편집
+                        </button>
+                        <button className="btn btn-warning" onClick={() => setShowTargetModal(true)}>
+                            🎯 목표설정
+                        </button>
+                        <button className="btn btn-purple" onClick={() => setShowTeamModal(true)}>
+                            👥 상담사
+                        </button>
+                        <button className="btn btn-success" onClick={exportToJPG}>
+                            📷 JPG
+                        </button>
+                        <button className="btn btn-info" onClick={exportToExcel}>
+                            📊 엑셀
+                        </button>
+                        
+                        <div className="date-selector">
+                            <label>날짜:</label>
+                            <input 
+                                type="date" 
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                            />
+                        </div>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={autoRefresh}
+                                onChange={(e) => setAutoRefresh(e.target.checked)}
+                            />
+                            자동새로고침
+                        </label>
+                    </div>
+
+                    <div id="dashboard-content">
+                        {/* 전체 실적 요약 */}
+                        <div className="summary-section">
+                            <div className="summary-title">📊 전체 실적 요약</div>
+                            <div className="metrics-row">
+                                {visibleMetrics.map(metric => (
+                                    <div 
+                                        key={metric} 
+                                        className={`metric-item ${getMetricLevel(grandTotals[metric], metric)}`}
+                                    >
+                                        <div className="metric-name">{metric}</div>
+                                        <div className="metric-value">{grandTotals[metric]}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 팀별 실적 */}
+                        {Object.entries(teams).map(([teamName, teamInfo]) => {
+                            const teamTotals = calculateTeamTotals(teamName);
+                            
+                            return (
+                                <div key={teamName} className="team-section">
+                                    <div className="team-header">
+                                        SNS센터 {teamName}
+                                    </div>
+                                    <table className="team-table">
+                                        <thead>
+                                            <tr>
+                                                <th>이름</th>
+                                                <th>근속기간</th>
+                                                {visibleMetrics.map(metric => (
+                                                    <th key={metric}>{metric}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {teamInfo.members.map(member => {
+                                                const key = `${teamName}_${member.name}`;
+                                                const data = performanceData[key] || {};
+                                                
+                                                return (
+                                                    <tr key={member.name}>
+                                                        <td>{member.name}</td>
+                                                        <td>{member.tenure}</td>
+                                                        {visibleMetrics.map(metric => {
+                                                            const dbColumn = metricToDb[metric];
+                                                            return (
+                                                                <td key={metric}>
+                                                                    {data[dbColumn] || 0}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                );
+                                            })}
+                                            <tr className="team-total">
+                                                <td colSpan="2">{teamName} 총합</td>
+                                                {visibleMetrics.map(metric => (
+                                                    <td key={metric}>{teamTotals[metric]}</td>
+                                                ))}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })}
+
+                        {/* 하단 요약 */}
+                        <div className="bottom-summary">
+                            <div className="summary-row" style={{ background: '#1f3a5f' }}>
+                                <div className="summary-label">센터 총합</div>
+                                <div className="summary-values">
+                                    {visibleMetrics.map(metric => (
+                                        <span key={metric} className="summary-item">
+                                            {metric}: {grandTotals[metric]}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="summary-row" style={{ background: '#3a3a3a' }}>
+                                <div className="summary-label">일 목표</div>
+                                <div className="summary-values">
+                                    {visibleMetrics.map(metric => (
+                                        <span key={metric} className="summary-item">
+                                            {metric}: {dailyTargets[metric] || 100}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="summary-row" style={{ background: '#2d2d2d' }}>
+                                <div className="summary-label">달성현황</div>
+                                <div className="summary-values">
+                                    {visibleMetrics.map(metric => {
+                                        const target = dailyTargets[metric] || 100;
+                                        const actual = grandTotals[metric];
+                                        const diff = target - actual;
+                                        
+                                        return (
+                                            <span 
+                                                key={metric} 
+                                                className={`achievement-status ${diff <= 0 ? 'achievement-success' : 'achievement-fail'}`}
+                                            >
+                                                {metric}: {diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 항목 편집 모달 */}
+                    <div className={`modal ${showMetricsModal ? 'active' : ''}`}>
+                        <div className="modal-content">
+                            <span className="modal-close" onClick={() => setShowMetricsModal(false)}>×</span>
+                            <div className="modal-header">표시 항목 설정</div>
+                            <div className="checkbox-group">
+                                {allMetrics.map(metric => (
+                                    <label key={metric} className="checkbox-item">
+                                        <input 
+                                            type="checkbox"
+                                            checked={visibleMetrics.includes(metric)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setVisibleMetrics([...visibleMetrics, metric]);
+                                                } else {
+                                                    setVisibleMetrics(visibleMetrics.filter(m => m !== metric));
+                                                }
+                                            }}
+                                        />
+                                        {metric}
+                                    </label>
+                                ))}
+                            </div>
+                            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                <button 
+                                    className="btn btn-success" 
+                                    onClick={() => {
+                                        saveSettings();
+                                        setShowMetricsModal(false);
+                                    }}
+                                >
+                                    저장
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 목표 설정 모달 */}
+                    <div className={`modal ${showTargetModal ? 'active' : ''}`}>
+                        <div className="modal-content">
+                            <span className="modal-close" onClick={() => setShowTargetModal(false)}>×</span>
+                            <div className="modal-header">일일 목표 설정</div>
+                            {visibleMetrics.map(metric => (
+                                <div key={metric} className="form-group">
+                                    <label>{metric}</label>
+                                    <input 
+                                        type="number"
+                                        value={dailyTargets[metric] || 100}
+                                        onChange={(e) => {
+                                            setDailyTargets({
+                                                ...dailyTargets,
+                                                [metric]: parseInt(e.target.value) || 0
+                                            });
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                <button 
+                                    className="btn btn-success" 
+                                    onClick={() => {
+                                        saveSettings();
+                                        setShowTargetModal(false);
+                                    }}
+                                >
+                                    저장
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 상담사 관리 모달 */}
+                    <div className={`modal ${showTeamModal ? 'active' : ''}`}>
+                        <div className="modal-content">
+                            <span className="modal-close" onClick={() => setShowTeamModal(false)}>×</span>
+                            <div className="modal-header">상담사 관리</div>
+                            <p style={{ textAlign: 'center', color: '#B0B0B0', marginBottom: '20px' }}>
+                                상담사 추가/수정/삭제는 관리자 페이지에서 직접 수행해주세요.
+                            </p>
+                            {Object.entries(teams).map(([teamName, teamInfo]) => (
+                                <div key={teamName} style={{ marginBottom: '20px' }}>
+                                    <h4 style={{ marginBottom: '10px' }}>{teamName}</h4>
+                                    <div style={{ paddingLeft: '20px' }}>
+                                        {teamInfo.members.map(member => (
+                                            <div key={member.name} style={{ marginBottom: '5px' }}>
+                                                {member.name} ({member.tenure})
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 앱 렌더링
+        ReactDOM.render(<DashboardApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
