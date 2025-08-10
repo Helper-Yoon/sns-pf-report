@@ -443,6 +443,323 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // 항목 편집 모달 컴포넌트
+        function MetricsEditModal({ show, onClose, allMetrics, visibleMetrics, metricToDb, onSave }) {
+            const [activeTab, setActiveTab] = useState('display');
+            const [localVisible, setLocalVisible] = useState([...visibleMetrics]);
+            const [localMetrics, setLocalMetrics] = useState([...allMetrics]);
+            const [localMapping, setLocalMapping] = useState({...metricToDb});
+            const [newMetricName, setNewMetricName] = useState('');
+            const [newMetricDb, setNewMetricDb] = useState('');
+
+            if (!show) return null;
+
+            const handleAddMetric = () => {
+                if (!newMetricName || !newMetricDb) {
+                    alert('모든 필드를 입력해주세요!');
+                    return;
+                }
+                
+                if (localMetrics.includes(newMetricName)) {
+                    alert('이미 존재하는 항목명입니다!');
+                    return;
+                }
+
+                if (!/^[a-z][a-z0-9_]*$/.test(newMetricDb)) {
+                    alert('DB 컬럼명은 영문 소문자로 시작하고 영문, 숫자, 언더스코어만 사용 가능합니다!');
+                    return;
+                }
+
+                setLocalMetrics([...localMetrics, newMetricName]);
+                setLocalMapping({...localMapping, [newMetricName]: newMetricDb});
+                setNewMetricName('');
+                setNewMetricDb('');
+            };
+
+            const handleDeleteMetric = (metric) => {
+                const defaultMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', 'SK매직', '가전제품', '제휴카드'];
+                if (defaultMetrics.includes(metric)) {
+                    alert('기본 항목은 삭제할 수 없습니다!');
+                    return;
+                }
+
+                if (confirm(`'${metric}' 항목을 삭제하시겠습니까?`)) {
+                    setLocalMetrics(localMetrics.filter(m => m !== metric));
+                    setLocalVisible(localVisible.filter(m => m !== metric));
+                    const newMapping = {...localMapping};
+                    delete newMapping[metric];
+                    setLocalMapping(newMapping);
+                }
+            };
+
+            const handleSave = async () => {
+                const metricsData = {
+                    items: localMetrics.map(metric => ({
+                        name: metric,
+                        db_column: localMapping[metric],
+                        is_default: true
+                    }))
+                };
+
+                await onSave(localMetrics, localVisible, localMapping, metricsData);
+                onClose();
+            };
+
+            return (
+                <div className="modal active">
+                    <div className="modal-content" style={{ maxWidth: '700px' }}>
+                        <span className="modal-close" onClick={onClose}>×</span>
+                        <div className="modal-header">항목 관리</div>
+                        
+                        <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                            <button 
+                                className={`btn ${activeTab === 'display' ? 'btn-primary' : ''}`}
+                                onClick={() => setActiveTab('display')}
+                                style={{ flex: 1 }}
+                            >
+                                표시 설정
+                            </button>
+                            <button 
+                                className={`btn ${activeTab === 'manage' ? 'btn-primary' : ''}`}
+                                onClick={() => setActiveTab('manage')}
+                                style={{ flex: 1 }}
+                            >
+                                항목 추가/삭제
+                            </button>
+                        </div>
+
+                        {activeTab === 'display' ? (
+                            <div>
+                                <p style={{ marginBottom: '15px' }}>대시보드에 표시할 항목을 선택하세요:</p>
+                                <div className="checkbox-group">
+                                    {localMetrics.map(metric => (
+                                        <label key={metric} className="checkbox-item">
+                                            <input 
+                                                type="checkbox"
+                                                checked={localVisible.includes(metric)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setLocalVisible([...localVisible, metric]);
+                                                    } else {
+                                                        setLocalVisible(localVisible.filter(m => m !== metric));
+                                                    }
+                                                }}
+                                            />
+                                            {metric}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <h4 style={{ marginBottom: '10px' }}>새 항목 추가</h4>
+                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                        <input 
+                                            type="text"
+                                            placeholder="한글명 (예: 새항목)"
+                                            value={newMetricName}
+                                            onChange={(e) => setNewMetricName(e.target.value)}
+                                            style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
+                                        />
+                                        <input 
+                                            type="text"
+                                            placeholder="DB컬럼명 (예: new_item)"
+                                            value={newMetricDb}
+                                            onChange={(e) => setNewMetricDb(e.target.value)}
+                                            style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
+                                        />
+                                        <button className="btn btn-success" onClick={handleAddMetric}>추가</button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 style={{ marginBottom: '10px' }}>현재 항목 목록</h4>
+                                    <div style={{ maxHeight: '300px', overflowY: 'auto', background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
+                                        {localMetrics.map(metric => (
+                                            <div key={metric} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #404040' }}>
+                                                <span>{metric} → {localMapping[metric]}</span>
+                                                <button 
+                                                    className="btn btn-danger" 
+                                                    onClick={() => handleDeleteMetric(metric)}
+                                                    style={{ padding: '4px 10px', fontSize: '12px' }}
+                                                >
+                                                    삭제
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                            <button className="btn btn-success" onClick={handleSave} style={{ marginRight: '10px' }}>
+                                저장
+                            </button>
+                            <button className="btn" onClick={onClose} style={{ background: '#666' }}>
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 상담사 관리 모달 컴포넌트
+        function TeamManagementModal({ show, onClose, teams, onSave }) {
+            const [localTeams, setLocalTeams] = useState(JSON.parse(JSON.stringify(teams)));
+            const [selectedTeam, setSelectedTeam] = useState(Object.keys(teams)[0] || '');
+            const [editingMember, setEditingMember] = useState(null);
+            const [newMemberName, setNewMemberName] = useState('');
+            const [newMemberTenure, setNewMemberTenure] = useState('3개월미만');
+
+            if (!show) return null;
+
+            const handleAddMember = () => {
+                if (!newMemberName) {
+                    alert('이름을 입력해주세요!');
+                    return;
+                }
+
+                const newTeams = {...localTeams};
+                newTeams[selectedTeam].members.push({
+                    name: newMemberName,
+                    tenure: newMemberTenure
+                });
+                setLocalTeams(newTeams);
+                setNewMemberName('');
+                setNewMemberTenure('3개월미만');
+            };
+
+            const handleDeleteMember = (memberIndex) => {
+                if (confirm('정말 삭제하시겠습니까?')) {
+                    const newTeams = {...localTeams};
+                    newTeams[selectedTeam].members.splice(memberIndex, 1);
+                    setLocalTeams(newTeams);
+                }
+            };
+
+            const handleEditMember = (memberIndex) => {
+                const member = localTeams[selectedTeam].members[memberIndex];
+                setEditingMember({ index: memberIndex, ...member });
+            };
+
+            const handleUpdateMember = () => {
+                const newTeams = {...localTeams};
+                newTeams[selectedTeam].members[editingMember.index] = {
+                    name: editingMember.name,
+                    tenure: editingMember.tenure
+                };
+                setLocalTeams(newTeams);
+                setEditingMember(null);
+            };
+
+            const handleSave = async () => {
+                await onSave(localTeams);
+                onClose();
+            };
+
+            return (
+                <div className="modal active">
+                    <div className="modal-content" style={{ maxWidth: '800px' }}>
+                        <span className="modal-close" onClick={onClose}>×</span>
+                        <div className="modal-header">상담사 관리</div>
+                        
+                        <div style={{ display: 'flex', gap: '20px' }}>
+                            <div style={{ width: '200px' }}>
+                                <h4 style={{ marginBottom: '10px' }}>팀 선택</h4>
+                                <select 
+                                    value={selectedTeam} 
+                                    onChange={(e) => setSelectedTeam(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
+                                >
+                                    {Object.keys(localTeams).map(team => (
+                                        <option key={team} value={team}>{team}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div style={{ flex: 1 }}>
+                                <h4 style={{ marginBottom: '10px' }}>팀원 목록</h4>
+                                
+                                {/* 새 멤버 추가 */}
+                                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                                    <input 
+                                        type="text"
+                                        placeholder="이름"
+                                        value={newMemberName}
+                                        onChange={(e) => setNewMemberName(e.target.value)}
+                                        style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
+                                    />
+                                    <select 
+                                        value={newMemberTenure}
+                                        onChange={(e) => setNewMemberTenure(e.target.value)}
+                                        style={{ padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
+                                    >
+                                        <option value="3개월미만">3개월미만</option>
+                                        <option value="3개월이상">3개월이상</option>
+                                        <option value="6개월이상">6개월이상</option>
+                                        <option value="9개월이상">9개월이상</option>
+                                        <option value="1년이상">1년이상</option>
+                                    </select>
+                                    <button className="btn btn-success" onClick={handleAddMember}>추가</button>
+                                </div>
+
+                                {/* 멤버 리스트 */}
+                                <div style={{ maxHeight: '400px', overflowY: 'auto', background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
+                                    {localTeams[selectedTeam]?.members.map((member, index) => (
+                                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #404040' }}>
+                                            {editingMember?.index === index ? (
+                                                <>
+                                                    <input 
+                                                        type="text"
+                                                        value={editingMember.name}
+                                                        onChange={(e) => setEditingMember({...editingMember, name: e.target.value})}
+                                                        style={{ flex: 1, marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
+                                                    />
+                                                    <select 
+                                                        value={editingMember.tenure}
+                                                        onChange={(e) => setEditingMember({...editingMember, tenure: e.target.value})}
+                                                        style={{ marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
+                                                    >
+                                                        <option value="3개월미만">3개월미만</option>
+                                                        <option value="3개월이상">3개월이상</option>
+                                                        <option value="6개월이상">6개월이상</option>
+                                                        <option value="9개월이상">9개월이상</option>
+                                                        <option value="1년이상">1년이상</option>
+                                                    </select>
+                                                    <button className="btn btn-success" onClick={handleUpdateMember} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>저장</button>
+                                                    <button className="btn" onClick={() => setEditingMember(null)} style={{ padding: '4px 10px', fontSize: '12px', background: '#666' }}>취소</button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>{member.name} ({member.tenure})</span>
+                                                    <div>
+                                                        <button className="btn btn-info" onClick={() => handleEditMember(index)} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>수정</button>
+                                                        <button className="btn btn-danger" onClick={() => handleDeleteMember(index)} style={{ padding: '4px 10px', fontSize: '12px' }}>삭제</button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                            <button className="btn btn-success" onClick={handleSave} style={{ marginRight: '10px' }}>
+                                저장
+                            </button>
+                            <button className="btn" onClick={onClose} style={{ background: '#666' }}>
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         function DashboardApp() {
             const [teams, setTeams] = useState({});
             const [visibleMetrics, setVisibleMetrics] = useState([]);
@@ -875,41 +1192,65 @@
                     </div>
 
                     {/* 항목 편집 모달 */}
-                    <div className={`modal ${showMetricsModal ? 'active' : ''}`}>
-                        <div className="modal-content">
-                            <span className="modal-close" onClick={() => setShowMetricsModal(false)}>×</span>
-                            <div className="modal-header">표시 항목 설정</div>
-                            <div className="checkbox-group">
-                                {allMetrics.map(metric => (
-                                    <label key={metric} className="checkbox-item">
-                                        <input 
-                                            type="checkbox"
-                                            checked={visibleMetrics.includes(metric)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setVisibleMetrics([...visibleMetrics, metric]);
-                                                } else {
-                                                    setVisibleMetrics(visibleMetrics.filter(m => m !== metric));
-                                                }
-                                            }}
-                                        />
-                                        {metric}
-                                    </label>
-                                ))}
-                            </div>
-                            <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                                <button 
-                                    className="btn btn-success" 
-                                    onClick={() => {
-                                        saveSettings();
-                                        setShowMetricsModal(false);
-                                    }}
-                                >
-                                    저장
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <MetricsEditModal 
+                        show={showMetricsModal}
+                        onClose={() => setShowMetricsModal(false)}
+                        allMetrics={allMetrics}
+                        visibleMetrics={visibleMetrics}
+                        metricToDb={metricToDb}
+                        onSave={async (newMetrics, newVisible, newMapping, metricsData) => {
+                            try {
+                                // 메트릭 정보 저장
+                                await supabase
+                                    .from('config')
+                                    .update({ data: metricsData })
+                                    .eq('type', 'metrics');
+
+                                // 설정 저장
+                                const settingsData = {
+                                    visible_metrics: newVisible,
+                                    daily_targets: dailyTargets
+                                };
+                                
+                                await supabase
+                                    .from('config')
+                                    .update({ data: settingsData })
+                                    .eq('type', 'settings');
+
+                                setAllMetrics(newMetrics);
+                                setVisibleMetrics(newVisible);
+                                setMetricToDb(newMapping);
+                                
+                                alert('항목 설정이 저장되었습니다.');
+                                loadPerformanceData();
+                            } catch (error) {
+                                console.error('저장 오류:', error);
+                                alert('저장 중 오류가 발생했습니다.');
+                            }
+                        }}
+                    />
+
+                    {/* 상담사 관리 모달 */}
+                    <TeamManagementModal 
+                        show={showTeamModal}
+                        onClose={() => setShowTeamModal(false)}
+                        teams={teams}
+                        onSave={async (updatedTeams) => {
+                            try {
+                                await supabase
+                                    .from('config')
+                                    .update({ data: updatedTeams })
+                                    .eq('type', 'teams');
+                                
+                                setTeams(updatedTeams);
+                                alert('상담사 정보가 저장되었습니다.');
+                                loadPerformanceData();
+                            } catch (error) {
+                                console.error('저장 오류:', error);
+                                alert('저장 중 오류가 발생했습니다.');
+                            }
+                        }}
+                    />
 
                     {/* 목표 설정 모달 */}
                     <div className={`modal ${showTargetModal ? 'active' : ''}`}>
@@ -946,27 +1287,26 @@
                     </div>
 
                     {/* 상담사 관리 모달 */}
-                    <div className={`modal ${showTeamModal ? 'active' : ''}`}>
-                        <div className="modal-content">
-                            <span className="modal-close" onClick={() => setShowTeamModal(false)}>×</span>
-                            <div className="modal-header">상담사 관리</div>
-                            <p style={{ textAlign: 'center', color: '#B0B0B0', marginBottom: '20px' }}>
-                                상담사 추가/수정/삭제는 관리자 페이지에서 직접 수행해주세요.
-                            </p>
-                            {Object.entries(teams).map(([teamName, teamInfo]) => (
-                                <div key={teamName} style={{ marginBottom: '20px' }}>
-                                    <h4 style={{ marginBottom: '10px' }}>{teamName}</h4>
-                                    <div style={{ paddingLeft: '20px' }}>
-                                        {teamInfo.members.map(member => (
-                                            <div key={member.name} style={{ marginBottom: '5px' }}>
-                                                {member.name} ({member.tenure})
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <TeamManagementModal 
+                        show={showTeamModal}
+                        onClose={() => setShowTeamModal(false)}
+                        teams={teams}
+                        onSave={async (updatedTeams) => {
+                            try {
+                                await supabase
+                                    .from('config')
+                                    .update({ data: updatedTeams })
+                                    .eq('type', 'teams');
+                                
+                                setTeams(updatedTeams);
+                                alert('상담사 정보가 저장되었습니다.');
+                                loadPerformanceData();
+                            } catch (error) {
+                                console.error('저장 오류:', error);
+                                alert('저장 중 오류가 발생했습니다.');
+                            }
+                        }}
+                    />
                 </div>
             );
         }
