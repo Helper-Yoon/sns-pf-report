@@ -960,9 +960,28 @@
                 return totals;
             };
 
-            // 엑셀 내보내기
+            // 개선된 엑셀 내보내기
             const exportToExcel = () => {
                 const wb = XLSX.utils.book_new();
+                
+                // 팀별 색상 정의
+                const teamColors = {
+                    '1파트': 'E2F0D9',
+                    '2파트': 'DDEBF7',
+                    '3파트': 'FCE4D6',
+                    '4파트': 'FFF2CC',
+                    '5파트': 'D9E2F3'
+                };
+                
+                // 파트장 정보
+                const teamLeaders = {
+                    '1파트': '이종민',
+                    '2파트': '윤도우리',
+                    '3파트': '김진후',
+                    '4파트': '이민주',
+                    '5파트': '차정환'
+                };
+                
                 const wsData = [
                     [`SNS센터 실적보고 - ${selectedDate}`],
                     [],
@@ -970,12 +989,23 @@
                 ];
 
                 Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    const leader = teamLeaders[teamName] || '';
+                    
                     teamInfo.members.forEach((member, idx) => {
                         const key = `${teamName}_${member.name}`;
                         const data = performanceData[key] || {};
                         
+                        let teamDisplay = '';
+                        if (idx === 0) {
+                            if (teamName === '5파트') {
+                                teamDisplay = `의정부SNS센터\n${teamName}\n${leader}`;
+                            } else {
+                                teamDisplay = `SNS센터\n${teamName}\n${leader}`;
+                            }
+                        }
+                        
                         const row = [
-                            idx === 0 ? `${teamName}` : '',
+                            teamDisplay,
                             member.name,
                             member.tenure,
                             ...visibleMetrics.map(metric => {
@@ -1005,18 +1035,42 @@
                     '',
                     ...visibleMetrics.map(metric => grandTotals[metric])
                 ]);
+                
+                // 일 목표
+                wsData.push([
+                    '일 목표',
+                    '',
+                    '',
+                    ...visibleMetrics.map(metric => dailyTargets[metric] || 100)
+                ]);
+                
+                // 달성
+                wsData.push([
+                    '달성',
+                    '',
+                    '',
+                    ...visibleMetrics.map(metric => {
+                        const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
+                        return diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
+                    })
+                ]);
 
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
                 XLSX.utils.book_append_sheet(wb, ws, '실적');
                 XLSX.writeFile(wb, `SNS센터_실적_${selectedDate.replace(/-/g, '')}.xlsx`);
             };
 
-            // JPG 내보내기
+            // 개선된 JPG 내보내기
             const exportToJPG = async () => {
                 const element = document.getElementById('dashboard-content');
+                
+                // html2canvas 옵션 개선
                 const canvas = await html2canvas(element, {
                     backgroundColor: '#ffffff',
-                    scale: 2
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true
                 });
                 
                 const link = document.createElement('a');
@@ -1222,53 +1276,72 @@
                             </div>
                         </div>
 
-                        {/* 팀별 실적 */}
+                        {/* 팀별 실적 및 팀별 요약 추가 */}
                         {Object.entries(teams).map(([teamName, teamInfo]) => {
                             const teamTotals = calculateTeamTotals(teamName);
                             
                             return (
-                                <div key={teamName} className="team-section">
-                                    <div className="team-header">
-                                        SNS센터 {teamName}
+                                <div key={teamName}>
+                                    {/* 팀별 실적 요약 - 새로 추가 */}
+                                    <div className="summary-section">
+                                        <div className="summary-title">📈 {teamName} 실적 요약</div>
+                                        <div className="metrics-row">
+                                            {visibleMetrics.map(metric => (
+                                                <div 
+                                                    key={metric} 
+                                                    className={`metric-item ${getMetricLevel(teamTotals[metric], metric)}`}
+                                                >
+                                                    <div className="metric-name">{metric}</div>
+                                                    <div className="metric-value">{teamTotals[metric]}</div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <table className="team-table">
-                                        <thead>
-                                            <tr>
-                                                <th>이름</th>
-                                                <th>근속기간</th>
-                                                {visibleMetrics.map(metric => (
-                                                    <th key={metric}>{metric}</th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {teamInfo.members.map(member => {
-                                                const key = `${teamName}_${member.name}`;
-                                                const data = performanceData[key] || {};
-                                                
-                                                return (
-                                                    <tr key={member.name}>
-                                                        <td>{member.name}</td>
-                                                        <td>{member.tenure}</td>
-                                                        {visibleMetrics.map(metric => {
-                                                            const dbColumn = metricToDb[metric];
-                                                            return (
-                                                                <td key={metric}>
-                                                                    {data[dbColumn] || 0}
-                                                                </td>
-                                                            );
-                                                        })}
-                                                    </tr>
-                                                );
-                                            })}
-                                            <tr className="team-total">
-                                                <td colSpan="2">{teamName} 총합</td>
-                                                {visibleMetrics.map(metric => (
-                                                    <td key={metric}>{teamTotals[metric]}</td>
-                                                ))}
-                                            </tr>
-                                        </tbody>
-                                    </table>
+
+                                    {/* 팀별 상세 테이블 */}
+                                    <div className="team-section">
+                                        <div className="team-header">
+                                            SNS센터 {teamName}
+                                        </div>
+                                        <table className="team-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>이름</th>
+                                                    <th>근속기간</th>
+                                                    {visibleMetrics.map(metric => (
+                                                        <th key={metric}>{metric}</th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {teamInfo.members.map(member => {
+                                                    const key = `${teamName}_${member.name}`;
+                                                    const data = performanceData[key] || {};
+                                                    
+                                                    return (
+                                                        <tr key={member.name}>
+                                                            <td>{member.name}</td>
+                                                            <td>{member.tenure}</td>
+                                                            {visibleMetrics.map(metric => {
+                                                                const dbColumn = metricToDb[metric];
+                                                                return (
+                                                                    <td key={metric}>
+                                                                        {data[dbColumn] || 0}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </tr>
+                                                    );
+                                                })}
+                                                <tr className="team-total">
+                                                    <td colSpan="2">{teamName} 총합</td>
+                                                    {visibleMetrics.map(metric => (
+                                                        <td key={metric}>{teamTotals[metric]}</td>
+                                                    ))}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -1413,28 +1486,6 @@
                             </div>
                         </div>
                     </div>
-
-                    {/* 상담사 관리 모달 */}
-                    <TeamManagementModal 
-                        show={showTeamModal}
-                        onClose={() => setShowTeamModal(false)}
-                        teams={teams}
-                        onSave={async (updatedTeams) => {
-                            try {
-                                await supabase
-                                    .from('config')
-                                    .update({ data: updatedTeams })
-                                    .eq('type', 'teams');
-                                
-                                setTeams(updatedTeams);
-                                alert('상담사 정보가 저장되었습니다.');
-                                loadPerformanceData();
-                            } catch (error) {
-                                console.error('저장 오류:', error);
-                                alert('저장 중 오류가 발생했습니다.');
-                            }
-                        }}
-                    />
                 </div>
             );
         }
