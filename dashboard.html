@@ -446,11 +446,24 @@
         // 항목 편집 모달 컴포넌트
         function MetricsEditModal({ show, onClose, allMetrics, visibleMetrics, metricToDb, onSave }) {
             const [activeTab, setActiveTab] = useState('display');
-            const [localVisible, setLocalVisible] = useState([...visibleMetrics]);
-            const [localMetrics, setLocalMetrics] = useState([...allMetrics]);
-            const [localMapping, setLocalMapping] = useState({...metricToDb});
+            const [localVisible, setLocalVisible] = useState([]);
+            const [localMetrics, setLocalMetrics] = useState([]);
+            const [localMapping, setLocalMapping] = useState({});
             const [newMetricName, setNewMetricName] = useState('');
             const [newMetricDb, setNewMetricDb] = useState('');
+
+            // 모달이 열릴 때마다 데이터 초기화
+            useEffect(() => {
+                if (show) {
+                    setLocalVisible([...visibleMetrics]);
+                    setLocalMetrics([...allMetrics]);
+                    setLocalMapping({...metricToDb});
+                    console.log('Modal initialized with:', {
+                        allMetrics: allMetrics,
+                        visibleMetrics: visibleMetrics
+                    });
+                }
+            }, [show, allMetrics, visibleMetrics, metricToDb]);
 
             if (!show) return null;
 
@@ -608,11 +621,20 @@
 
         // 상담사 관리 모달 컴포넌트
         function TeamManagementModal({ show, onClose, teams, onSave }) {
-            const [localTeams, setLocalTeams] = useState(JSON.parse(JSON.stringify(teams)));
-            const [selectedTeam, setSelectedTeam] = useState(Object.keys(teams)[0] || '');
+            const [localTeams, setLocalTeams] = useState({});
+            const [selectedTeam, setSelectedTeam] = useState('');
             const [editingMember, setEditingMember] = useState(null);
             const [newMemberName, setNewMemberName] = useState('');
             const [newMemberTenure, setNewMemberTenure] = useState('3개월미만');
+
+            // 모달이 열릴 때마다 데이터 초기화
+            useEffect(() => {
+                if (show && teams && Object.keys(teams).length > 0) {
+                    setLocalTeams(JSON.parse(JSON.stringify(teams)));
+                    setSelectedTeam(Object.keys(teams)[0] || '');
+                    console.log('Team modal initialized with:', teams);
+                }
+            }, [show, teams]);
 
             if (!show) return null;
 
@@ -761,6 +783,8 @@
         }
 
         function DashboardApp() {
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [passwordInput, setPasswordInput] = useState('');
             const [teams, setTeams] = useState({});
             const [visibleMetrics, setVisibleMetrics] = useState([]);
             const [metricToDb, setMetricToDb] = useState({});
@@ -774,6 +798,33 @@
             const [showMetricsModal, setShowMetricsModal] = useState(false);
             const [showTargetModal, setShowTargetModal] = useState(false);
             const [showTeamModal, setShowTeamModal] = useState(false);
+
+            // 비밀번호 확인
+            const handlePasswordSubmit = (e) => {
+                e.preventDefault();
+                if (passwordInput === '3504') {
+                    setIsAuthenticated(true);
+                    localStorage.setItem('dashboardAuth', 'true');
+                } else {
+                    alert('비밀번호가 틀렸습니다.');
+                    setPasswordInput('');
+                }
+            };
+
+            // 로그아웃
+            const handleLogout = () => {
+                setIsAuthenticated(false);
+                localStorage.removeItem('dashboardAuth');
+                setPasswordInput('');
+            };
+
+            // 페이지 로드 시 인증 상태 확인
+            useEffect(() => {
+                const auth = localStorage.getItem('dashboardAuth');
+                if (auth === 'true') {
+                    setIsAuthenticated(true);
+                }
+            }, []);
 
             // 설정 로드
             const loadConfig = useCallback(async () => {
@@ -996,17 +1047,86 @@
 
             // useEffect
             useEffect(() => {
-                loadConfig();
-            }, [loadConfig]);
+                if (isAuthenticated) {
+                    loadConfig();
+                }
+            }, [loadConfig, isAuthenticated]);
 
             useEffect(() => {
-                loadPerformanceData();
-                
-                if (autoRefresh) {
-                    const interval = setInterval(loadPerformanceData, 60000); // 1분마다
-                    return () => clearInterval(interval);
+                if (isAuthenticated) {
+                    loadPerformanceData();
+                    
+                    if (autoRefresh) {
+                        const interval = setInterval(loadPerformanceData, 60000); // 1분마다
+                        return () => clearInterval(interval);
+                    }
                 }
-            }, [loadPerformanceData, autoRefresh]);
+            }, [loadPerformanceData, autoRefresh, isAuthenticated]);
+
+            // 비밀번호 화면
+            if (!isAuthenticated) {
+                return (
+                    <div className="dashboard-container">
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minHeight: '100vh'
+                        }}>
+                            <div style={{
+                                background: '#2d2d2d',
+                                padding: '40px',
+                                borderRadius: '10px',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+                                textAlign: 'center',
+                                maxWidth: '400px',
+                                width: '90%'
+                            }}>
+                                <h2 style={{ marginBottom: '30px', color: '#E0E0E0' }}>
+                                    🔒 관리자 대시보드
+                                </h2>
+                                <form onSubmit={handlePasswordSubmit}>
+                                    <input
+                                        type="password"
+                                        placeholder="비밀번호를 입력하세요"
+                                        value={passwordInput}
+                                        onChange={(e) => setPasswordInput(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            fontSize: '16px',
+                                            background: '#3a3a3a',
+                                            border: '1px solid #404040',
+                                            borderRadius: '5px',
+                                            color: '#E0E0E0',
+                                            marginBottom: '20px'
+                                        }}
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            fontSize: '16px'
+                                        }}
+                                    >
+                                        로그인
+                                    </button>
+                                </form>
+                                <p style={{
+                                    marginTop: '20px',
+                                    fontSize: '12px',
+                                    color: '#B0B0B0'
+                                }}>
+                                    SNS센터 관리자만 접근 가능합니다
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
 
             if (isLoading) {
                 return (
@@ -1075,6 +1195,14 @@
                             />
                             자동새로고침
                         </label>
+
+                        <button 
+                            className="btn btn-danger" 
+                            onClick={handleLogout}
+                            style={{ marginLeft: 'auto' }}
+                        >
+                            🚪 로그아웃
+                        </button>
                     </div>
 
                     <div id="dashboard-content">
