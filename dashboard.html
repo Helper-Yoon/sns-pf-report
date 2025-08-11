@@ -510,7 +510,8 @@
                     items: localMetrics.map(metric => ({
                         name: metric,
                         db_column: localMapping[metric],
-                        is_default: true
+                        is_default: true,
+                        previous_columns: localMapping[metric + '_history'] || []
                     }))
                 };
 
@@ -798,6 +799,8 @@
             const [showMetricsModal, setShowMetricsModal] = useState(false);
             const [showTargetModal, setShowTargetModal] = useState(false);
             const [showTeamModal, setShowTeamModal] = useState(false);
+            const [showWeeklyModal, setShowWeeklyModal] = useState(false);
+            const [weeklyData, setWeeklyData] = useState({});
 
             // 비밀번호 확인
             const handlePasswordSubmit = (e) => {
@@ -895,6 +898,45 @@
                     console.error('데이터 로드 오류:', error);
                 } finally {
                     setIsLoading(false);
+                }
+            }, [selectedDate]);
+
+            // 주간 데이터 로드
+            const loadWeeklyData = useCallback(async () => {
+                try {
+                    // 선택된 날짜의 주 계산 (월요일 ~ 금요일)
+                    const currentDate = new Date(selectedDate);
+                    const dayOfWeek = currentDate.getDay();
+                    const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                    const monday = new Date(currentDate.setDate(diff));
+                    
+                    const weekDates = [];
+                    for (let i = 0; i < 5; i++) {
+                        const date = new Date(monday);
+                        date.setDate(monday.getDate() + i);
+                        weekDates.push(date.toISOString().split('T')[0]);
+                    }
+                    
+                    // 주간 데이터 가져오기
+                    const { data } = await supabase
+                        .from('performance')
+                        .select('*')
+                        .in('date', weekDates);
+                    
+                    const weeklyMap = {};
+                    if (data) {
+                        data.forEach(record => {
+                            if (!weeklyMap[record.date]) {
+                                weeklyMap[record.date] = {};
+                            }
+                            const key = `${record.team}_${record.name}`;
+                            weeklyMap[record.date][key] = record;
+                        });
+                    }
+                    
+                    setWeeklyData(weeklyMap);
+                } catch (error) {
+                    console.error('주간 데이터 로드 오류:', error);
                 }
             }, [selectedDate]);
 
@@ -1510,6 +1552,13 @@
                 }
             }, [loadPerformanceData, autoRefresh, isAuthenticated]);
 
+            // 주간 현황 모달이 열릴 때 데이터 로드
+            useEffect(() => {
+                if (showWeeklyModal && isAuthenticated) {
+                    loadWeeklyData();
+                }
+            }, [showWeeklyModal, loadWeeklyData, isAuthenticated]);
+
             // 비밀번호 화면
             if (!isAuthenticated) {
                 return (
@@ -1617,6 +1666,9 @@
                         </button>
                         <button className="btn btn-purple" onClick={() => setShowTeamModal(true)}>
                             👥 상담사
+                        </button>
+                        <button className="btn" onClick={() => setShowWeeklyModal(true)} style={{ background: '#8B4513' }}>
+                            📅 주간현황
                         </button>
                         <button className="btn btn-success" onClick={exportToJPG}>
                             📷 JPG
@@ -1877,6 +1929,212 @@
                                     저장
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* 주간 현황 모달 */}
+                    <div className={`modal ${showWeeklyModal ? 'active' : ''}`}>
+                        <div className="modal-content" style={{ maxWidth: '900px' }}>
+                            <span className="modal-close" onClick={() => setShowWeeklyModal(false)}>×</span>
+                            <div className="modal-header">📅 주간 목표 달성 현황</div>
+                            
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={loadWeeklyData}
+                                style={{ marginBottom: '15px' }}
+                            >
+                                데이터 새로고침
+                            </button>
+                            
+                            {(() => {
+                                // 주간 날짜 계산
+                                const currentDate = new Date(selectedDate);
+                                const dayOfWeek = currentDate.getDay();
+                                const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                                const monday = new Date(currentDate.setDate(diff));
+                                
+                                const weekDates = [];
+                                const weekDays = ['월', '화', '수', '목', '금'];
+                                for (let i = 0; i < 5; i++) {
+                                    const date = new Date(monday);
+                                    date.setDate(monday.getDate() + i);
+                                    weekDates.push(date.toISOString().split('T')[0]);
+                                }
+                                
+                                return (
+                                    <div>
+                                        <p style={{ marginBottom: '15px', color: '#B0B0B0', fontSize: '13px' }}>
+                                            {weekDates[0]} ~ {weekDates[4]} 주간 실적
+                                        </p>
+                                        
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th style={{ padding: '10px', background: '#3a3a3a', border: '1px solid #404040', color: '#E0E0E0' }}>
+                                                            구분
+                                                        </th>
+                                                        {weekDays.map((day, i) => (
+                                                            <th key={day} style={{ padding: '10px', background: '#3a3a3a', border: '1px solid #404040', color: '#E0E0E0', minWidth: '100px' }}>
+                                                                {day}요일<br/>
+                                                                <span style={{ fontSize: '11px', color: '#B0B0B0' }}>
+                                                                    {weekDates[i]}
+                                                                </span>
+                                                            </th>
+                                                        ))}
+                                                        <th style={{ padding: '10px', background: '#4A9EFF', border: '1px solid #404040', color: 'white' }}>
+                                                            주간 합계
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {visibleMetrics.map(metric => {
+                                                        const dbColumn = metricToDb[metric];
+                                                        let weekTotal = 0;
+                                                        const dayValues = weekDates.map(date => {
+                                                            const dayData = weeklyData[date] || {};
+                                                            let dayTotal = 0;
+                                                            Object.values(dayData).forEach(record => {
+                                                                dayTotal += record[dbColumn] || 0;
+                                                            });
+                                                            weekTotal += dayTotal;
+                                                            return dayTotal;
+                                                        });
+                                                        
+                                                        const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                                                        const achievement = ((weekTotal / weeklyTarget) * 100).toFixed(1);
+                                                        
+                                                        return (
+                                                            <tr key={metric}>
+                                                                <td style={{ padding: '8px', background: '#2d2d2d', border: '1px solid #404040', color: '#E0E0E0', fontWeight: 'bold' }}>
+                                                                    {metric}
+                                                                </td>
+                                                                {dayValues.map((value, i) => {
+                                                                    const dayTarget = dailyTargets[metric] || 100;
+                                                                    const isAchieved = value >= dayTarget;
+                                                                    return (
+                                                                        <td key={i} style={{ 
+                                                                            padding: '8px', 
+                                                                            background: isAchieved ? '#4CAF5030' : '#E5737330',
+                                                                            border: '1px solid #404040', 
+                                                                            color: '#E0E0E0', 
+                                                                            textAlign: 'center' 
+                                                                        }}>
+                                                                            {value}
+                                                                            <br/>
+                                                                            <span style={{ 
+                                                                                fontSize: '11px', 
+                                                                                color: isAchieved ? '#4CAF50' : '#E57373' 
+                                                                            }}>
+                                                                                (목표: {dayTarget})
+                                                                            </span>
+                                                                        </td>
+                                                                    );
+                                                                })}
+                                                                <td style={{ 
+                                                                    padding: '8px', 
+                                                                    background: weekTotal >= weeklyTarget ? '#4CAF50' : '#E57373',
+                                                                    border: '1px solid #404040', 
+                                                                    color: 'white', 
+                                                                    textAlign: 'center',
+                                                                    fontWeight: 'bold'
+                                                                }}>
+                                                                    {weekTotal}
+                                                                    <br/>
+                                                                    <span style={{ fontSize: '11px' }}>
+                                                                        ({achievement}%)
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    
+                                                    {/* 전체 합계 행 */}
+                                                    <tr style={{ background: '#1f3a5f' }}>
+                                                        <td style={{ padding: '10px', border: '1px solid #404040', color: 'white', fontWeight: 'bold' }}>
+                                                            전체 합계
+                                                        </td>
+                                                        {weekDates.map((date, i) => {
+                                                            const dayData = weeklyData[date] || {};
+                                                            let dayTotal = 0;
+                                                            visibleMetrics.forEach(metric => {
+                                                                const dbColumn = metricToDb[metric];
+                                                                Object.values(dayData).forEach(record => {
+                                                                    dayTotal += record[dbColumn] || 0;
+                                                                });
+                                                            });
+                                                            
+                                                            const dayTarget = visibleMetrics.reduce((sum, metric) => 
+                                                                sum + (dailyTargets[metric] || 100), 0
+                                                            );
+                                                            
+                                                            return (
+                                                                <td key={i} style={{ 
+                                                                    padding: '10px', 
+                                                                    border: '1px solid #404040', 
+                                                                    color: 'white', 
+                                                                    textAlign: 'center',
+                                                                    fontWeight: 'bold'
+                                                                }}>
+                                                                    {dayTotal}
+                                                                    <br/>
+                                                                    <span style={{ fontSize: '11px', color: '#B0B0B0' }}>
+                                                                        (목표: {dayTarget})
+                                                                    </span>
+                                                                </td>
+                                                            );
+                                                        })}
+                                                        <td style={{ 
+                                                            padding: '10px', 
+                                                            background: '#FFD700',
+                                                            border: '1px solid #404040', 
+                                                            color: 'black', 
+                                                            textAlign: 'center',
+                                                            fontWeight: 'bold'
+                                                        }}>
+                                                            {(() => {
+                                                                let grandTotal = 0;
+                                                                weekDates.forEach(date => {
+                                                                    const dayData = weeklyData[date] || {};
+                                                                    visibleMetrics.forEach(metric => {
+                                                                        const dbColumn = metricToDb[metric];
+                                                                        Object.values(dayData).forEach(record => {
+                                                                            grandTotal += record[dbColumn] || 0;
+                                                                        });
+                                                                    });
+                                                                });
+                                                                
+                                                                const weeklyGrandTarget = visibleMetrics.reduce((sum, metric) => 
+                                                                    sum + (dailyTargets[metric] || 100) * 5, 0
+                                                                );
+                                                                
+                                                                return (
+                                                                    <>
+                                                                        {grandTotal}
+                                                                        <br/>
+                                                                        <span style={{ fontSize: '11px' }}>
+                                                                            ({((grandTotal / weeklyGrandTarget) * 100).toFixed(1)}%)
+                                                                        </span>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        
+                                        <div style={{ marginTop: '20px', padding: '15px', background: '#3a3a3a', borderRadius: '5px' }}>
+                                            <h4 style={{ marginBottom: '10px', color: '#4A9EFF' }}>💡 항목명 변경 안내</h4>
+                                            <p style={{ fontSize: '13px', color: '#B0B0B0', lineHeight: '1.6' }}>
+                                                항목명이 변경되어도 과거 데이터는 정상적으로 표시됩니다.<br/>
+                                                예시: "SK 인터넷" → "SK 유심"으로 변경해도, DB 컬럼명(sk_유심)이 동일하면 모든 데이터가 연속성 있게 유지됩니다.<br/>
+                                                <span style={{ color: '#FF9800' }}>※ 단, DB 컬럼명이 다른 완전히 새로운 항목을 추가하는 경우에는 과거 데이터와 별개로 관리됩니다.</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>
