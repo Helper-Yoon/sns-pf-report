@@ -960,17 +960,18 @@
                 return totals;
             };
 
-            // 개선된 엑셀 내보내기
+            // 개선된 엑셀 내보내기 - 팀별 색상과 병합 적용
             const exportToExcel = () => {
                 const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet([]);
                 
                 // 팀별 색상 정의
                 const teamColors = {
-                    '1파트': 'E2F0D9',
-                    '2파트': 'DDEBF7',
-                    '3파트': 'FCE4D6',
-                    '4파트': 'FFF2CC',
-                    '5파트': 'D9E2F3'
+                    '1파트': 'FFE2F0D9',  // 연한 녹색
+                    '2파트': 'FFDDEBF7',  // 연한 파란색
+                    '3파트': 'FFFCE4D6',  // 연한 주황색
+                    '4파트': 'FFFFF2CC',  // 연한 노란색
+                    '5파트': 'FFD9E2F3'   // 진한 파란색
                 };
                 
                 // 파트장 정보
@@ -982,97 +983,489 @@
                     '5파트': '차정환'
                 };
                 
-                const wsData = [
-                    [`SNS센터 실적보고 - ${selectedDate}`],
-                    [],
-                    ['소속', '이름', '근속기간', ...visibleMetrics]
-                ];
-
+                // 제목 추가
+                XLSX.utils.sheet_add_aoa(ws, [[`SNS센터 실적보고 - ${selectedDate}`]], {origin: 'A1'});
+                
+                // 헤더 추가
+                const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
+                XLSX.utils.sheet_add_aoa(ws, [headers], {origin: 'A3'});
+                
+                // 헤더 스타일 적용
+                for (let col = 0; col < headers.length; col++) {
+                    const cellRef = XLSX.utils.encode_cell({r: 2, c: col});
+                    if (!ws[cellRef]) ws[cellRef] = {};
+                    ws[cellRef].s = {
+                        fill: { fgColor: { rgb: "FFD9D9D9" } },
+                        font: { bold: true, sz: 10, name: "맑은 고딕" },
+                        alignment: { horizontal: "center", vertical: "center" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "FF000000" } },
+                            bottom: { style: "thin", color: { rgb: "FF000000" } },
+                            left: { style: "thin", color: { rgb: "FF000000" } },
+                            right: { style: "thin", color: { rgb: "FF000000" } }
+                        }
+                    };
+                }
+                
+                let rowNum = 3;
+                const mergeRanges = [];
+                
+                // 각 팀별 데이터
                 Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    const startRow = rowNum;
+                    const teamColor = teamColors[teamName] || 'FFE2F0D9';
                     const leader = teamLeaders[teamName] || '';
+                    const teamTotals = calculateTeamTotals(teamName);
                     
                     teamInfo.members.forEach((member, idx) => {
                         const key = `${teamName}_${member.name}`;
                         const data = performanceData[key] || {};
+                        const rowData = [];
                         
-                        let teamDisplay = '';
+                        // 소속 (첫 번째 멤버만)
                         if (idx === 0) {
-                            if (teamName === '5파트') {
-                                teamDisplay = `의정부SNS센터\n${teamName}\n${leader}`;
-                            } else {
-                                teamDisplay = `SNS센터\n${teamName}\n${leader}`;
-                            }
+                            const teamDisplay = teamName === '5파트' 
+                                ? `의정부SNS센터\n${teamName}\n${leader}`
+                                : `SNS센터\n${teamName}\n${leader}`;
+                            rowData.push(teamDisplay);
+                        } else {
+                            rowData.push('');
                         }
                         
-                        const row = [
-                            teamDisplay,
-                            member.name,
-                            member.tenure,
-                            ...visibleMetrics.map(metric => {
-                                const dbColumn = metricToDb[metric];
-                                return data[dbColumn] || 0;
-                            })
-                        ];
-                        wsData.push(row);
+                        // 이름, 근속기간
+                        rowData.push(member.name, member.tenure);
+                        
+                        // 실적 데이터
+                        visibleMetrics.forEach(metric => {
+                            const dbColumn = metricToDb[metric];
+                            rowData.push(data[dbColumn] || 0);
+                        });
+                        
+                        XLSX.utils.sheet_add_aoa(ws, [rowData], {origin: `A${rowNum + 1}`});
+                        
+                        // 셀 스타일 적용
+                        for (let col = 0; col < 3; col++) {
+                            const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
+                            if (!ws[cellRef]) ws[cellRef] = { v: '' };
+                            ws[cellRef].s = {
+                                fill: { fgColor: { rgb: teamColor } },
+                                font: { sz: 10, name: "맑은 고딕", bold: col === 0 },
+                                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "FF000000" } },
+                                    bottom: { style: "thin", color: { rgb: "FF000000" } },
+                                    left: { style: "thin", color: { rgb: "FF000000" } },
+                                    right: { style: "thin", color: { rgb: "FF000000" } }
+                                }
+                            };
+                        }
+                        
+                        // 실적 데이터 셀 스타일
+                        for (let col = 3; col < 3 + visibleMetrics.length; col++) {
+                            const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
+                            if (!ws[cellRef]) ws[cellRef] = { v: 0 };
+                            ws[cellRef].s = {
+                                font: { sz: 10, name: "맑은 고딕" },
+                                alignment: { horizontal: "center" },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "FF000000" } },
+                                    bottom: { style: "thin", color: { rgb: "FF000000" } },
+                                    left: { style: "thin", color: { rgb: "FF000000" } },
+                                    right: { style: "thin", color: { rgb: "FF000000" } }
+                                }
+                            };
+                        }
+                        
+                        rowNum++;
                     });
-
+                    
+                    // 소속 셀 병합
+                    if (teamInfo.members.length > 1) {
+                        mergeRanges.push({
+                            s: { r: startRow, c: 0 },
+                            e: { r: rowNum - 1, c: 0 }
+                        });
+                    }
+                    
                     // 팀 총합
-                    const teamTotals = calculateTeamTotals(teamName);
-                    wsData.push([
-                        `${teamName} 총합`,
-                        '',
-                        '',
-                        ...visibleMetrics.map(metric => teamTotals[metric])
-                    ]);
-                    wsData.push([]); // 빈 줄
+                    const totalRow = [`${teamName} 총합`, '', '', ...visibleMetrics.map(metric => teamTotals[metric])];
+                    XLSX.utils.sheet_add_aoa(ws, [totalRow], {origin: `A${rowNum + 1}`});
+                    
+                    // 팀 총합 병합
+                    mergeRanges.push({
+                        s: { r: rowNum, c: 0 },
+                        e: { r: rowNum, c: 2 }
+                    });
+                    
+                    // 팀 총합 스타일
+                    for (let col = 0; col < headers.length; col++) {
+                        const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
+                        if (!ws[cellRef]) ws[cellRef] = { v: '' };
+                        ws[cellRef].s = {
+                            fill: { fgColor: { rgb: "FFFFF2CC" } },  // 노란색
+                            font: { bold: true, sz: 10, name: "맑은 고딕" },
+                            alignment: { horizontal: "center" },
+                            border: {
+                                top: { style: "thin", color: { rgb: "FF000000" } },
+                                bottom: { style: "thin", color: { rgb: "FF000000" } },
+                                left: { style: "thin", color: { rgb: "FF000000" } },
+                                right: { style: "thin", color: { rgb: "FF000000" } }
+                            }
+                        };
+                    }
+                    
+                    rowNum++;
                 });
-
+                
                 // 전체 총합
                 const grandTotals = calculateTotals();
-                wsData.push([
-                    '센터 총합',
-                    '',
-                    '',
-                    ...visibleMetrics.map(metric => grandTotals[metric])
-                ]);
+                const centerRow = ['센터 총합', '', '', ...visibleMetrics.map(metric => grandTotals[metric])];
+                XLSX.utils.sheet_add_aoa(ws, [centerRow], {origin: `A${rowNum + 1}`});
+                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 2 } });
+                
+                // 센터 총합 스타일
+                for (let col = 0; col < headers.length; col++) {
+                    const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
+                    if (!ws[cellRef]) ws[cellRef] = { v: '' };
+                    ws[cellRef].s = {
+                        fill: { fgColor: { rgb: "FFFFCCCC" } },  // 분홍색
+                        font: { bold: true, sz: 10, name: "맑은 고딕" },
+                        alignment: { horizontal: "center" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "FF000000" } },
+                            bottom: { style: "thin", color: { rgb: "FF000000" } },
+                            left: { style: "thin", color: { rgb: "FF000000" } },
+                            right: { style: "thin", color: { rgb: "FF000000" } }
+                        }
+                    };
+                }
+                rowNum++;
                 
                 // 일 목표
-                wsData.push([
-                    '일 목표',
-                    '',
-                    '',
-                    ...visibleMetrics.map(metric => dailyTargets[metric] || 100)
-                ]);
+                const targetRow = ['일 목표', '', '', ...visibleMetrics.map(metric => dailyTargets[metric] || 100)];
+                XLSX.utils.sheet_add_aoa(ws, [targetRow], {origin: `A${rowNum + 1}`});
+                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 2 } });
+                
+                // 일 목표 스타일
+                for (let col = 0; col < headers.length; col++) {
+                    const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
+                    if (!ws[cellRef]) ws[cellRef] = { v: '' };
+                    ws[cellRef].s = {
+                        fill: { fgColor: { rgb: "FFFFCCCC" } },
+                        font: { sz: 10, name: "맑은 고딕" },
+                        alignment: { horizontal: "center" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "FF000000" } },
+                            bottom: { style: "thin", color: { rgb: "FF000000" } },
+                            left: { style: "thin", color: { rgb: "FF000000" } },
+                            right: { style: "thin", color: { rgb: "FF000000" } }
+                        }
+                    };
+                }
+                rowNum++;
                 
                 // 달성
-                wsData.push([
-                    '달성',
-                    '',
-                    '',
-                    ...visibleMetrics.map(metric => {
-                        const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
-                        return diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
-                    })
-                ]);
-
-                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                const achievementRow = ['달성', '', '', ...visibleMetrics.map(metric => {
+                    const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
+                    return diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
+                })];
+                XLSX.utils.sheet_add_aoa(ws, [achievementRow], {origin: `A${rowNum + 1}`});
+                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 2 } });
+                
+                // 달성 스타일
+                for (let col = 0; col < headers.length; col++) {
+                    const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
+                    if (!ws[cellRef]) ws[cellRef] = { v: '' };
+                    ws[cellRef].s = {
+                        fill: { fgColor: { rgb: "FFFFCCCC" } },
+                        font: { sz: 10, name: "맑은 고딕" },
+                        alignment: { horizontal: "center" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "FF000000" } },
+                            bottom: { style: "thin", color: { rgb: "FF000000" } },
+                            left: { style: "thin", color: { rgb: "FF000000" } },
+                            right: { style: "thin", color: { rgb: "FF000000" } }
+                        }
+                    };
+                }
+                
+                // 병합 적용
+                ws['!merges'] = mergeRanges;
+                
+                // 컬럼 너비 설정
+                const colWidths = [
+                    { wch: 20 },  // 소속
+                    { wch: 12 },  // 이름
+                    { wch: 12 },  // 근속기간
+                    ...visibleMetrics.map(() => ({ wch: 10 }))
+                ];
+                ws['!cols'] = colWidths;
+                
+                // 범위 설정
+                ws['!ref'] = XLSX.utils.encode_range({
+                    s: { r: 0, c: 0 },
+                    e: { r: rowNum, c: headers.length - 1 }
+                });
+                
                 XLSX.utils.book_append_sheet(wb, ws, '실적');
                 XLSX.writeFile(wb, `SNS센터_실적_${selectedDate.replace(/-/g, '')}.xlsx`);
             };
 
-            // 개선된 JPG 내보내기
+            // 개선된 JPG 내보내기 - Canvas로 직접 그리기
             const exportToJPG = async () => {
-                const element = document.getElementById('dashboard-content');
+                // 팀별 색상 정의
+                const teamColors = {
+                    '1파트': '#E2F0D9',
+                    '2파트': '#DDEBF7', 
+                    '3파트': '#FCE4D6',
+                    '4파트': '#FFF2CC',
+                    '5파트': '#D9E2F3'
+                };
                 
-                // html2canvas 옵션 개선
-                const canvas = await html2canvas(element, {
-                    backgroundColor: '#ffffff',
-                    scale: 2,
-                    logging: false,
-                    useCORS: true,
-                    allowTaint: true
+                // 파트장 정보
+                const teamLeaders = {
+                    '1파트': '이종민',
+                    '2파트': '윤도우리',
+                    '3파트': '김진후',
+                    '4파트': '이민주',
+                    '5파트': '차정환'
+                };
+                
+                // Canvas 생성
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 크기 계산
+                const colWidths = [150, 100, 100, ...visibleMetrics.map(() => 85)];
+                const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
+                const rowHeight = 26;
+                let totalRows = 4; // 제목 + 헤더
+                Object.values(teams).forEach(team => {
+                    totalRows += team.members.length + 1; // 멤버 + 팀 총합
+                });
+                totalRows += 4; // 센터총합, 일목표, 달성, 여백
+                
+                canvas.width = totalWidth;
+                canvas.height = totalRows * rowHeight + 100;
+                
+                // 배경
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 폰트 설정
+                ctx.font = '10px Malgun Gothic';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                let y = 25;
+                const xStart = 40;
+                
+                // 제목
+                ctx.font = 'bold 14px Malgun Gothic';
+                ctx.fillStyle = 'black';
+                ctx.fillText(`SNS센터 실적보고 - ${selectedDate}`, totalWidth / 2, y);
+                y += 45;
+                
+                // 헤더
+                ctx.font = '10px Malgun Gothic';
+                const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
+                let x = xStart;
+                headers.forEach((header, i) => {
+                    // 헤더 배경
+                    ctx.fillStyle = '#D9D9D9';
+                    ctx.fillRect(x, y, colWidths[i], rowHeight);
+                    
+                    // 테두리
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[i], rowHeight);
+                    
+                    // 텍스트
+                    ctx.fillStyle = 'black';
+                    ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
+                    x += colWidths[i];
+                });
+                y += rowHeight;
+                
+                // 각 팀별 데이터
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    const teamColor = teamColors[teamName] || '#E2F0D9';
+                    const leader = teamLeaders[teamName] || '';
+                    const startY = y;
+                    const teamTotals = calculateTeamTotals(teamName);
+                    
+                    teamInfo.members.forEach((member, idx) => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = performanceData[key] || {};
+                        x = xStart;
+                        
+                        // 소속 (첫 번째 멤버만)
+                        if (idx === 0) {
+                            const mergeHeight = teamInfo.members.length * rowHeight;
+                            
+                            // 배경
+                            ctx.fillStyle = teamColor;
+                            ctx.fillRect(x, y, colWidths[0], mergeHeight);
+                            
+                            // 테두리
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[0], mergeHeight);
+                            
+                            // 텍스트
+                            ctx.fillStyle = 'black';
+                            ctx.font = 'bold 10px Malgun Gothic';
+                            const teamText = teamName === '5파트' 
+                                ? `의정부SNS센터` 
+                                : `SNS센터`;
+                            ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 20);
+                            ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
+                            ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 20);
+                            ctx.font = '10px Malgun Gothic';
+                        } else {
+                            // 병합된 셀의 세로 선만 그리기
+                            ctx.strokeStyle = 'black';
+                            ctx.beginPath();
+                            ctx.moveTo(x + colWidths[0], y);
+                            ctx.lineTo(x + colWidths[0], y + rowHeight);
+                            ctx.stroke();
+                        }
+                        x += colWidths[0];
+                        
+                        // 이름
+                        ctx.fillStyle = teamColor;
+                        ctx.fillRect(x, y, colWidths[1], rowHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[1], rowHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
+                        x += colWidths[1];
+                        
+                        // 근속기간
+                        ctx.fillStyle = teamColor;
+                        ctx.fillRect(x, y, colWidths[2], rowHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[2], rowHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
+                        x += colWidths[2];
+                        
+                        // 실적 데이터
+                        visibleMetrics.forEach((metric, i) => {
+                            const dbColumn = metricToDb[metric];
+                            const value = data[dbColumn] || 0;
+                            
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = 'black';
+                            ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                            x += colWidths[3 + i];
+                        });
+                        
+                        y += rowHeight;
+                    });
+                    
+                    // 팀 총합
+                    x = xStart;
+                    
+                    // 팀 총합 병합 셀
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 10px Malgun Gothic';
+                    ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                    ctx.font = '10px Malgun Gothic';
+                    x += colWidths[0] + colWidths[1] + colWidths[2];
+                    
+                    // 팀 총합 데이터
+                    visibleMetrics.forEach((metric, i) => {
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'bold 10px Malgun Gothic';
+                        ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                        x += colWidths[3 + i];
+                    });
+                    ctx.font = '10px Malgun Gothic';
+                    
+                    y += rowHeight + 8;
                 });
                 
+                // 전체 총합
+                const grandTotals = calculateTotals();
+                x = xStart;
+                
+                // 센터 총합
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 10px Malgun Gothic';
+                ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                visibleMetrics.forEach((metric, i) => {
+                    ctx.fillStyle = '#FFCCCC';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                    x += colWidths[3 + i];
+                });
+                ctx.font = '10px Malgun Gothic';
+                y += rowHeight + 2;
+                
+                // 일 목표
+                x = xStart;
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.fillText('일 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                visibleMetrics.forEach((metric, i) => {
+                    ctx.fillStyle = '#FFCCCC';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.fillText((dailyTargets[metric] || 100).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                    x += colWidths[3 + i];
+                });
+                y += rowHeight + 2;
+                
+                // 달성
+                x = xStart;
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.fillText('달성', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                visibleMetrics.forEach((metric, i) => {
+                    const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
+                    const status = diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
+                    
+                    ctx.fillStyle = '#FFCCCC';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.fillText(status, x + colWidths[3 + i]/2, y + rowHeight/2);
+                    x += colWidths[3 + i];
+                });
+                
+                // 다운로드
                 const link = document.createElement('a');
                 link.download = `SNS센터_실적_${selectedDate.replace(/-/g, '')}.jpg`;
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
