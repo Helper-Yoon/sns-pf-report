@@ -105,9 +105,147 @@
             animation: pulse 2s infinite;
         }
         
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            animation: slideIn 0.3s;
+        }
+        
+        .modal-header {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #2a2a2a;
+            border-radius: 10px;
+            background: #0a0a0a;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 5px;
+        }
+        
+        .password-input:focus {
+            outline: none;
+            border-color: #1E6FFF;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .modal-btn-confirm {
+            background: #1E6FFF;
+            color: white;
+        }
+        
+        .modal-btn-confirm:hover {
+            background: #1859d6;
+        }
+        
+        .modal-btn-cancel {
+            background: #2a2a2a;
+            color: #8a8a8a;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #3a3a3a;
+        }
+        
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
+        .auth-status {
+            color: #4CAF50;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .auth-status.show {
+            display: block;
+        }
+        
+        .logout-btn {
+            margin-top: 5px;
+            padding: 5px 10px;
+            font-size: 11px;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 5px;
+            color: #8a8a8a;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #3a3a3a;
+            color: #ffffff;
+        }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
         
         @media (max-width: 480px) {
@@ -123,6 +261,10 @@
                 font-size: 16px;
                 padding: 15px 30px;
             }
+            
+            .modal-content {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
@@ -136,16 +278,169 @@
                 <span>📝</span>
                 <span>상담사 실적입력</span>
             </a>
-            <a href="dashboard.html" class="btn btn-dashboard">
+            <button class="btn btn-dashboard" onclick="showPasswordModal()">
                 <span>📊</span>
                 <span>관리자 대시보드</span>
-            </a>
+            </button>
         </div>
         
         <div class="status">
             <span class="status-dot"></span>
             시스템 정상 작동중
+            <div class="auth-status" id="authStatus">
+                🔓 관리자 인증완료
+                <button class="logout-btn" onclick="logout()">로그아웃</button>
+            </div>
         </div>
     </div>
+    
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">🔐 관리자 인증</h2>
+            <input 
+                type="password" 
+                id="passwordInput" 
+                class="password-input" 
+                placeholder="비밀번호 입력"
+                maxlength="4"
+                onkeypress="if(event.keyCode==13) checkPassword()"
+            >
+            <div class="error-message" id="errorMessage">비밀번호가 일치하지 않습니다</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">취소</button>
+                <button class="modal-btn modal-btn-confirm" onclick="checkPassword()">확인</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const CORRECT_PASSWORD = '3504';
+        const AUTH_KEY = 'sns_admin_auth';
+        const AUTH_EXPIRY_KEY = 'sns_admin_auth_expiry';
+        const AUTH_DURATION = 24 * 60 * 60 * 1000; // 24시간
+        
+        // 페이지 로드 시 실행
+        window.onload = function() {
+            checkAuthStatus();
+        };
+        
+        function checkAuthStatus() {
+            const authTime = localStorage.getItem(AUTH_EXPIRY_KEY);
+            
+            if (authTime) {
+                const now = new Date().getTime();
+                const expiryTime = parseInt(authTime);
+                
+                if (now < expiryTime) {
+                    // 인증 유효
+                    document.getElementById('authStatus').classList.add('show');
+                } else {
+                    // 인증 만료
+                    clearAuth();
+                }
+            }
+        }
+        
+        function showPasswordModal() {
+            // 이미 인증되었는지 확인
+            const authTime = localStorage.getItem(AUTH_EXPIRY_KEY);
+            
+            if (authTime) {
+                const now = new Date().getTime();
+                const expiryTime = parseInt(authTime);
+                
+                if (now < expiryTime) {
+                    // 인증 유효하면 바로 대시보드로 이동
+                    window.location.href = 'dashboard.html';
+                    return;
+                } else {
+                    // 인증 만료되었으면 삭제
+                    clearAuth();
+                }
+            }
+            
+            // 모달 표시
+            document.getElementById('passwordModal').classList.add('show');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').focus();
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function closeModal() {
+            document.getElementById('passwordModal').classList.remove('show');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function checkPassword() {
+            const inputPassword = document.getElementById('passwordInput').value;
+            
+            if (inputPassword === CORRECT_PASSWORD) {
+                // 인증 성공
+                const now = new Date().getTime();
+                const expiryTime = now + AUTH_DURATION;
+                
+                // localStorage에 인증 정보 저장
+                localStorage.setItem(AUTH_KEY, 'true');
+                localStorage.setItem(AUTH_EXPIRY_KEY, expiryTime.toString());
+                
+                document.getElementById('authStatus').classList.add('show');
+                closeModal();
+                
+                // 대시보드로 이동
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 300);
+            } else {
+                // 인증 실패
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+                
+                // 입력 필드 흔들기 효과
+                const input = document.getElementById('passwordInput');
+                input.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    input.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        function logout() {
+            clearAuth();
+            document.getElementById('authStatus').classList.remove('show');
+            alert('로그아웃 되었습니다.');
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem(AUTH_KEY);
+            localStorage.removeItem(AUTH_EXPIRY_KEY);
+        }
+        
+        // 흔들기 애니메이션 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('passwordModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+    </script>
 </body>
 </html>
