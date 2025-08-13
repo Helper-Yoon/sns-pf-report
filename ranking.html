@@ -336,47 +336,182 @@
         마지막 업데이트: -
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase 설정
-        const SUPABASE_URL = 'https://bhtqjipygkawoyieidgp.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
-        
-        // Supabase 클라이언트 초기화
-        let supabase = null;
+        // 페이지 로드 대기
+        window.addEventListener('DOMContentLoaded', async function() {
+            // Supabase 설정
+            const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
+            
+            // Supabase 클라이언트 초기화 (실적 입력 페이지와 완전히 동일)
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            
+            let categories = []; // 동적으로 로드될 카테고리들
+            let metricToDb = {}; // 메트릭 이름과 DB 컬럼 매핑
         
         // 페이지 로드 시 실행
-        window.onload = async function() {
+        window.addEventListener('DOMContentLoaded', async function() {
+            console.log('페이지 로드 완료');
+            
             // 현재 날짜 설정
             setCurrentDate();
             
-            // Supabase 클라이언트 생성
+            // 바로 기본값으로 시작
+            categories = [
+                { key: 'db', name: 'DB', icon: '💾' },
+                { key: 'new_requests', name: '신규신청', icon: '📝' },
+                { key: 'consultations', name: '상담', icon: '💬' },
+                { key: 'premium_conversions', name: '유료전환', icon: '💳' },
+                { key: 'high_value', name: '고액결제', icon: '💎' },
+                { key: 'reservations', name: '사전예약', icon: '📅' },
+                { key: 'revisits', name: '재방고객', icon: '🔄' },
+                { key: 'no_shows', name: '노쇼', icon: '❌' }
+            ];
+            
+            // 바로 랭킹 로드 시도
+            await loadRankings();
+            
+            // 그 다음 설정을 로드해서 업데이트 시도
             try {
-                // 클라이언트 초기화를 안전하게 처리
-                if (window.supabase && window.supabase.createClient) {
-                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                        auth: {
-                            persistSession: false,
-                            autoRefreshToken: false
-                        }
-                    });
-                    
-                    // 초기 로드
-                    await loadRankings();
-                    
-                    // 30초마다 자동 새로고침
-                    setInterval(loadRankings, 30000);
-                } else {
-                    console.error('Supabase 라이브러리가 로드되지 않았습니다.');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
-                }
+                await loadSettings();
+                await loadRankings(); // 설정 로드 후 다시 로드
             } catch (error) {
-                console.error('Supabase 초기화 오류:', error);
-                showSetupNotice();
+                console.log('설정 로드 실패, 기본값 사용:', error.message);
             }
-        };
+            
+            // 30초마다 자동 새로고침
+            setInterval(loadRankings, 30000);
+        });
+        
+        // 설정 로드 함수
+        async function loadSettings() {
+            try {
+                console.log('설정 로드 시작...');
+                
+                // 메트릭 정보 로드
+                const { data: metricsData, error: metricsError } = await supabaseClient
+                    .from('config')
+                    .select('*')
+                    .eq('type', 'metrics')
+                    .single();
+
+                console.log('메트릭 원본 데이터:', metricsData);
+                if (metricsError) {
+                    console.error('메트릭 에러 상세:', metricsError.message, metricsError);
+                }
+
+                if (metricsData) {
+                    // 메트릭 정보를 categories 배열로 변환
+                    categories = [];
+                    metricToDb = {};
+                    
+                    // data.data.items 구조를 확인
+                    let items = [];
+                    if (metricsData.data && metricsData.data.items) {
+                        items = metricsData.data.items;
+                    } else if (metricsData.items) {
+                        items = metricsData.items;
+                    } else if (Array.isArray(metricsData.data)) {
+                        items = metricsData.data;
+                    }
+                    
+                    console.log('파싱된 items:', items);
+                    
+                    if (items.length > 0) {
+                        // 기본 아이콘 매핑 (실제 메트릭 이름에 맞게 조정)
+                        const iconMap = {
+                            'DB': '💾',
+                            '신규신청': '📝',
+                            '상담': '💬',
+                            '유료전환': '💳',
+                            '고액결제': '💎',
+                            '사전예약': '📅',
+                            '재방고객': '🔄',
+                            '노쇼': '❌',
+                            '콜': '📞',
+                            '미팅': '🤝',
+                            '계약': '📑',
+                            '방문': '🚶',
+                            '전화': '☎️',
+                            '문의': '❓',
+                            '등록': '✅'
+                        };
+                        
+                        items.forEach(item => {
+                            categories.push({
+                                key: item.db_column,
+                                name: item.name,
+                                icon: iconMap[item.name] || '📊'
+                            });
+                            
+                            metricToDb[item.name] = item.db_column;
+                        });
+                    }
+                } else {
+                    console.log('메트릭 데이터가 없습니다');
+                }
+
+                // visible_metrics 설정 로드
+                const { data: settingsData, error: settingsError } = await supabaseClient
+                    .from('config')
+                    .select('*')
+                    .eq('type', 'settings')
+                    .single();
+
+                console.log('설정 원본 데이터:', settingsData);
+                if (settingsError) {
+                    console.error('설정 에러 상세:', settingsError.message, settingsError);
+                }
+
+                if (settingsData) {
+                    let visibleMetrics = [];
+                    if (settingsData.data && settingsData.data.visible_metrics) {
+                        visibleMetrics = settingsData.data.visible_metrics;
+                    } else if (settingsData.visible_metrics) {
+                        visibleMetrics = settingsData.visible_metrics;
+                    }
+                    
+                    console.log('표시할 메트릭:', visibleMetrics);
+                    
+                    if (visibleMetrics.length > 0) {
+                        // visible_metrics에 있는 항목만 필터링
+                        categories = categories.filter(cat => visibleMetrics.includes(cat.name));
+                    }
+                }
+
+                console.log('최종 카테고리:', categories);
+                
+                // 카테고리가 비어있으면 기본값 사용
+                if (categories.length === 0) {
+                    console.log('카테고리가 비어있어 기본값 사용');
+                    categories = [
+                        { key: 'db', name: 'DB', icon: '💾' },
+                        { key: 'new_requests', name: '신규신청', icon: '📝' },
+                        { key: 'consultations', name: '상담', icon: '💬' },
+                        { key: 'premium_conversions', name: '유료전환', icon: '💳' },
+                        { key: 'high_value', name: '고액결제', icon: '💎' },
+                        { key: 'reservations', name: '사전예약', icon: '📅' },
+                        { key: 'revisits', name: '재방고객', icon: '🔄' },
+                        { key: 'no_shows', name: '노쇼', icon: '❌' }
+                    ];
+                }
+                
+            } catch (error) {
+                console.error('설정 로드 중 오류:', error.message || error);
+                // 오류가 있어도 기본 카테고리로 진행
+                categories = [
+                    { key: 'db', name: 'DB', icon: '💾' },
+                    { key: 'new_requests', name: '신규신청', icon: '📝' },
+                    { key: 'consultations', name: '상담', icon: '💬' },
+                    { key: 'premium_conversions', name: '유료전환', icon: '💳' },
+                    { key: 'high_value', name: '고액결제', icon: '💎' },
+                    { key: 'reservations', name: '사전예약', icon: '📅' },
+                    { key: 'revisits', name: '재방고객', icon: '🔄' },
+                    { key: 'no_shows', name: '노쇼', icon: '❌' }
+                ];
+            }
+        }
         
         function showSetupNotice() {
             const container = document.getElementById('rankingsContainer');
@@ -398,8 +533,8 @@
         }
         
         async function loadRankings() {
-            if (!supabase) {
-                console.error('Supabase가 초기화되지 않았습니다.');
+            if (categories.length === 0) {
+                console.log('카테고리가 아직 로드되지 않았습니다. 기다리는 중...');
                 return;
             }
             
@@ -409,35 +544,20 @@
             try {
                 // 오늘 날짜 가져오기
                 const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
+                const todayStr = today.toISOString().split('T')[0];
                 
-                // 오늘 데이터 가져오기
-                const { data, error } = await supabase
-                    .from('performances')
+                // 오늘 데이터 가져오기 (performance 테이블 사용)
+                const { data, error } = await supabaseClient
+                    .from('performance')
                     .select('*')
-                    .gte('created_at', today.toISOString())
-                    .lt('created_at', tomorrow.toISOString());
+                    .eq('date', todayStr);
                 
                 if (error) {
-                    console.error('데이터 로드 오류:', error);
+                    console.error('데이터 로드 오류 상세:', error.message, error);
                     throw error;
                 }
                 
                 console.log('로드된 데이터:', data); // 디버깅용
-                
-                // 항목별로 데이터 집계
-                const categories = [
-                    { key: 'db', name: 'DB', icon: '💾' },
-                    { key: 'new_requests', name: '신규신청', icon: '📝' },
-                    { key: 'consultations', name: '상담', icon: '💬' },
-                    { key: 'premium_conversions', name: '유료전환', icon: '💳' },
-                    { key: 'high_value', name: '고액결제', icon: '💎' },
-                    { key: 'reservations', name: '사전예약', icon: '📅' },
-                    { key: 'revisits', name: '재방고객', icon: '🔄' },
-                    { key: 'no_shows', name: '노쇼', icon: '❌' }
-                ];
                 
                 let html = '';
                 
@@ -448,10 +568,10 @@
                     // 상담사별로 집계
                     if (data && data.length > 0) {
                         data.forEach(record => {
-                            const counselorKey = `${record.counselor_name}_${record.team}`;
+                            const counselorKey = `${record.name}_${record.team}`;
                             if (!counselorTotals[counselorKey]) {
                                 counselorTotals[counselorKey] = {
-                                    name: record.counselor_name,
+                                    name: record.name,
                                     team: record.team,
                                     value: 0
                                 };
@@ -514,14 +634,14 @@
                 document.getElementById('updateTime').textContent = `마지막 업데이트: ${timeStr}`;
                 
             } catch (error) {
-                console.error('Error loading rankings:', error);
+                console.error('Error loading rankings:', error.message || error);
                 container.innerHTML = `
                     <div class="setup-notice">
                         <h2>❌ 데이터 로드 오류</h2>
                         <p>랭킹 데이터를 불러오는 중 오류가 발생했습니다.</p>
                         <p style="color: #ff4444; margin-top: 15px;">
                             <strong>오류 메시지:</strong><br>
-                            ${error.message}
+                            ${error.message || '알 수 없는 오류'}
                         </p>
                         <p style="margin-top: 20px; font-size: 12px;">
                             잠시 후 다시 시도하거나 새로고침 버튼을 눌러주세요.
