@@ -303,34 +303,43 @@
         const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
         
-        // 카테고리 정의
+        // 카테고리 정의 - 실제 항목으로 변경
         const categories = [
-            { key: 'db', name: 'DB', icon: '💾' },
-            { key: 'new_requests', name: '신규신청', icon: '📝' },
-            { key: 'consultations', name: '상담', icon: '💬' },
-            { key: 'premium_conversions', name: '유료전환', icon: '💳' },
-            { key: 'high_value', name: '고액결제', icon: '💎' },
-            { key: 'reservations', name: '사전예약', icon: '📅' },
-            { key: 'revisits', name: '재방고객', icon: '🔄' },
-            { key: 'no_shows', name: '노쇼', icon: '❌' }
+            { key: 'usim_count', name: '유심갯수', icon: '📱' },
+            { key: 'sk_internet', name: 'SK 인터넷', icon: '🌐' },
+            { key: 'premium', name: '프리미엄', icon: '⭐' },
+            { key: 'essence', name: '에센스', icon: '💎' },
+            { key: 'iot', name: 'IOT', icon: '📡' },
+            { key: 'one_g', name: '1G', icon: '📶' },
+            { key: 'sk_magic', name: 'SK매직', icon: '✨' },
+            { key: 'appliance', name: '가전제품', icon: '🏠' },
+            { key: 'card', name: '제휴카드', icon: '💳' }
         ];
         
-        // 테스트 데이터 생성 함수 (폴백용)
+        // 테스트 데이터 생성 함수 (실제 팀과 이름 사용)
         function generateTestData() {
-            const names = ['김철수', '이영희', '박민수', '정수진', '강민호'];
-            const teams = ['A팀', 'B팀', 'C팀'];
+            // 실제 팀과 이름으로 변경하세요
+            const names = ['김철수', '이영희', '박민수', '정수진', '강민호', '최지훈', '윤서연'];
+            const teams = ['1팀', '2팀', '3팀', '4팀'];
             const data = [];
             
-            for (let i = 0; i < 10; i++) {
+            // 더 현실적인 데이터 생성
+            for (let i = 0; i < 15; i++) {
                 const record = {
                     name: names[Math.floor(Math.random() * names.length)],
                     team: teams[Math.floor(Math.random() * teams.length)],
-                    date: new Date().toISOString().split('T')[0]
+                    date: new Date().toISOString().split('T')[0],
+                    // 새로운 카테고리에 맞게 필드 추가
+                    usim_count: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    sk_internet: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    premium: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    essence: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    iot: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    one_g: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    sk_magic: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    appliance: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
+                    card: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0
                 };
-                
-                categories.forEach(cat => {
-                    record[cat.key] = Math.floor(Math.random() * 10);
-                });
                 
                 data.push(record);
             }
