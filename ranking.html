@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS센터 - 당일 실적 랭킹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .date-info {
+            color: #8a8a8a;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: #1E6FFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .nav-btn:hover {
+            background: #1859d6;
+            transform: translateY(-2px);
+        }
+        
+        .rankings-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .ranking-card {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #2a2a2a;
+            transition: all 0.3s;
+        }
+        
+        .ranking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(30,111,255,0.2);
+            border-color: #1E6FFF;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2a2a2a;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1E6FFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-icon {
+            font-size: 20px;
+        }
+        
+        .podium {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rank-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .rank-item.gold {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+        }
+        
+        .rank-item.silver {
+            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+            color: #000;
+        }
+        
+        .rank-item.bronze {
+            background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+            color: #fff;
+        }
+        
+        .rank-number {
+            font-size: 24px;
+            font-weight: bold;
+            width: 40px;
+            text-align: center;
+            margin-right: 15px;
+        }
+        
+        .rank-medal {
+            font-size: 28px;
+            margin-right: 15px;
+        }
+        
+        .rank-info {
+            flex: 1;
+        }
+        
+        .rank-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+        
+        .rank-team {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .rank-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-left: auto;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: #8a8a8a;
+            padding: 40px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: #1E6FFF;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(30,111,255,0.5);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .refresh-btn:hover {
+            transform: rotate(180deg) scale(1.1);
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #8a8a8a;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #2a2a2a;
+            border-top: 3px solid #1E6FFF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .update-time {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: #1a1a1a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #8a8a8a;
+            border: 1px solid #2a2a2a;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .rankings-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-buttons {
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .update-time {
+                position: static;
+                margin-top: 20px;
+                text-align: center;
+            }
+            
+            .refresh-btn {
+                bottom: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🏆 당일 실적 랭킹</h1>
+            <div class="date-info" id="currentDate"></div>
+        </div>
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="nav-btn">
+                <span>📊</span>
+                <span>대시보드</span>
+            </a>
+            <a href="index.html" class="nav-btn">
+                <span>🏠</span>
+                <span>메인으로</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="rankings-container" id="rankingsContainer">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+    
+    <button class="refresh-btn" onclick="loadRankings()" title="새로고침">
+        🔄
+    </button>
+    
+    <div class="update-time" id="updateTime">
+        마지막 업데이트: -
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase 설정
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // 페이지 로드 시 인증 확인
+        window.onload = function() {
+            // 인증 확인
+            const authTime = localStorage.getItem('sns_admin_auth_expiry');
+            
+            if (!authTime) {
+                alert('관리자 인증이 필요합니다.');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const now = new Date().getTime();
+            const expiryTime = parseInt(authTime);
+            
+            if (now >= expiryTime) {
+                alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+                localStorage.removeItem('sns_admin_auth');
+                localStorage.removeItem('sns_admin_auth_expiry');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // 현재 날짜 설정
+            setCurrentDate();
+            
+            // 랭킹 데이터 로드
+            loadRankings();
+            
+            // 30초마다 자동 새로고침
+            setInterval(loadRankings, 30000);
+        };
+        
+        function setCurrentDate() {
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+            document.getElementById('currentDate').textContent = dateStr;
+        }
+        
+        async function loadRankings() {
+            const container = document.getElementById('rankingsContainer');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+            
+            try {
+                // 오늘 날짜 가져오기
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                // 오늘 데이터 가져오기
+                const { data, error } = await supabase
+                    .from('performances')
+                    .select('*')
+                    .gte('created_at', today.toISOString())
+                    .lt('created_at', tomorrow.toISOString());
+                
+                if (error) throw error;
+                
+                // 항목별로 데이터 집계
+                const categories = [
+                    { key: 'db', name: 'DB', icon: '💾' },
+                    { key: 'new_requests', name: '신규신청', icon: '📝' },
+                    { key: 'consultations', name: '상담', icon: '💬' },
+                    { key: 'premium_conversions', name: '유료전환', icon: '💳' },
+                    { key: 'high_value', name: '고액결제', icon: '💎' },
+                    { key: 'reservations', name: '사전예약', icon: '📅' },
+                    { key: 'revisits', name: '재방고객', icon: '🔄' },
+                    { key: 'no_shows', name: '노쇼', icon: '❌' }
+                ];
+                
+                let html = '';
+                
+                // 각 카테고리별로 랭킹 생성
+                categories.forEach(category => {
+                    const counselorTotals = {};
+                    
+                    // 상담사별로 집계
+                    data.forEach(record => {
+                        const counselorKey = `${record.counselor_name}_${record.team}`;
+                        if (!counselorTotals[counselorKey]) {
+                            counselorTotals[counselorKey] = {
+                                name: record.counselor_name,
+                                team: record.team,
+                                value: 0
+                            };
+                        }
+                        counselorTotals[counselorKey].value += record[category.key] || 0;
+                    });
+                    
+                    // 0보다 큰 값만 필터링하고 정렬하여 TOP 3 추출
+                    const sorted = Object.values(counselorTotals)
+                        .filter(item => item.value > 0)  // 1 이상인 데이터만
+                        .sort((a, b) => b.value - a.value)
+                        .slice(0, 3);
+                    
+                    // 랭킹 카드 HTML 생성
+                    html += `
+                        <div class="ranking-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <span class="card-icon">${category.icon}</span>
+                                    <span>${category.name}</span>
+                                </div>
+                            </div>
+                            <div class="podium">
+                    `;
+                    
+                    if (sorted.length === 0) {
+                        // 데이터가 없을 때
+                        html += '<div class="no-data">아직 아무도 없어요...</div>';
+                    } else {
+                        // 랭킹 아이템 생성
+                        sorted.forEach((item, index) => {
+                            const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze';
+                            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                            
+                            html += `
+                                <div class="rank-item ${rankClass}">
+                                    <span class="rank-medal">${medal}</span>
+                                    <div class="rank-info">
+                                        <div class="rank-name">${item.name}</div>
+                                        <div class="rank-team">${item.team}</div>
+                                    </div>
+                                    <div class="rank-value">${item.value}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+                // 업데이트 시간 표시
+                const now = new Date();
+                const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+                document.getElementById('updateTime').textContent = `마지막 업데이트: ${timeStr}`;
+                
+            } catch (error) {
+                console.error('Error loading rankings:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; color: #ff4444; padding: 40px;">
+                        데이터 로드 중 오류가 발생했습니다.<br>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
