@@ -286,14 +286,14 @@
                 <span>📝</span>
                 <span>상담사 실적입력</span>
             </a>
-            <button class="btn btn-dashboard" onclick="showPasswordModal('dashboard')">
+            <button class="btn btn-dashboard" onclick="showPasswordModal()">
                 <span>📊</span>
                 <span>관리자 대시보드</span>
             </button>
-            <button class="btn btn-ranking" onclick="showPasswordModal('ranking')">
+            <a href="ranking.html" class="btn btn-ranking">
                 <span>🏆</span>
                 <span>실시간 랭킹</span>
-            </button>
+            </a>
         </div>
         
         <div class="status">
@@ -331,7 +331,6 @@
         const AUTH_KEY = 'sns_admin_auth';
         const AUTH_EXPIRY_KEY = 'sns_admin_auth_expiry';
         const AUTH_DURATION = 24 * 60 * 60 * 1000; // 24시간
-        let targetPage = 'dashboard'; // 이동할 페이지 저장
         
         // 페이지 로드 시 실행
         window.onload = function() {
@@ -355,9 +354,7 @@
             }
         }
         
-        function showPasswordModal(page) {
-            targetPage = page; // 대상 페이지 저장
-            
+        function showPasswordModal() {
             // 이미 인증되었는지 확인
             const authTime = localStorage.getItem(AUTH_EXPIRY_KEY);
             
@@ -366,8 +363,8 @@
                 const expiryTime = parseInt(authTime);
                 
                 if (now < expiryTime) {
-                    // 인증 유효하면 바로 해당 페이지로 이동
-                    window.location.href = `${targetPage}.html`;
+                    // 인증 유효하면 바로 대시보드로 이동
+                    window.location.href = 'dashboard.html';
                     return;
                 } else {
                     // 인증 만료되었으면 삭제
@@ -403,9 +400,9 @@
                 document.getElementById('authStatus').classList.add('show');
                 closeModal();
                 
-                // 대상 페이지로 이동
+                // 대시보드로 이동
                 setTimeout(() => {
-                    window.location.href = `${targetPage}.html`;
+                    window.location.href = 'dashboard.html';
                 }, 300);
             } else {
                 // 인증 실패
