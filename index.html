@@ -69,7 +69,13 @@
         }
         
         .btn-dashboard {
-            background: #1E6FFF;
+            background: #FF6B6B;
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.5); }
         }
         
         .btn-ranking {
@@ -86,7 +92,7 @@
         }
         
         .btn-dashboard:hover {
-            background: #1859d6;
+            background: #FF5252;
         }
         
         .btn-ranking:hover {
@@ -111,6 +117,41 @@
             border-radius: 50%;
             margin-right: 5px;
             animation: pulse 2s infinite;
+        }
+        
+        /* Settings Button */
+        .settings-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 50%;
+            color: #8a8a8a;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .settings-btn:hover {
+            background: #3a3a3a;
+            transform: rotate(90deg);
+            color: #ffffff;
+        }
+        
+        .settings-btn.authenticated {
+            background: #FF6B6B;
+            color: white;
+            animation: settingsGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes settingsGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 107, 107, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(255, 107, 107, 0.8); }
         }
         
         /* Modal styles */
@@ -207,32 +248,62 @@
             display: none;
         }
         
-        .auth-status {
+        .auth-info {
+            text-align: center;
             color: #4CAF50;
-            font-size: 12px;
-            margin-top: 5px;
+            font-size: 14px;
+            margin-bottom: 20px;
             display: none;
         }
         
-        .auth-status.show {
+        .auth-info.show {
             display: block;
         }
         
         .logout-btn {
-            margin-top: 5px;
-            padding: 5px 10px;
-            font-size: 11px;
-            background: #2a2a2a;
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            background: #ff4444;
             border: none;
-            border-radius: 5px;
-            color: #8a8a8a;
+            border-radius: 10px;
+            color: white;
             cursor: pointer;
             transition: all 0.3s;
+            font-weight: bold;
+            margin-top: 10px;
         }
         
         .logout-btn:hover {
-            background: #3a3a3a;
-            color: #ffffff;
+            background: #ff3333;
+        }
+        
+        .admin-btn-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .admin-btn-container.show {
+            display: block;
+        }
+        
+        .tooltip {
+            position: fixed;
+            bottom: 90px;
+            right: 30px;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
         }
         
         @keyframes pulse {
@@ -256,6 +327,12 @@
             }
         }
         
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
         @media (max-width: 480px) {
             .container {
                 padding: 40px 20px;
@@ -273,6 +350,14 @@
             .modal-content {
                 padding: 30px 20px;
             }
+            
+            .settings-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
         }
     </style>
 </head>
@@ -286,43 +371,61 @@
                 <span>📝</span>
                 <span>상담사 실적입력</span>
             </a>
-            <button class="btn btn-dashboard" onclick="showPasswordModal()">
-                <span>📊</span>
-                <span>관리자 대시보드</span>
-            </button>
             <a href="ranking.html" class="btn btn-ranking">
                 <span>🏆</span>
                 <span>실시간 랭킹</span>
             </a>
+            
+            <!-- 관리자 인증 후에만 표시되는 대시보드 버튼 -->
+            <div id="adminBtnContainer" class="admin-btn-container">
+                <a href="dashboard.html" class="btn btn-dashboard">
+                    <span>📊</span>
+                    <span>관리자 대시보드</span>
+                </a>
+            </div>
         </div>
         
         <div class="status">
             <span class="status-dot"></span>
             시스템 정상 작동중
-            <div class="auth-status" id="authStatus">
-                🔓 관리자 인증완료
-                <button class="logout-btn" onclick="logout()">로그아웃</button>
-            </div>
         </div>
     </div>
+    
+    <!-- Settings Button -->
+    <button class="settings-btn" id="settingsBtn" onclick="showPasswordModal()" title="관리자 설정">
+        ⚙️
+    </button>
+    <div class="tooltip" id="tooltip">관리자 설정</div>
     
     <!-- Password Modal -->
     <div id="passwordModal" class="modal">
         <div class="modal-content">
             <h2 class="modal-header">🔐 관리자 인증</h2>
-            <input 
-                type="password" 
-                id="passwordInput" 
-                class="password-input" 
-                placeholder="비밀번호 입력"
-                maxlength="4"
-                onkeypress="if(event.keyCode==13) checkPassword()"
-            >
-            <div class="error-message" id="errorMessage">비밀번호가 일치하지 않습니다</div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">취소</button>
-                <button class="modal-btn modal-btn-confirm" onclick="checkPassword()">확인</button>
+            
+            <div id="authInfo" class="auth-info">
+                ✅ 관리자 인증 완료
+                <br>대시보드 접근 권한이 활성화되었습니다.
             </div>
+            
+            <div id="loginForm">
+                <input 
+                    type="password" 
+                    id="passwordInput" 
+                    class="password-input" 
+                    placeholder="비밀번호 입력"
+                    maxlength="4"
+                    onkeypress="if(event.keyCode==13) checkPassword()"
+                >
+                <div class="error-message" id="errorMessage">비밀번호가 일치하지 않습니다</div>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">취소</button>
+                    <button class="modal-btn modal-btn-confirm" onclick="checkPassword()">확인</button>
+                </div>
+            </div>
+            
+            <button id="logoutBtn" class="logout-btn" style="display:none;" onclick="logout()">
+                로그아웃
+            </button>
         </div>
     </div>
     
@@ -335,7 +438,21 @@
         // 페이지 로드 시 실행
         window.onload = function() {
             checkAuthStatus();
+            setupTooltip();
         };
+        
+        function setupTooltip() {
+            const settingsBtn = document.getElementById('settingsBtn');
+            const tooltip = document.getElementById('tooltip');
+            
+            settingsBtn.addEventListener('mouseenter', () => {
+                tooltip.classList.add('show');
+            });
+            
+            settingsBtn.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('show');
+            });
+        }
         
         function checkAuthStatus() {
             const authTime = localStorage.getItem(AUTH_EXPIRY_KEY);
@@ -346,12 +463,21 @@
                 
                 if (now < expiryTime) {
                     // 인증 유효
-                    document.getElementById('authStatus').classList.add('show');
+                    showAdminButton();
+                    document.getElementById('settingsBtn').classList.add('authenticated');
                 } else {
                     // 인증 만료
                     clearAuth();
                 }
             }
+        }
+        
+        function showAdminButton() {
+            document.getElementById('adminBtnContainer').classList.add('show');
+        }
+        
+        function hideAdminButton() {
+            document.getElementById('adminBtnContainer').classList.remove('show');
         }
         
         function showPasswordModal() {
@@ -363,20 +489,32 @@
                 const expiryTime = parseInt(authTime);
                 
                 if (now < expiryTime) {
-                    // 인증 유효하면 바로 대시보드로 이동
-                    window.location.href = 'dashboard.html';
-                    return;
+                    // 인증 유효하면 로그아웃 옵션 표시
+                    document.getElementById('authInfo').classList.add('show');
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('logoutBtn').style.display = 'block';
                 } else {
-                    // 인증 만료되었으면 삭제
+                    // 인증 만료
                     clearAuth();
+                    resetModalToLogin();
                 }
+            } else {
+                resetModalToLogin();
             }
             
             // 모달 표시
             document.getElementById('passwordModal').classList.add('show');
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('passwordInput').focus();
+            if (document.getElementById('loginForm').style.display !== 'none') {
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
             document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function resetModalToLogin() {
+            document.getElementById('authInfo').classList.remove('show');
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'none';
         }
         
         function closeModal() {
@@ -397,13 +535,19 @@
                 localStorage.setItem(AUTH_KEY, 'true');
                 localStorage.setItem(AUTH_EXPIRY_KEY, expiryTime.toString());
                 
-                document.getElementById('authStatus').classList.add('show');
-                closeModal();
+                // UI 업데이트
+                showAdminButton();
+                document.getElementById('settingsBtn').classList.add('authenticated');
                 
-                // 대시보드로 이동
+                // 모달 내용 변경
+                document.getElementById('authInfo').classList.add('show');
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'block';
+                
+                // 2초 후 모달 자동 닫기
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 300);
+                    closeModal();
+                }, 2000);
             } else {
                 // 인증 실패
                 document.getElementById('errorMessage').style.display = 'block';
@@ -420,7 +564,9 @@
         
         function logout() {
             clearAuth();
-            document.getElementById('authStatus').classList.remove('show');
+            hideAdminButton();
+            document.getElementById('settingsBtn').classList.remove('authenticated');
+            closeModal();
             alert('로그아웃 되었습니다.');
         }
         
@@ -428,17 +574,6 @@
             localStorage.removeItem(AUTH_KEY);
             localStorage.removeItem(AUTH_EXPIRY_KEY);
         }
-        
-        // 흔들기 애니메이션 추가
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-                20%, 40%, 60%, 80% { transform: translateX(5px); }
-            }
-        `;
-        document.head.appendChild(style);
         
         // ESC 키로 모달 닫기
         document.addEventListener('keydown', function(event) {
