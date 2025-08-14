@@ -1439,9 +1439,9 @@
                 const ctx = canvas.getContext('2d');
                 
                 // 크기 계산
-                const colWidths = [150, 100, 100, ...visibleMetrics.map(() => 85)];
+                const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
                 const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
-                const rowHeight = 30; // 높이 증가
+                const rowHeight = 35; // 높이 더 증가
                 let totalRows = 4; // 제목 + 헤더
                 Object.values(teams).forEach(team => {
                     totalRows += team.members.length + 1; // 멤버 + 팀 총합
@@ -1449,28 +1449,28 @@
                 totalRows += 4; // 센터총합, 일목표, 달성, 여백
                 
                 canvas.width = totalWidth;
-                canvas.height = totalRows * rowHeight + 100;
+                canvas.height = totalRows * rowHeight + 120;
                 
                 // 배경
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 // 폰트 설정
-                ctx.font = '11px Malgun Gothic';
+                ctx.font = '13px Malgun Gothic';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
-                let y = 25;
+                let y = 30;
                 const xStart = 40;
                 
                 // 제목
-                ctx.font = 'bold 16px Malgun Gothic';
+                ctx.font = 'bold 20px Malgun Gothic';
                 ctx.fillStyle = 'black';
                 ctx.fillText(`SNS센터 실적보고 - ${selectedDate}`, totalWidth / 2, y);
-                y += 45;
+                y += 50;
                 
                 // 헤더
-                ctx.font = '11px Malgun Gothic';
+                ctx.font = 'bold 14px Malgun Gothic';
                 const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
                 let x = xStart;
                 headers.forEach((header, i) => {
@@ -1484,7 +1484,7 @@
                     
                     // 텍스트
                     ctx.fillStyle = 'black';
-                    ctx.font = 'bold 11px Malgun Gothic';
+                    ctx.font = 'bold 14px Malgun Gothic';
                     ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
                     x += colWidths[i];
                 });
@@ -1524,14 +1524,14 @@
                             
                             // 텍스트
                             ctx.fillStyle = 'black';
-                            ctx.font = 'bold 11px Malgun Gothic';
+                            ctx.font = 'bold 13px Malgun Gothic';
                             const teamText = teamName === '5파트' 
                                 ? `의정부SNS센터` 
                                 : `SNS센터`;
-                            ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 22);
+                            ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
                             ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
-                            ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 22);
-                            ctx.font = '11px Malgun Gothic';
+                            ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
+                            ctx.font = '13px Malgun Gothic';
                         } else {
                             // 병합된 셀의 세로 선만 그리기
                             ctx.strokeStyle = 'black';
@@ -1548,16 +1548,16 @@
                         ctx.strokeStyle = 'black';
                         ctx.strokeRect(x, y, colWidths[1], rowHeight);
                         ctx.fillStyle = 'black';
-                        ctx.font = '11px Malgun Gothic';
+                        ctx.font = '13px Malgun Gothic';
                         
                         // 휴무 표시
                         if (isOff && !hasAnyData) {
-                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2 - 6);
-                            ctx.font = '9px Malgun Gothic';
-                            ctx.fillStyle = '#B71C1C';
-                            ctx.fillText('(휴무)', x + colWidths[1]/2, y + rowHeight/2 + 6);
-                            ctx.fillStyle = 'black';
+                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2 - 7);
                             ctx.font = '11px Malgun Gothic';
+                            ctx.fillStyle = '#B71C1C';
+                            ctx.fillText('(휴무)', x + colWidths[1]/2, y + rowHeight/2 + 8);
+                            ctx.fillStyle = 'black';
+                            ctx.font = '13px Malgun Gothic';
                         } else {
                             ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
                         }
@@ -1569,7 +1569,7 @@
                         ctx.strokeStyle = 'black';
                         ctx.strokeRect(x, y, colWidths[2], rowHeight);
                         ctx.fillStyle = 'black';
-                        ctx.font = '10px Malgun Gothic';
+                        ctx.font = '12px Malgun Gothic';
                         ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
                         x += colWidths[2];
                         
@@ -1586,7 +1586,7 @@
                                 ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                                 
                                 ctx.fillStyle = '#B71C1C';
-                                ctx.font = 'bold 11px Malgun Gothic';
+                                ctx.font = 'bold 13px Malgun Gothic';
                                 ctx.fillText('휴무', x + colWidths[3 + i]/2, y + rowHeight/2);
                             } else {
                                 // 데이터가 있거나 휴무가 아닌 경우 정상 표시
@@ -1596,12 +1596,12 @@
                                 ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                                 
                                 ctx.fillStyle = 'black';
-                                ctx.font = 'bold 13px Malgun Gothic';
+                                ctx.font = 'bold 16px Malgun Gothic';
                                 ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                             }
                             x += colWidths[3 + i];
                         });
-                        ctx.font = '11px Malgun Gothic';
+                        ctx.font = '13px Malgun Gothic';
                         
                         y += rowHeight;
                     });
@@ -1615,7 +1615,7 @@
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                     ctx.fillStyle = 'black';
-                    ctx.font = 'bold 12px Malgun Gothic';
+                    ctx.font = 'bold 14px Malgun Gothic';
                     ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
                     x += colWidths[0] + colWidths[1] + colWidths[2];
                     
@@ -1626,13 +1626,13 @@
                         ctx.strokeStyle = 'black';
                         ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                         ctx.fillStyle = 'black';
-                        ctx.font = 'bold 14px Malgun Gothic';
+                        ctx.font = 'bold 17px Malgun Gothic';
                         ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                         x += colWidths[3 + i];
                     });
-                    ctx.font = '11px Malgun Gothic';
+                    ctx.font = '13px Malgun Gothic';
                     
-                    y += rowHeight + 8;
+                    y += rowHeight + 10;
                 });
                 
                 // 전체 총합
@@ -1645,7 +1645,7 @@
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.fillStyle = 'black';
-                ctx.font = 'bold 12px Malgun Gothic';
+                ctx.font = 'bold 15px Malgun Gothic';
                 ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
                 x += colWidths[0] + colWidths[1] + colWidths[2];
                 
@@ -1655,12 +1655,12 @@
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.fillStyle = 'black';
-                    ctx.font = 'bold 14px Malgun Gothic';
+                    ctx.font = 'bold 18px Malgun Gothic';
                     ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                     x += colWidths[3 + i];
                 });
-                ctx.font = '11px Malgun Gothic';
-                y += rowHeight + 2;
+                ctx.font = '13px Malgun Gothic';
+                y += rowHeight + 3;
                 
                 // 일 목표
                 x = xStart;
@@ -1669,7 +1669,7 @@
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.fillStyle = 'black';
-                ctx.font = '12px Malgun Gothic';
+                ctx.font = 'bold 14px Malgun Gothic';
                 ctx.fillText('일 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
                 x += colWidths[0] + colWidths[1] + colWidths[2];
                 
@@ -1679,12 +1679,12 @@
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.fillStyle = 'black';
-                    ctx.font = 'bold 13px Malgun Gothic';
+                    ctx.font = 'bold 16px Malgun Gothic';
                     ctx.fillText((dailyTargets[metric] || 100).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                     x += colWidths[3 + i];
                 });
-                ctx.font = '11px Malgun Gothic';
-                y += rowHeight + 2;
+                ctx.font = '13px Malgun Gothic';
+                y += rowHeight + 3;
                 
                 // 달성
                 x = xStart;
@@ -1693,7 +1693,7 @@
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.fillStyle = 'black';
-                ctx.font = '12px Malgun Gothic';
+                ctx.font = 'bold 14px Malgun Gothic';
                 ctx.fillText('달성', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
                 x += colWidths[0] + colWidths[1] + colWidths[2];
                 
@@ -1706,7 +1706,7 @@
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.fillStyle = diff > 0 ? '#B71C1C' : '#1B5E20';
-                    ctx.font = 'bold 13px Malgun Gothic';
+                    ctx.font = 'bold 16px Malgun Gothic';
                     ctx.fillText(status, x + colWidths[3 + i]/2, y + rowHeight/2);
                     x += colWidths[3 + i];
                 });
