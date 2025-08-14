@@ -43,16 +43,6 @@
             margin-top: 5px;
         }
         
-        .period-info {
-            color: #FFD700;
-            font-size: 13px;
-            margin-top: 8px;
-            padding: 5px 10px;
-            background: rgba(255, 215, 0, 0.1);
-            border-radius: 5px;
-            display: inline-block;
-        }
-        
         .nav-buttons {
             display: flex;
             gap: 10px;
@@ -281,7 +271,6 @@
         <div>
             <h1>🏆 당일 실적 랭킹</h1>
             <div class="date-info" id="currentDate"></div>
-            <div class="period-info" id="periodInfo"></div>
         </div>
         <div class="nav-buttons">
             <a href="index.html" class="nav-btn">
@@ -328,14 +317,14 @@
             const now = new Date();
             const hours = now.getHours();
             
-            // 0시~11시59분까지는 전날 날짜 사용
-            if (hours < 12) {
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                return yesterday;
+            // 12시 이후는 다음날 날짜 사용 (내일 날짜의 랭킹을 미리 집계)
+            if (hours >= 12) {
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                return tomorrow;
             }
             
-            // 12시 이후는 당일 날짜 사용
+            // 0시~11시59분까지는 당일 날짜 사용
             return now;
         }
         
@@ -345,14 +334,12 @@
             const hours = now.getHours();
             
             let periodText = '';
-            if (hours < 12) {
-                // 0시~11시59분: 어제 12시 ~ 오늘 12시
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                periodText = `📊 집계 기간: 어제 12:00 ~ 오늘 12:00`;
-            } else {
+            if (hours >= 12) {
                 // 12시 이후: 오늘 12시 ~ 내일 12시
                 periodText = `📊 집계 기간: 오늘 12:00 ~ 내일 12:00`;
+            } else {
+                // 0시~11시59분: 어제 12시 ~ 오늘 12시
+                periodText = `📊 집계 기간: 어제 12:00 ~ 오늘 12:00`;
             }
             
             document.getElementById('periodInfo').textContent = periodText;
@@ -532,16 +519,17 @@
             // 바로 데이터 로드
             loadRankings();
             
-            // 초기화 타이머 시작
-            updateResetTimer();
-            setInterval(updateResetTimer, 1000);
-            
             // 30초마다 자동 새로고침
             setInterval(loadRankings, 30000);
             
             // 1분마다 날짜 확인 및 업데이트
             setInterval(() => {
                 setCurrentDate();
+                // 12시가 되면 자동 새로고침
+                const now = new Date();
+                if (now.getHours() === 12 && now.getMinutes() === 0 && now.getSeconds() < 2) {
+                    location.reload();
+                }
             }, 60000);
         });
     </script>
