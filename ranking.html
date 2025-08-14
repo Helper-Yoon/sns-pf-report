@@ -349,11 +349,6 @@
             // 1분마다 날짜 확인 및 업데이트
             setInterval(() => {
                 setCurrentDate();
-                // 12시가 되면 자동 새로고침
-                const now = new Date();
-                if (now.getHours() === 12 && now.getMinutes() === 0 && now.getSeconds() < 2) {
-                    location.reload();
-                }
             }, 60000);
         });
         function displayRankings(data) {
@@ -433,8 +428,8 @@
         
         // REST API로 데이터 가져오기
         async function fetchDataFromAPI() {
-            const effectiveDate = getEffectiveDate();
-            const dateStr = effectiveDate.toISOString().split('T')[0];
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
             const url = `${supabaseUrl}/rest/v1/performance?date=eq.${dateStr}`;
             
             console.log('조회 날짜:', dateStr);
@@ -459,8 +454,6 @@
                 const data = await response.json();
                 console.log('REST API 데이터:', data);
                 
-                // 12시 이후 데이터만 필터링 (만약 시간 정보가 있다면)
-                // 현재는 날짜만 저장되므로 전체 데이터 사용
                 return data;
                 
             } catch (error) {
