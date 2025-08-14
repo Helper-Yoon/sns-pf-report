@@ -9,7 +9,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -147,7 +146,6 @@
             font-weight: bold;
         }
 
-        /* 메트릭 색상 - 실적량에 따른 동적 색상 */
         .metric-level-0 { 
             background: #3a3a3a;
             color: #B0B0B0;
@@ -436,468 +434,14 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback, useRef } = React;
+        const { useState, useEffect, useCallback } = React;
 
         // Supabase 클라이언트 초기화
         const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 항목 편집 모달 컴포넌트
-        function MetricsEditModal({ show, onClose, allMetrics, visibleMetrics, metricToDb, onSave }) {
-            const [activeTab, setActiveTab] = useState('display');
-            const [localVisible, setLocalVisible] = useState([]);
-            const [localMetrics, setLocalMetrics] = useState([]);
-            const [localMapping, setLocalMapping] = useState({});
-            const [newMetricName, setNewMetricName] = useState('');
-            const [newMetricDb, setNewMetricDb] = useState('');
-
-            // 모달이 열릴 때마다 데이터 초기화
-            useEffect(() => {
-                if (show) {
-                    setLocalVisible([...visibleMetrics]);
-                    setLocalMetrics([...allMetrics]);
-                    setLocalMapping({...metricToDb});
-                    console.log('Modal initialized with:', {
-                        allMetrics: allMetrics,
-                        visibleMetrics: visibleMetrics
-                    });
-                }
-            }, [show, allMetrics, visibleMetrics, metricToDb]);
-
-            if (!show) return null;
-
-            const handleAddMetric = () => {
-                if (!newMetricName || !newMetricDb) {
-                    alert('모든 필드를 입력해주세요!');
-                    return;
-                }
-                
-                if (localMetrics.includes(newMetricName)) {
-                    alert('이미 존재하는 항목명입니다!');
-                    return;
-                }
-
-                if (!/^[a-z][a-z0-9_]*$/.test(newMetricDb)) {
-                    alert('DB 컬럼명은 영문 소문자로 시작하고 영문, 숫자, 언더스코어만 사용 가능합니다!');
-                    return;
-                }
-
-                setLocalMetrics([...localMetrics, newMetricName]);
-                setLocalMapping({...localMapping, [newMetricName]: newMetricDb});
-                setNewMetricName('');
-                setNewMetricDb('');
-            };
-
-            const handleDeleteMetric = (metric) => {
-                const defaultMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', 'SK매직', '가전제품', '제휴카드'];
-                if (defaultMetrics.includes(metric)) {
-                    alert('기본 항목은 삭제할 수 없습니다!');
-                    return;
-                }
-
-                if (confirm(`'${metric}' 항목을 삭제하시겠습니까?`)) {
-                    setLocalMetrics(localMetrics.filter(m => m !== metric));
-                    setLocalVisible(localVisible.filter(m => m !== metric));
-                    const newMapping = {...localMapping};
-                    delete newMapping[metric];
-                    setLocalMapping(newMapping);
-                }
-            };
-
-            const handleSave = async () => {
-                const metricsData = {
-                    items: localMetrics.map(metric => ({
-                        name: metric,
-                        db_column: localMapping[metric],
-                        is_default: true,
-                        previous_columns: localMapping[metric + '_history'] || []
-                    }))
-                };
-
-                await onSave(localMetrics, localVisible, localMapping, metricsData);
-                onClose();
-            };
-
-            return (
-                <div className="modal active">
-                    <div className="modal-content" style={{ maxWidth: '700px' }}>
-                        <span className="modal-close" onClick={onClose}>×</span>
-                        <div className="modal-header">항목 관리</div>
-                        
-                        <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                            <button 
-                                className={`btn ${activeTab === 'display' ? 'btn-primary' : ''}`}
-                                onClick={() => setActiveTab('display')}
-                                style={{ flex: 1 }}
-                            >
-                                표시 설정
-                            </button>
-                            <button 
-                                className={`btn ${activeTab === 'manage' ? 'btn-primary' : ''}`}
-                                onClick={() => setActiveTab('manage')}
-                                style={{ flex: 1 }}
-                            >
-                                항목 추가/삭제
-                            </button>
-                        </div>
-
-                        {activeTab === 'display' ? (
-                            <div>
-                                <p style={{ marginBottom: '15px' }}>대시보드에 표시할 항목을 선택하세요:</p>
-                                <div className="checkbox-group">
-                                    {localMetrics.map(metric => (
-                                        <label key={metric} className="checkbox-item">
-                                            <input 
-                                                type="checkbox"
-                                                checked={localVisible.includes(metric)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setLocalVisible([...localVisible, metric]);
-                                                    } else {
-                                                        setLocalVisible(localVisible.filter(m => m !== metric));
-                                                    }
-                                                }}
-                                            />
-                                            {metric}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                                <div style={{ marginBottom: '20px' }}>
-                                    <h4 style={{ marginBottom: '10px' }}>새 항목 추가</h4>
-                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                        <input 
-                                            type="text"
-                                            placeholder="한글명 (예: 새항목)"
-                                            value={newMetricName}
-                                            onChange={(e) => setNewMetricName(e.target.value)}
-                                            style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                        />
-                                        <input 
-                                            type="text"
-                                            placeholder="DB컬럼명 (예: new_item)"
-                                            value={newMetricDb}
-                                            onChange={(e) => setNewMetricDb(e.target.value)}
-                                            style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                        />
-                                        <button className="btn btn-success" onClick={handleAddMetric}>추가</button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4 style={{ marginBottom: '10px' }}>현재 항목 목록</h4>
-                                    <div style={{ maxHeight: '300px', overflowY: 'auto', background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
-                                        {localMetrics.map(metric => (
-                                            <div key={metric} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #404040' }}>
-                                                <span>{metric} → {localMapping[metric]}</span>
-                                                <button 
-                                                    className="btn btn-danger" 
-                                                    onClick={() => handleDeleteMetric(metric)}
-                                                    style={{ padding: '4px 10px', fontSize: '12px' }}
-                                                >
-                                                    삭제
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button className="btn btn-success" onClick={handleSave} style={{ marginRight: '10px' }}>
-                                저장
-                            </button>
-                            <button className="btn" onClick={onClose} style={{ background: '#666' }}>
-                                취소
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // 상담사 관리 모달 컴포넌트
-        function TeamManagementModal({ show, onClose, teams, onSave }) {
-            const [localTeams, setLocalTeams] = useState({});
-            const [selectedTeam, setSelectedTeam] = useState('');
-            const [editingMember, setEditingMember] = useState(null);
-            const [newMemberName, setNewMemberName] = useState('');
-            const [newMemberTenure, setNewMemberTenure] = useState('3개월미만');
-            const [offMembers, setOffMembers] = useState({}); // 휴무 상태 관리
-
-            // 모달이 열릴 때마다 데이터 초기화
-            useEffect(() => {
-                if (show && teams && Object.keys(teams).length > 0) {
-                    setLocalTeams(JSON.parse(JSON.stringify(teams)));
-                    setSelectedTeam(Object.keys(teams)[0] || '');
-                    // 휴무 상태 초기화
-                    const offStatus = {};
-                    Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                        teamInfo.members.forEach(member => {
-                            const key = `${teamName}_${member.name}`;
-                            offStatus[key] = member.isOff || false;
-                        });
-                    });
-                    setOffMembers(offStatus);
-                    console.log('Team modal initialized with:', teams);
-                }
-            }, [show, teams]);
-
-            if (!show) return null;
-
-            const handleAddMember = () => {
-                if (!newMemberName) {
-                    alert('이름을 입력해주세요!');
-                    return;
-                }
-
-                const newTeams = {...localTeams};
-                newTeams[selectedTeam].members.push({
-                    name: newMemberName,
-                    tenure: newMemberTenure,
-                    isOff: false
-                });
-                setLocalTeams(newTeams);
-                setNewMemberName('');
-                setNewMemberTenure('3개월미만');
-            };
-
-            const handleDeleteMember = (memberIndex) => {
-                if (confirm('정말 삭제하시겠습니까?')) {
-                    const newTeams = {...localTeams};
-                    const member = newTeams[selectedTeam].members[memberIndex];
-                    const key = `${selectedTeam}_${member.name}`;
-                    newTeams[selectedTeam].members.splice(memberIndex, 1);
-                    setLocalTeams(newTeams);
-                    
-                    const newOffMembers = {...offMembers};
-                    delete newOffMembers[key];
-                    setOffMembers(newOffMembers);
-                }
-            };
-
-            const handleEditMember = (memberIndex) => {
-                const member = localTeams[selectedTeam].members[memberIndex];
-                setEditingMember({ index: memberIndex, ...member });
-            };
-
-            const handleUpdateMember = () => {
-                const newTeams = {...localTeams};
-                newTeams[selectedTeam].members[editingMember.index] = {
-                    name: editingMember.name,
-                    tenure: editingMember.tenure,
-                    isOff: editingMember.isOff || false
-                };
-                setLocalTeams(newTeams);
-                
-                const key = `${selectedTeam}_${editingMember.name}`;
-                setOffMembers({...offMembers, [key]: editingMember.isOff || false});
-                
-                setEditingMember(null);
-            };
-
-            const toggleOffStatus = (memberIndex) => {
-                const member = localTeams[selectedTeam].members[memberIndex];
-                const key = `${selectedTeam}_${member.name}`;
-                const newOffStatus = !offMembers[key];
-                
-                setOffMembers({...offMembers, [key]: newOffStatus});
-                
-                const newTeams = {...localTeams};
-                newTeams[selectedTeam].members[memberIndex].isOff = newOffStatus;
-                setLocalTeams(newTeams);
-            };
-
-            const handleSave = async () => {
-                await onSave(localTeams);
-                onClose();
-            };
-
-            return (
-                <div className="modal active">
-                    <div className="modal-content" style={{ maxWidth: '900px' }}>
-                        <span className="modal-close" onClick={onClose}>×</span>
-                        <div className="modal-header">상담사 관리</div>
-                        
-                        <div style={{ display: 'flex', gap: '20px' }}>
-                            <div style={{ width: '200px' }}>
-                                <h4 style={{ marginBottom: '10px' }}>팀 선택</h4>
-                                <select 
-                                    value={selectedTeam} 
-                                    onChange={(e) => setSelectedTeam(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                >
-                                    {Object.keys(localTeams).map(team => (
-                                        <option key={team} value={team}>{team}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div style={{ flex: 1 }}>
-                                <h4 style={{ marginBottom: '10px' }}>팀원 목록</h4>
-                                
-                                {/* 새 멤버 추가 */}
-                                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                                    <input 
-                                        type="text"
-                                        placeholder="이름"
-                                        value={newMemberName}
-                                        onChange={(e) => setNewMemberName(e.target.value)}
-                                        style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                    />
-                                    <select 
-                                        value={newMemberTenure}
-                                        onChange={(e) => setNewMemberTenure(e.target.value)}
-                                        style={{ padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                    >
-                                        <option value="3개월미만">3개월미만</option>
-                                        <option value="3개월이상">3개월이상</option>
-                                        <option value="6개월이상">6개월이상</option>
-                                        <option value="9개월이상">9개월이상</option>
-                                        <option value="1년이상">1년이상</option>
-                                    </select>
-                                    <button className="btn btn-success" onClick={handleAddMember}>추가</button>
-                                </div>
-
-                                {/* 멤버 리스트 */}
-                                <div style={{ maxHeight: '400px', overflowY: 'auto', background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
-                                    {localTeams[selectedTeam]?.members.map((member, index) => {
-                                        const key = `${selectedTeam}_${member.name}`;
-                                        const isOff = offMembers[key] || false;
-                                        
-                                        return (
-                                            <div key={index} style={{ 
-                                                display: 'flex', 
-                                                justifyContent: 'space-between', 
-                                                alignItems: 'center', 
-                                                padding: '8px', 
-                                                borderBottom: '1px solid #404040',
-                                                background: isOff ? '#5f2a2a30' : 'transparent'
-                                            }}>
-                                                {editingMember?.index === index ? (
-                                                    <>
-                                                        <input 
-                                                            type="text"
-                                                            value={editingMember.name}
-                                                            onChange={(e) => setEditingMember({...editingMember, name: e.target.value})}
-                                                            style={{ flex: 1, marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
-                                                        />
-                                                        <select 
-                                                            value={editingMember.tenure}
-                                                            onChange={(e) => setEditingMember({...editingMember, tenure: e.target.value})}
-                                                            style={{ marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
-                                                        >
-                                                            <option value="3개월미만">3개월미만</option>
-                                                            <option value="3개월이상">3개월이상</option>
-                                                            <option value="6개월이상">6개월이상</option>
-                                                            <option value="9개월이상">9개월이상</option>
-                                                            <option value="1년이상">1년이상</option>
-                                                        </select>
-                                                        <button className="btn btn-success" onClick={handleUpdateMember} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>저장</button>
-                                                        <button className="btn" onClick={() => setEditingMember(null)} style={{ padding: '4px 10px', fontSize: '12px', background: '#666' }}>취소</button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span>
-                                                            {member.name} ({member.tenure})
-                                                            {isOff && <span style={{ color: '#FF6B6B', marginLeft: '10px', fontWeight: 'bold' }}>🔴 휴무</span>}
-                                                        </span>
-                                                        <div>
-                                                            <button 
-                                                                className={`btn ${isOff ? 'btn-success' : 'btn-warning'}`} 
-                                                                onClick={() => toggleOffStatus(index)} 
-                                                                style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}
-                                                            >
-                                                                {isOff ? '출근' : '휴무'}
-                                                            </button>
-                                                            <button className="btn btn-info" onClick={() => handleEditMember(index)} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>수정</button>
-                                                            <button className="btn btn-danger" onClick={() => handleDeleteMember(index)} style={{ padding: '4px 10px', fontSize: '12px' }}>삭제</button>
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button className="btn btn-success" onClick={handleSave} style={{ marginRight: '10px' }}>
-                                저장
-                            </button>
-                            <button className="btn" onClick={onClose} style={{ background: '#666' }}>
-                                취소
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // 목표 설정 모달 컴포넌트 추가
-        function TargetSettingModal({ show, onClose, visibleMetrics, dailyTargets, onSave }) {
-            const [localTargets, setLocalTargets] = useState({});
-
-            // 모달이 열릴 때마다 데이터 초기화
-            useEffect(() => {
-                if (show) {
-                    setLocalTargets({...dailyTargets});
-                }
-            }, [show, dailyTargets]);
-
-            if (!show) return null;
-
-            const handleSave = async () => {
-                await onSave(localTargets);
-                onClose();
-            };
-
-            return (
-                <div className="modal active">
-                    <div className="modal-content">
-                        <span className="modal-close" onClick={onClose}>×</span>
-                        <div className="modal-header">일일 목표 설정</div>
-                        {visibleMetrics.map(metric => (
-                            <div key={metric} className="form-group">
-                                <label>{metric}</label>
-                                <input 
-                                    type="number"
-                                    value={localTargets[metric] || 100}
-                                    onChange={(e) => {
-                                        setLocalTargets({
-                                            ...localTargets,
-                                            [metric]: parseInt(e.target.value) || 0
-                                        });
-                                    }}
-                                />
-                            </div>
-                        ))}
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button 
-                                className="btn btn-success" 
-                                onClick={handleSave}
-                                style={{ marginRight: '10px' }}
-                            >
-                                저장
-                            </button>
-                            <button 
-                                className="btn" 
-                                onClick={onClose}
-                                style={{ background: '#666' }}
-                            >
-                                취소
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
+        // 메인 대시보드 앱
         function DashboardApp() {
             const [teams, setTeams] = useState({});
             const [visibleMetrics, setVisibleMetrics] = useState([]);
@@ -905,12 +449,7 @@
             const [allMetrics, setAllMetrics] = useState([]);
             const [dailyTargets, setDailyTargets] = useState({});
             const [performanceData, setPerformanceData] = useState({});
-            const [selectedDate, setSelectedDate] = useState(() => {
-                // 초기값을 KST 기준으로 설정
-                const now = new Date();
-                const kst = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                return kst.toISOString().split('T')[0];
-            });
+            const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
             const [isLoading, setIsLoading] = useState(true);
             const [lastUpdate, setLastUpdate] = useState(new Date());
             const [autoRefresh, setAutoRefresh] = useState(true);
@@ -995,92 +534,6 @@
                 }
             }, [selectedDate]);
 
-            // 메트릭 색상 레벨 계산
-            const getMetricLevel = (value, metric) => {
-                if (value === 0) return 'metric-level-0';
-                
-                if (metric === '제휴카드') {
-                    // 제휴카드는 30개 기준
-                    if (value < 30) return 'metric-level-1';
-                    if (value < 90) return 'metric-level-2';
-                    if (value < 150) return 'metric-level-3';
-                    if (value < 210) return 'metric-level-4';
-                    return 'metric-level-5';
-                } else {
-                    // 일반 항목은 10개 기준
-                    if (value < 10) return 'metric-level-1';
-                    if (value < 30) return 'metric-level-2';
-                    if (value < 50) return 'metric-level-3';
-                    if (value < 70) return 'metric-level-4';
-                    return 'metric-level-5';
-                }
-            };
-            const loadPerformanceData = useCallback(async () => {
-                try {
-                    const { data } = await supabase
-                        .from('performance')
-                        .select('*')
-                        .eq('date', selectedDate);
-
-                    const dataMap = {};
-                    if (data) {
-                        data.forEach(record => {
-                            const key = `${record.team}_${record.name}`;
-                            dataMap[key] = record;
-                        });
-                    }
-                    setPerformanceData(dataMap);
-                    setEditedData({});
-                    setLastUpdate(new Date());
-                    
-                    // 휴무 상태도 로드 (localStorage에서)
-                    loadOffStatus();
-                } catch (error) {
-                    console.error('데이터 로드 오류:', error);
-                } finally {
-                    setIsLoading(false);
-                }
-            }, [selectedDate, loadOffStatus]);
-
-            // 주간 데이터 로드
-            const loadWeeklyData = useCallback(async () => {
-                try {
-                    // 선택된 날짜의 주 계산 (월요일 ~ 금요일)
-                    const currentDate = new Date(selectedDate);
-                    const dayOfWeek = currentDate.getDay();
-                    const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-                    const monday = new Date(currentDate.setDate(diff));
-                    
-                    const weekDates = [];
-                    for (let i = 0; i < 5; i++) {
-                        const date = new Date(monday);
-                        date.setDate(monday.getDate() + i);
-                        weekDates.push(date.toISOString().split('T')[0]);
-                    }
-                    
-                    // 주간 데이터 가져오기
-                    const { data } = await supabase
-                        .from('performance')
-                        .select('*')
-                        .in('date', weekDates);
-                    
-                    const weeklyMap = {};
-                    if (data) {
-                        data.forEach(record => {
-                            if (!weeklyMap[record.date]) {
-                                weeklyMap[record.date] = {};
-                            }
-                            const key = `${record.team}_${record.name}`;
-                            weeklyMap[record.date][key] = record;
-                        });
-                    }
-                    
-                    setWeeklyData(weeklyMap);
-                } catch (error) {
-                    console.error('주간 데이터 로드 오류:', error);
-                }
-            }, [selectedDate]);
-
             // 데이터 수정 핸들러
             const handleDataEdit = (teamName, memberName, metric, value) => {
                 const key = `${teamName}_${memberName}`;
@@ -1105,7 +558,6 @@
                         const existingData = performanceData[key];
                         
                         if (existingData) {
-                            // 기존 데이터 업데이트
                             updates.push(
                                 supabase
                                     .from('performance')
@@ -1113,7 +565,6 @@
                                     .eq('id', existingData.id)
                             );
                         } else {
-                            // 새 데이터 생성
                             const newRecord = {
                                 team,
                                 name,
@@ -1150,22 +601,22 @@
                 } else {
                     setEditMode(!editMode);
                     if (!editMode) {
-                        setAutoRefresh(false); // 수정 모드에서는 자동 새로고침 비활성화
+                        setAutoRefresh(false);
                     }
                 }
             };
+
+            // 메트릭 색상 레벨 계산
             const getMetricLevel = (value, metric) => {
                 if (value === 0) return 'metric-level-0';
                 
                 if (metric === '제휴카드') {
-                    // 제휴카드는 30개 기준
                     if (value < 30) return 'metric-level-1';
                     if (value < 90) return 'metric-level-2';
                     if (value < 150) return 'metric-level-3';
                     if (value < 210) return 'metric-level-4';
                     return 'metric-level-5';
                 } else {
-                    // 일반 항목은 10개 기준
                     if (value < 10) return 'metric-level-1';
                     if (value < 30) return 'metric-level-2';
                     if (value < 50) return 'metric-level-3';
@@ -1215,587 +666,6 @@
                 return totals;
             };
 
-            // 개선된 엑셀 내보내기 - 팀별 색상과 병합 적용
-            const exportToExcel = () => {
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet([]);
-                
-                // 팀별 색상 정의
-                const teamColors = {
-                    '1파트': 'FFE2F0D9',  // 연한 녹색
-                    '2파트': 'FFDDEBF7',  // 연한 파란색
-                    '3파트': 'FFFCE4D6',  // 연한 주황색
-                    '4파트': 'FFFFF2CC',  // 연한 노란색
-                    '5파트': 'FFD9E2F3'   // 진한 파란색
-                };
-                
-                // 파트장 정보
-                const teamLeaders = {
-                    '1파트': '이종민',
-                    '2파트': '윤도우리',
-                    '3파트': '김진후',
-                    '4파트': '이민주',
-                    '5파트': '차정환'
-                };
-                
-                // 제목 추가
-                XLSX.utils.sheet_add_aoa(ws, [[`SNS센터 실적보고 - ${selectedDate}`]], {origin: 'A1'});
-                
-                // 헤더 추가
-                const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
-                XLSX.utils.sheet_add_aoa(ws, [headers], {origin: 'A3'});
-                
-                // 헤더 스타일 적용
-                for (let col = 0; col < headers.length; col++) {
-                    const cellRef = XLSX.utils.encode_cell({r: 2, c: col});
-                    if (!ws[cellRef]) ws[cellRef] = {};
-                    ws[cellRef].s = {
-                        fill: { fgColor: { rgb: "FFD9D9D9" } },
-                        font: { bold: true, sz: 10, name: "맑은 고딕" },
-                        alignment: { horizontal: "center", vertical: "center" },
-                        border: {
-                            top: { style: "thin", color: { rgb: "FF000000" } },
-                            bottom: { style: "thin", color: { rgb: "FF000000" } },
-                            left: { style: "thin", color: { rgb: "FF000000" } },
-                            right: { style: "thin", color: { rgb: "FF000000" } }
-                        }
-                    };
-                }
-                
-                let rowNum = 3;
-                const mergeRanges = [];
-                
-                // 각 팀별 데이터
-                Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                    const startRow = rowNum;
-                    const teamColor = teamColors[teamName] || 'FFE2F0D9';
-                    const leader = teamLeaders[teamName] || '';
-                    const teamTotals = calculateTeamTotals(teamName);
-                    
-                    teamInfo.members.forEach((member, idx) => {
-                        const key = `${teamName}_${member.name}`;
-                        const data = performanceData[key] || {};
-                        const rowData = [];
-                        
-                        // 소속 (첫 번째 멤버만)
-                        if (idx === 0) {
-                            const teamDisplay = teamName === '5파트' 
-                                ? `의정부SNS센터\n${teamName}\n${leader}`
-                                : `SNS센터\n${teamName}\n${leader}`;
-                            rowData.push(teamDisplay);
-                        } else {
-                            rowData.push('');
-                        }
-                        
-                        // 이름, 근속기간
-                        rowData.push(member.name, member.tenure);
-                        
-                        // 실적 데이터
-                        visibleMetrics.forEach(metric => {
-                            const dbColumn = metricToDb[metric];
-                            rowData.push(data[dbColumn] || 0);
-                        });
-                        
-                        XLSX.utils.sheet_add_aoa(ws, [rowData], {origin: `A${rowNum + 1}`});
-                        
-                        // 셀 스타일 적용
-                        for (let col = 0; col < 3; col++) {
-                            const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
-                            if (!ws[cellRef]) ws[cellRef] = { v: '' };
-                            ws[cellRef].s = {
-                                fill: { fgColor: { rgb: teamColor } },
-                                font: { sz: 10, name: "맑은 고딕", bold: col === 0 },
-                                alignment: { horizontal: "center", vertical: "center", wrapText: true },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "FF000000" } },
-                                    bottom: { style: "thin", color: { rgb: "FF000000" } },
-                                    left: { style: "thin", color: { rgb: "FF000000" } },
-                                    right: { style: "thin", color: { rgb: "FF000000" } }
-                                }
-                            };
-                        }
-                        
-                        // 실적 데이터 셀 스타일
-                        for (let col = 3; col < 3 + visibleMetrics.length; col++) {
-                            const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
-                            if (!ws[cellRef]) ws[cellRef] = { v: 0 };
-                            ws[cellRef].s = {
-                                font: { sz: 10, name: "맑은 고딕" },
-                                alignment: { horizontal: "center" },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "FF000000" } },
-                                    bottom: { style: "thin", color: { rgb: "FF000000" } },
-                                    left: { style: "thin", color: { rgb: "FF000000" } },
-                                    right: { style: "thin", color: { rgb: "FF000000" } }
-                                }
-                            };
-                        }
-                        
-                        rowNum++;
-                    });
-                    
-                    // 소속 셀 병합
-                    if (teamInfo.members.length > 1) {
-                        mergeRanges.push({
-                            s: { r: startRow, c: 0 },
-                            e: { r: rowNum - 1, c: 0 }
-                        });
-                    }
-                    
-                    // 팀 총합
-                    const totalRow = [`${teamName} 총합`, '', '', ...visibleMetrics.map(metric => teamTotals[metric])];
-                    XLSX.utils.sheet_add_aoa(ws, [totalRow], {origin: `A${rowNum + 1}`});
-                    
-                    // 팀 총합 병합
-                    mergeRanges.push({
-                        s: { r: rowNum, c: 0 },
-                        e: { r: rowNum, c: 2 }
-                    });
-                    
-                    // 팀 총합 스타일
-                    for (let col = 0; col < headers.length; col++) {
-                        const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
-                        if (!ws[cellRef]) ws[cellRef] = { v: '' };
-                        ws[cellRef].s = {
-                            fill: { fgColor: { rgb: "FFFFF2CC" } },  // 노란색
-                            font: { bold: true, sz: 10, name: "맑은 고딕" },
-                            alignment: { horizontal: "center" },
-                            border: {
-                                top: { style: "thin", color: { rgb: "FF000000" } },
-                                bottom: { style: "thin", color: { rgb: "FF000000" } },
-                                left: { style: "thin", color: { rgb: "FF000000" } },
-                                right: { style: "thin", color: { rgb: "FF000000" } }
-                            }
-                        };
-                    }
-                    
-                    rowNum++;
-                });
-                
-                // 전체 총합
-                const grandTotals = calculateTotals();
-                const centerRow = ['센터 총합', '', '', ...visibleMetrics.map(metric => grandTotals[metric])];
-                XLSX.utils.sheet_add_aoa(ws, [centerRow], {origin: `A${rowNum + 1}`});
-                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 2 } });
-                
-                // 센터 총합 스타일
-                for (let col = 0; col < headers.length; col++) {
-                    const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
-                    if (!ws[cellRef]) ws[cellRef] = { v: '' };
-                    ws[cellRef].s = {
-                        fill: { fgColor: { rgb: "FFFFCCCC" } },  // 분홍색
-                        font: { bold: true, sz: 10, name: "맑은 고딕" },
-                        alignment: { horizontal: "center" },
-                        border: {
-                            top: { style: "thin", color: { rgb: "FF000000" } },
-                            bottom: { style: "thin", color: { rgb: "FF000000" } },
-                            left: { style: "thin", color: { rgb: "FF000000" } },
-                            right: { style: "thin", color: { rgb: "FF000000" } }
-                        }
-                    };
-                }
-                rowNum++;
-                
-                // 일 목표
-                const targetRow = ['일 목표', '', '', ...visibleMetrics.map(metric => dailyTargets[metric] || 100)];
-                XLSX.utils.sheet_add_aoa(ws, [targetRow], {origin: `A${rowNum + 1}`});
-                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 2 } });
-                
-                // 일 목표 스타일
-                for (let col = 0; col < headers.length; col++) {
-                    const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
-                    if (!ws[cellRef]) ws[cellRef] = { v: '' };
-                    ws[cellRef].s = {
-                        fill: { fgColor: { rgb: "FFFFCCCC" } },
-                        font: { sz: 10, name: "맑은 고딕" },
-                        alignment: { horizontal: "center" },
-                        border: {
-                            top: { style: "thin", color: { rgb: "FF000000" } },
-                            bottom: { style: "thin", color: { rgb: "FF000000" } },
-                            left: { style: "thin", color: { rgb: "FF000000" } },
-                            right: { style: "thin", color: { rgb: "FF000000" } }
-                        }
-                    };
-                }
-                rowNum++;
-                
-                // 달성
-                const achievementRow = ['달성', '', '', ...visibleMetrics.map(metric => {
-                    const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
-                    return diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
-                })];
-                XLSX.utils.sheet_add_aoa(ws, [achievementRow], {origin: `A${rowNum + 1}`});
-                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 2 } });
-                
-                // 달성 스타일
-                for (let col = 0; col < headers.length; col++) {
-                    const cellRef = XLSX.utils.encode_cell({r: rowNum, c: col});
-                    if (!ws[cellRef]) ws[cellRef] = { v: '' };
-                    ws[cellRef].s = {
-                        fill: { fgColor: { rgb: "FFFFCCCC" } },
-                        font: { sz: 10, name: "맑은 고딕" },
-                        alignment: { horizontal: "center" },
-                        border: {
-                            top: { style: "thin", color: { rgb: "FF000000" } },
-                            bottom: { style: "thin", color: { rgb: "FF000000" } },
-                            left: { style: "thin", color: { rgb: "FF000000" } },
-                            right: { style: "thin", color: { rgb: "FF000000" } }
-                        }
-                    };
-                }
-                
-                // 병합 적용
-                ws['!merges'] = mergeRanges;
-                
-                // 컬럼 너비 설정
-                const colWidths = [
-                    { wch: 20 },  // 소속
-                    { wch: 12 },  // 이름
-                    { wch: 12 },  // 근속기간
-                    ...visibleMetrics.map(() => ({ wch: 10 }))
-                ];
-                ws['!cols'] = colWidths;
-                
-                // 범위 설정
-                ws['!ref'] = XLSX.utils.encode_range({
-                    s: { r: 0, c: 0 },
-                    e: { r: rowNum, c: headers.length - 1 }
-                });
-                
-                XLSX.utils.book_append_sheet(wb, ws, '실적');
-                XLSX.writeFile(wb, `SNS센터_실적_${selectedDate.replace(/-/g, '')}.xlsx`);
-            };
-
-            // 개선된 JPG 내보내기 - Canvas로 직접 그리기
-            const exportToJPG = async () => {
-                // 팀별 색상 정의
-                const teamColors = {
-                    '1파트': '#E2F0D9',
-                    '2파트': '#DDEBF7', 
-                    '3파트': '#FCE4D6',
-                    '4파트': '#FFF2CC',
-                    '5파트': '#D9E2F3'
-                };
-                
-                // 파트장 정보
-                const teamLeaders = {
-                    '1파트': '이종민',
-                    '2파트': '윤도우리',
-                    '3파트': '김진후',
-                    '4파트': '이민주',
-                    '5파트': '차정환'
-                };
-                
-                // Canvas 생성
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // 크기 계산
-                const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
-                const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
-                const rowHeight = 35; // 높이 더 증가
-                let totalRows = 4; // 제목 + 헤더
-                Object.values(teams).forEach(team => {
-                    totalRows += team.members.length + 1; // 멤버 + 팀 총합
-                });
-                totalRows += 4; // 센터총합, 일목표, 달성, 여백
-                
-                canvas.width = totalWidth;
-                canvas.height = totalRows * rowHeight + 120;
-                
-                // 배경
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // 폰트 설정
-                ctx.font = '13px Malgun Gothic';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                let y = 30;
-                const xStart = 40;
-                
-                // 제목
-                ctx.font = 'bold 20px Malgun Gothic';
-                ctx.fillStyle = 'black';
-                ctx.fillText(`SNS센터 실적보고 - ${selectedDate}`, totalWidth / 2, y);
-                y += 50;
-                
-                // 헤더
-                ctx.font = 'bold 14px Malgun Gothic';
-                const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
-                let x = xStart;
-                headers.forEach((header, i) => {
-                    // 헤더 배경
-                    ctx.fillStyle = '#D9D9D9';
-                    ctx.fillRect(x, y, colWidths[i], rowHeight);
-                    
-                    // 테두리
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[i], rowHeight);
-                    
-                    // 텍스트
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 14px Malgun Gothic';
-                    ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
-                    x += colWidths[i];
-                });
-                y += rowHeight;
-                
-                // 각 팀별 데이터
-                Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                    const teamColor = teamColors[teamName] || '#E2F0D9';
-                    const leader = teamLeaders[teamName] || '';
-                    const startY = y;
-                    const teamTotals = calculateTeamTotals(teamName);
-                    
-                    teamInfo.members.forEach((member, idx) => {
-                        const key = `${teamName}_${member.name}`;
-                        const data = performanceData[key] || {};
-                        const isOff = member.isOff || false;
-                        
-                        // 실적이 있는지 확인
-                        const hasAnyData = visibleMetrics.some(metric => {
-                            const dbColumn = metricToDb[metric];
-                            return data[dbColumn] && data[dbColumn] > 0;
-                        });
-                        
-                        x = xStart;
-                        
-                        // 소속 (첫 번째 멤버만)
-                        if (idx === 0) {
-                            const mergeHeight = teamInfo.members.length * rowHeight;
-                            
-                            // 배경
-                            ctx.fillStyle = teamColor;
-                            ctx.fillRect(x, y, colWidths[0], mergeHeight);
-                            
-                            // 테두리
-                            ctx.strokeStyle = 'black';
-                            ctx.strokeRect(x, y, colWidths[0], mergeHeight);
-                            
-                            // 텍스트
-                            ctx.fillStyle = 'black';
-                            ctx.font = 'bold 13px Malgun Gothic';
-                            const teamText = teamName === '5파트' 
-                                ? `의정부SNS센터` 
-                                : `SNS센터`;
-                            ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
-                            ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
-                            ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
-                            ctx.font = '13px Malgun Gothic';
-                        } else {
-                            // 병합된 셀의 세로 선만 그리기
-                            ctx.strokeStyle = 'black';
-                            ctx.beginPath();
-                            ctx.moveTo(x + colWidths[0], y);
-                            ctx.lineTo(x + colWidths[0], y + rowHeight);
-                            ctx.stroke();
-                        }
-                        x += colWidths[0];
-                        
-                        // 이름 - 휴무인 경우 배경색 변경
-                        ctx.fillStyle = isOff && !hasAnyData ? '#FFCDD2' : teamColor;
-                        ctx.fillRect(x, y, colWidths[1], rowHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[1], rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = '13px Malgun Gothic';
-                        
-                        // 휴무 표시
-                        if (isOff && !hasAnyData) {
-                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2 - 7);
-                            ctx.font = '11px Malgun Gothic';
-                            ctx.fillStyle = '#B71C1C';
-                            ctx.fillText('(휴무)', x + colWidths[1]/2, y + rowHeight/2 + 8);
-                            ctx.fillStyle = 'black';
-                            ctx.font = '13px Malgun Gothic';
-                        } else {
-                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
-                        }
-                        x += colWidths[1];
-                        
-                        // 근속기간 - 휴무인 경우 배경색 변경
-                        ctx.fillStyle = isOff && !hasAnyData ? '#FFCDD2' : teamColor;
-                        ctx.fillRect(x, y, colWidths[2], rowHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[2], rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = '12px Malgun Gothic';
-                        ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
-                        x += colWidths[2];
-                        
-                        // 실적 데이터
-                        visibleMetrics.forEach((metric, i) => {
-                            const dbColumn = metricToDb[metric];
-                            const value = data[dbColumn] || 0;
-                            
-                            // 휴무자는 데이터가 없을 때만 빨간색 배경과 "휴무" 텍스트
-                            if (isOff && value === 0) {
-                                ctx.fillStyle = '#FFCDD2';
-                                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                                ctx.strokeStyle = 'black';
-                                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                                
-                                ctx.fillStyle = '#B71C1C';
-                                ctx.font = 'bold 13px Malgun Gothic';
-                                ctx.fillText('휴무', x + colWidths[3 + i]/2, y + rowHeight/2);
-                            } else {
-                                // 데이터가 있거나 휴무가 아닌 경우 정상 표시
-                                ctx.fillStyle = 'white';
-                                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                                ctx.strokeStyle = 'black';
-                                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                                
-                                ctx.fillStyle = 'black';
-                                ctx.font = 'bold 16px Malgun Gothic';
-                                ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                            }
-                            x += colWidths[3 + i];
-                        });
-                        ctx.font = '13px Malgun Gothic';
-                        
-                        y += rowHeight;
-                    });
-                    
-                    // 팀 총합
-                    x = xStart;
-                    
-                    // 팀 총합 병합 셀
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 14px Malgun Gothic';
-                    ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                    x += colWidths[0] + colWidths[1] + colWidths[2];
-                    
-                    // 팀 총합 데이터
-                    visibleMetrics.forEach((metric, i) => {
-                        ctx.fillStyle = '#FFD700';
-                        ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = 'bold 17px Malgun Gothic';
-                        ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                        x += colWidths[3 + i];
-                    });
-                    ctx.font = '13px Malgun Gothic';
-                    
-                    y += rowHeight + 10;
-                });
-                
-                // 전체 총합
-                const grandTotals = calculateTotals();
-                x = xStart;
-                
-                // 센터 총합
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 15px Malgun Gothic';
-                ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                x += colWidths[0] + colWidths[1] + colWidths[2];
-                
-                visibleMetrics.forEach((metric, i) => {
-                    ctx.fillStyle = '#FFCCCC';
-                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 18px Malgun Gothic';
-                    ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                    x += colWidths[3 + i];
-                });
-                ctx.font = '13px Malgun Gothic';
-                y += rowHeight + 3;
-                
-                // 일 목표
-                x = xStart;
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 14px Malgun Gothic';
-                ctx.fillText('일 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                x += colWidths[0] + colWidths[1] + colWidths[2];
-                
-                visibleMetrics.forEach((metric, i) => {
-                    ctx.fillStyle = '#FFCCCC';
-                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 16px Malgun Gothic';
-                    ctx.fillText((dailyTargets[metric] || 100).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                    x += colWidths[3 + i];
-                });
-                ctx.font = '13px Malgun Gothic';
-                y += rowHeight + 3;
-                
-                // 달성
-                x = xStart;
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 14px Malgun Gothic';
-                ctx.fillText('달성', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                x += colWidths[0] + colWidths[1] + colWidths[2];
-                
-                visibleMetrics.forEach((metric, i) => {
-                    const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
-                    const status = diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
-                    
-                    ctx.fillStyle = '#FFCCCC';
-                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = diff > 0 ? '#B71C1C' : '#1B5E20';
-                    ctx.font = 'bold 16px Malgun Gothic';
-                    ctx.fillText(status, x + colWidths[3 + i]/2, y + rowHeight/2);
-                    x += colWidths[3 + i];
-                });
-                
-                // 다운로드
-                const link = document.createElement('a');
-                link.download = `SNS센터_실적_${selectedDate.replace(/-/g, '')}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.click();
-            };
-
-            // 설정 저장 함수를 upsert로 수정
-            const saveSettings = async (targets) => {
-                try {
-                    const settingsData = {
-                        type: 'settings',
-                        data: {
-                            visible_metrics: visibleMetrics,
-                            daily_targets: targets
-                        }
-                    };
-
-                    // upsert 사용 - 레코드가 없으면 생성, 있으면 업데이트
-                    const { error } = await supabase
-                        .from('config')
-                        .upsert(settingsData, { onConflict: 'type' });
-
-                    if (error) throw error;
-
-                    setDailyTargets(targets);
-                    alert('목표가 저장되었습니다.');
-                } catch (error) {
-                    console.error('설정 저장 오류:', error);
-                    alert('설정 저장 중 오류가 발생했습니다.');
-                }
-            };
-
             // useEffect
             useEffect(() => {
                 loadConfig();
@@ -1805,29 +675,10 @@
                 loadPerformanceData();
                 
                 if (autoRefresh) {
-                    const interval = setInterval(loadPerformanceData, 60000); // 1분마다
+                    const interval = setInterval(loadPerformanceData, 60000);
                     return () => clearInterval(interval);
                 }
             }, [loadPerformanceData, autoRefresh]);
-
-            // useEffect - 자정에 날짜 자동 변경
-            useEffect(() => {
-                const checkMidnight = setInterval(() => {
-                    const now = new Date();
-                    // 자정이 되면 날짜 자동 변경
-                    if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() < 2) {
-                        setSelectedDate(now.toISOString().split('T')[0]);
-                        loadPerformanceData();
-                    }
-                }, 1000);
-                
-                return () => clearInterval(checkMidnight);
-            }, [loadPerformanceData]);
-            useEffect(() => {
-                if (showWeeklyModal) {
-                    loadWeeklyData();
-                }
-            }, [showWeeklyModal, loadWeeklyData]);
 
             if (isLoading) {
                 return (
@@ -1869,24 +720,6 @@
                         >
                             {editMode ? '✏️ 수정완료' : '✏️ 수정모드'}
                         </button>
-                        <button className="btn btn-info" onClick={() => setShowMetricsModal(true)}>
-                            ⚙️ 항목편집
-                        </button>
-                        <button className="btn btn-warning" onClick={() => setShowTargetModal(true)}>
-                            🎯 목표설정
-                        </button>
-                        <button className="btn btn-purple" onClick={() => setShowTeamModal(true)}>
-                            👥 상담사
-                        </button>
-                        <button className="btn" onClick={() => setShowWeeklyModal(true)} style={{ background: '#8B4513' }}>
-                            📅 주간현황
-                        </button>
-                        <button className="btn btn-success" onClick={exportToJPG}>
-                            📷 JPG
-                        </button>
-                        <button className="btn btn-info" onClick={exportToExcel}>
-                            📊 엑셀
-                        </button>
                         
                         <div className="date-selector">
                             <label>날짜:</label>
@@ -1922,390 +755,102 @@
                         )}
                     </div>
 
-                    <div id="dashboard-content">
-                        {/* 전체 실적 요약 */}
-                        <div className="summary-section">
-                            <div className="summary-title">📊 전체 실적 요약</div>
-                            <div className="metrics-row">
-                                {visibleMetrics.map(metric => (
-                                    <div 
-                                        key={metric} 
-                                        className={`metric-item ${getMetricLevel(grandTotals[metric], metric)}`}
-                                    >
-                                        <div className="metric-name">{metric}</div>
-                                        <div className="metric-value">{grandTotals[metric]}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* 팀별 실적 및 팀별 요약 추가 */}
-                        {Object.entries(teams).map(([teamName, teamInfo]) => {
-                            const teamTotals = calculateTeamTotals(teamName);
-                            
-                            return (
-                                <div key={teamName}>
-                                    {/* 팀별 실적 요약 - 새로 추가 */}
-                                    <div className="summary-section">
-                                        <div className="summary-title">📈 {teamName} 실적 요약</div>
-                                        <div className="metrics-row">
-                                            {visibleMetrics.map(metric => (
-                                                <div 
-                                                    key={metric} 
-                                                    className={`metric-item ${getMetricLevel(teamTotals[metric], metric)}`}
-                                                >
-                                                    <div className="metric-name">{metric}</div>
-                                                    <div className="metric-value">{teamTotals[metric]}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* 팀별 상세 테이블 */}
-                                    <div className="team-section">
-                                        <div className="team-header">
-                                            SNS센터 {teamName}
-                                        </div>
-                                        <table className="team-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>이름</th>
-                                                    <th>근속기간</th>
-                                                    {visibleMetrics.map(metric => (
-                                                        <th key={metric}>{metric}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {teamInfo.members.map(member => {
-                                                    const key = `${teamName}_${member.name}`;
-                                                    const data = performanceData[key] || {};
-                                                    const editData = editedData[key] || {};
-                                                    const isOff = member.isOff || false;
-                                                    
-                                                    return (
-                                                        <tr key={member.name} style={{
-                                                            background: isOff ? '#5f2a2a20' : 'transparent'
-                                                        }}>
-                                                            <td style={{
-                                                                background: isOff ? '#5f2a2a30' : 'transparent',
-                                                                fontWeight: isOff ? 'bold' : 'normal'
-                                                            }}>
-                                                                {member.name}
-                                                                {isOff && <span style={{ color: '#FF6B6B', marginLeft: '5px' }}>(휴무)</span>}
-                                                            </td>
-                                                            <td style={{
-                                                                background: isOff ? '#5f2a2a30' : 'transparent'
-                                                            }}>{member.tenure}</td>
-                                                            {visibleMetrics.map(metric => {
-                                                                const dbColumn = metricToDb[metric];
-                                                                const originalValue = data[dbColumn] || 0;
-                                                                const currentValue = editData[dbColumn] !== undefined ? editData[dbColumn] : originalValue;
-                                                                
-                                                                if (editMode) {
-                                                                    return (
-                                                                        <td key={metric} style={{
-                                                                            padding: '2px',
-                                                                            background: editData[dbColumn] !== undefined ? '#4A9EFF20' : 'transparent'
-                                                                        }}>
-                                                                            <input 
-                                                                                type="number"
-                                                                                value={currentValue}
-                                                                                onChange={(e) => handleDataEdit(teamName, member.name, metric, e.target.value)}
-                                                                                style={{
-                                                                                    width: '100%',
-                                                                                    padding: '4px',
-                                                                                    background: '#2d2d2d',
-                                                                                    border: editData[dbColumn] !== undefined ? '2px solid #4A9EFF' : '1px solid #404040',
-                                                                                    borderRadius: '3px',
-                                                                                    color: '#E0E0E0',
-                                                                                    textAlign: 'center',
-                                                                                    fontSize: '12px'
-                                                                                }}
-                                                                                min="0"
-                                                                            />
-                                                                        </td>
-                                                                    );
-                                                                } else {
-                                                                    // 휴무자인 경우 데이터가 0이면 "휴무" 표시
-                                                                    const displayValue = isOff && currentValue === 0 ? '휴무' : currentValue;
-                                                                    
-                                                                    return (
-                                                                        <td key={metric} style={{
-                                                                            background: isOff && currentValue === 0 ? '#5f2a2a30' : 'transparent',
-                                                                            color: isOff && currentValue === 0 ? '#FF6B6B' : '#E0E0E0',
-                                                                            fontWeight: isOff && currentValue === 0 ? 'bold' : 'normal'
-                                                                        }}>
-                                                                            {displayValue}
-                                                                        </td>
-                                                                    );
-                                                                }
-                                                            })}
-                                                        </tr>
-                                                    );
-                                                })}
-                                                <tr className="team-total">
-                                                    <td colSpan="2">{teamName} 총합</td>
-                                                    {visibleMetrics.map(metric => (
-                                                        <td key={metric}>{teamTotals[metric]}</td>
-                                                    ))}
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                    <div className="summary-section">
+                        <div className="summary-title">📊 전체 실적 요약</div>
+                        <div className="metrics-row">
+                            {visibleMetrics.map(metric => (
+                                <div 
+                                    key={metric} 
+                                    className={`metric-item ${getMetricLevel(grandTotals[metric], metric)}`}
+                                >
+                                    <div className="metric-name">{metric}</div>
+                                    <div className="metric-value">{grandTotals[metric]}</div>
                                 </div>
-                            );
-                        })}
-
-                        {/* 하단 요약 */}
-                        <div className="bottom-summary">
-                            <div className="summary-row" style={{ background: '#1f3a5f' }}>
-                                <div className="summary-label">센터 총합</div>
-                                <div className="summary-values">
-                                    {visibleMetrics.map(metric => (
-                                        <span key={metric} className="summary-item">
-                                            {metric}: {grandTotals[metric]}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="summary-row" style={{ background: '#3a3a3a' }}>
-                                <div className="summary-label">일 목표</div>
-                                <div className="summary-values">
-                                    {visibleMetrics.map(metric => (
-                                        <span key={metric} className="summary-item">
-                                            {metric}: {dailyTargets[metric] || 100}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="summary-row" style={{ background: '#2d2d2d' }}>
-                                <div className="summary-label">달성현황</div>
-                                <div className="summary-values">
-                                    {visibleMetrics.map(metric => {
-                                        const target = dailyTargets[metric] || 100;
-                                        const actual = grandTotals[metric];
-                                        const diff = target - actual;
-                                        
-                                        return (
-                                            <span 
-                                                key={metric} 
-                                                className={`achievement-status ${diff <= 0 ? 'achievement-success' : 'achievement-fail'}`}
-                                            >
-                                                {metric}: {diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* 항목 편집 모달 */}
-                    <MetricsEditModal 
-                        show={showMetricsModal}
-                        onClose={() => setShowMetricsModal(false)}
-                        allMetrics={allMetrics}
-                        visibleMetrics={visibleMetrics}
-                        metricToDb={metricToDb}
-                        onSave={async (newMetrics, newVisible, newMapping, metricsData) => {
-                            try {
-                                // 메트릭 정보 저장
-                                await supabase
-                                    .from('config')
-                                    .upsert({ type: 'metrics', data: metricsData }, { onConflict: 'type' });
-
-                                // 설정 저장
-                                const settingsData = {
-                                    type: 'settings',
-                                    data: {
-                                        visible_metrics: newVisible,
-                                        daily_targets: dailyTargets
-                                    }
-                                };
-                                
-                                await supabase
-                                    .from('config')
-                                    .upsert(settingsData, { onConflict: 'type' });
-
-                                setAllMetrics(newMetrics);
-                                setVisibleMetrics(newVisible);
-                                setMetricToDb(newMapping);
-                                
-                                alert('항목 설정이 저장되었습니다.');
-                                loadPerformanceData();
-                            } catch (error) {
-                                console.error('저장 오류:', error);
-                                alert('저장 중 오류가 발생했습니다.');
-                            }
-                        }}
-                    />
-
-                    {/* 상담사 관리 모달 */}
-                    <TeamManagementModal 
-                        show={showTeamModal}
-                        onClose={() => setShowTeamModal(false)}
-                        teams={teams}
-                        onSave={async (updatedTeams) => {
-                            try {
-                                await supabase
-                                    .from('config')
-                                    .upsert({ type: 'teams', data: updatedTeams }, { onConflict: 'type' });
-                                
-                                setTeams(updatedTeams);
-                                alert('상담사 정보가 저장되었습니다.');
-                                loadPerformanceData();
-                            } catch (error) {
-                                console.error('저장 오류:', error);
-                                alert('저장 중 오류가 발생했습니다.');
-                            }
-                        }}
-                    />
-
-                    {/* 목표 설정 모달 */}
-                    <TargetSettingModal 
-                        show={showTargetModal}
-                        onClose={() => setShowTargetModal(false)}
-                        visibleMetrics={visibleMetrics}
-                        dailyTargets={dailyTargets}
-                        onSave={saveSettings}
-                    />
-
-                    {/* 주간 현황 모달 */}
-                    <div className={`modal ${showWeeklyModal ? 'active' : ''}`}>
-                        <div className="modal-content" style={{ maxWidth: '900px' }}>
-                            <span className="modal-close" onClick={() => setShowWeeklyModal(false)}>×</span>
-                            <div className="modal-header">📅 주간 목표 달성 현황</div>
-                            
-                            <button 
-                                className="btn btn-primary" 
-                                onClick={loadWeeklyData}
-                                style={{ marginBottom: '15px' }}
-                            >
-                                데이터 새로고침
-                            </button>
-                            
-                            {(() => {
-                                // 주간 날짜 계산
-                                const currentDate = new Date(selectedDate);
-                                const dayOfWeek = currentDate.getDay();
-                                const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-                                const monday = new Date(currentDate.setDate(diff));
-                                
-                                const weekDates = [];
-                                const weekDays = ['월', '화', '수', '목', '금'];
-                                for (let i = 0; i < 5; i++) {
-                                    const date = new Date(monday);
-                                    date.setDate(monday.getDate() + i);
-                                    weekDates.push(date.toISOString().split('T')[0]);
-                                }
-                                
-                                return (
-                                    <div>
-                                        <p style={{ marginBottom: '15px', color: '#B0B0B0', fontSize: '13px' }}>
-                                            {weekDates[0]} ~ {weekDates[4]} 주간 실적
-                                        </p>
-                                        
-                                        <div style={{ overflowX: 'auto' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                                <thead>
-                                                    <tr>
-                                                        <th style={{ padding: '10px', background: '#3a3a3a', border: '1px solid #404040', color: '#E0E0E0' }}>
-                                                            구분
-                                                        </th>
-                                                        {weekDays.map((day, i) => (
-                                                            <th key={day} style={{ padding: '10px', background: '#3a3a3a', border: '1px solid #404040', color: '#E0E0E0', minWidth: '100px' }}>
-                                                                {day}요일<br/>
-                                                                <span style={{ fontSize: '11px', color: '#B0B0B0' }}>
-                                                                    {weekDates[i]}
-                                                                </span>
-                                                            </th>
-                                                        ))}
-                                                        <th style={{ padding: '10px', background: '#4A9EFF', border: '1px solid #404040', color: 'white' }}>
-                                                            주간 합계
-                                                        </th>
+                    {Object.entries(teams).map(([teamName, teamInfo]) => {
+                        const teamTotals = calculateTeamTotals(teamName);
+                        
+                        return (
+                            <div key={teamName}>
+                                <div className="team-section">
+                                    <div className="team-header">
+                                        SNS센터 {teamName}
+                                    </div>
+                                    <table className="team-table">
+                                        <thead>
+                                            <tr>
+                                                <th>이름</th>
+                                                <th>근속기간</th>
+                                                {visibleMetrics.map(metric => (
+                                                    <th key={metric}>{metric}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {teamInfo.members.map(member => {
+                                                const key = `${teamName}_${member.name}`;
+                                                const data = performanceData[key] || {};
+                                                const editData = editedData[key] || {};
+                                                
+                                                return (
+                                                    <tr key={member.name}>
+                                                        <td>{member.name}</td>
+                                                        <td>{member.tenure}</td>
+                                                        {visibleMetrics.map(metric => {
+                                                            const dbColumn = metricToDb[metric];
+                                                            const originalValue = data[dbColumn] || 0;
+                                                            const currentValue = editData[dbColumn] !== undefined ? editData[dbColumn] : originalValue;
+                                                            
+                                                            if (editMode) {
+                                                                return (
+                                                                    <td key={metric} style={{
+                                                                        padding: '2px',
+                                                                        background: editData[dbColumn] !== undefined ? '#4A9EFF20' : 'transparent'
+                                                                    }}>
+                                                                        <input 
+                                                                            type="number"
+                                                                            value={currentValue}
+                                                                            onChange={(e) => handleDataEdit(teamName, member.name, metric, e.target.value)}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                padding: '4px',
+                                                                                background: '#2d2d2d',
+                                                                                border: editData[dbColumn] !== undefined ? '2px solid #4A9EFF' : '1px solid #404040',
+                                                                                borderRadius: '3px',
+                                                                                color: '#E0E0E0',
+                                                                                textAlign: 'center',
+                                                                                fontSize: '12px'
+                                                                            }}
+                                                                            min="0"
+                                                                        />
+                                                                    </td>
+                                                                );
+                                                            } else {
+                                                                return (
+                                                                    <td key={metric}>
+                                                                        {currentValue}
+                                                                    </td>
+                                                                );
+                                                            }
+                                                        })}
                                                     </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {visibleMetrics.map(metric => {
-                                                        const dbColumn = metricToDb[metric];
-                                                        let weekTotal = 0;
-                                                        const dayValues = weekDates.map(date => {
-                                                            const dayData = weeklyData[date] || {};
-                                                            let dayTotal = 0;
-                                                            Object.values(dayData).forEach(record => {
-                                                                dayTotal += record[dbColumn] || 0;
-                                                            });
-                                                            weekTotal += dayTotal;
-                                                            return dayTotal;
-                                                        });
-                                                        
-                                                        const weeklyTarget = (dailyTargets[metric] || 100) * 5;
-                                                        const achievement = ((weekTotal / weeklyTarget) * 100).toFixed(1);
-                                                        
-                                                        return (
-                                                            <tr key={metric}>
-                                                                <td style={{ padding: '8px', background: '#2d2d2d', border: '1px solid #404040', color: '#E0E0E0', fontWeight: 'bold' }}>
-                                                                    {metric}
-                                                                </td>
-                                                                {dayValues.map((value, i) => {
-                                                                    const dayTarget = dailyTargets[metric] || 100;
-                                                                    const isAchieved = value >= dayTarget;
-                                                                    return (
-                                                                        <td key={i} style={{ 
-                                                                            padding: '8px', 
-                                                                            background: isAchieved ? '#4CAF5030' : '#E5737330',
-                                                                            border: '1px solid #404040', 
-                                                                            color: '#E0E0E0', 
-                                                                            textAlign: 'center' 
-                                                                        }}>
-                                                                            {value}
-                                                                            <br/>
-                                                                            <span style={{ 
-                                                                                fontSize: '11px', 
-                                                                                color: isAchieved ? '#4CAF50' : '#E57373' 
-                                                                            }}>
-                                                                                (목표: {dayTarget})
-                                                                            </span>
-                                                                        </td>
-                                                                    );
-                                                                })}
-                                                                <td style={{ 
-                                                                    padding: '8px', 
-                                                                    background: weekTotal >= weeklyTarget ? '#4CAF50' : '#E57373',
-                                                                    border: '1px solid #404040', 
-                                                                    color: 'white', 
-                                                                    textAlign: 'center',
-                                                                    fontWeight: 'bold'
-                                                                }}>
-                                                                    {weekTotal}
-                                                                    <br/>
-                                                                    <span style={{ fontSize: '11px' }}>
-                                                                        ({achievement}%)
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        
-                                        <div style={{ marginTop: '20px', padding: '15px', background: '#3a3a3a', borderRadius: '5px' }}>
-                                            <h4 style={{ marginBottom: '10px', color: '#4A9EFF' }}>💡 항목명 변경 안내</h4>
-                                            <p style={{ fontSize: '13px', color: '#B0B0B0', lineHeight: '1.6' }}>
-                                                항목명이 변경되어도 과거 데이터는 정상적으로 표시됩니다.<br/>
-                                                예시: "SK 인터넷" → "SK 유심"으로 변경해도, DB 컬럼명(sk_유심)이 동일하면 모든 데이터가 연속성 있게 유지됩니다.<br/>
-                                                <span style={{ color: '#FF9800' }}>※ 단, DB 컬럼명이 다른 완전히 새로운 항목을 추가하는 경우에는 과거 데이터와 별개로 관리됩니다.</span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                        </div>
-                    </div>
+                                                );
+                                            })}
+                                            <tr className="team-total">
+                                                <td colSpan="2">{teamName} 총합</td>
+                                                {visibleMetrics.map(metric => (
+                                                    <td key={metric}>{teamTotals[metric]}</td>
+                                                ))}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             );
         }
