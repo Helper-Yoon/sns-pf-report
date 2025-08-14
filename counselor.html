@@ -325,6 +325,37 @@
             color: white;
         }
 
+        .btn-back {
+            background: linear-gradient(135deg, #6B9EFF, #4A9EFF);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5A8FEF, #3A8EEF);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn-refresh {
+            background: #2d2d2d;
+            color: #E0E0E0;
+            border: 1px solid #404040;
+        }
+
+        .btn-refresh:hover:not(:disabled) {
+            background: #3a3a3a;
+            border-color: #4A9EFF;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .save-indicator {
             position: fixed;
             top: 20px;
@@ -375,6 +406,11 @@
             select {
                 flex: 1;
             }
+
+            .button-group {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -387,7 +423,7 @@
         // Supabase 클라이언트 초기화
         const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         function CounselorApp() {
             const [teams, setTeams] = useState({});
@@ -407,7 +443,7 @@
             const loadSettings = useCallback(async () => {
                 try {
                     // 팀 정보 로드
-                    const { data: teamsData } = await supabase
+                    const { data: teamsData } = await supabaseClient
                         .from('config')
                         .select('*')
                         .eq('type', 'teams')
@@ -422,7 +458,7 @@
                     }
 
                     // 메트릭 정보 로드
-                    const { data: metricsData } = await supabase
+                    const { data: metricsData } = await supabaseClient
                         .from('config')
                         .select('*')
                         .eq('type', 'metrics')
@@ -437,7 +473,7 @@
                     }
 
                     // 설정 로드
-                    const { data: settingsData } = await supabase
+                    const { data: settingsData } = await supabaseClient
                         .from('config')
                         .select('*')
                         .eq('type', 'settings')
@@ -480,11 +516,12 @@
                 
                 cleanOldMemos();
             }, []);
+
             const loadTodayData = useCallback(async () => {
                 if (!selectedTeam || !selectedName) return;
 
                 try {
-                    const { data } = await supabase
+                    const { data } = await supabaseClient
                         .from('performance')
                         .select('*')
                         .eq('team', selectedTeam)
@@ -556,7 +593,7 @@
                     });
 
                     // 기존 데이터 확인
-                    const { data: existing } = await supabase
+                    const { data: existing } = await supabaseClient
                         .from('performance')
                         .select('id')
                         .eq('team', selectedTeam)
@@ -565,12 +602,12 @@
                         .single();
 
                     if (existing) {
-                        await supabase
+                        await supabaseClient
                             .from('performance')
                             .update(data)
                             .eq('id', existing.id);
                     } else {
-                        await supabase
+                        await supabaseClient
                             .from('performance')
                             .insert(data);
                     }
@@ -615,7 +652,7 @@
                         });
 
                         // 기존 데이터 확인
-                        const { data: existing } = await supabase
+                        const { data: existing } = await supabaseClient
                             .from('performance')
                             .select('id')
                             .eq('team', selectedTeam)
@@ -624,12 +661,12 @@
                             .single();
 
                         if (existing) {
-                            await supabase
+                            await supabaseClient
                                 .from('performance')
                                 .update(data)
                                 .eq('id', existing.id);
                         } else {
-                            await supabase
+                            await supabaseClient
                                 .from('performance')
                                 .insert(data);
                         }
@@ -668,6 +705,14 @@
             // 수동 새로고침
             const handleRefresh = async () => {
                 window.location.reload();
+            };
+
+            // 실적보고 메인으로 이동
+            const handleGoToMain = () => {
+                // 실적보고 메인 페이지 URL로 변경해주세요
+                // 예시: window.location.href = '/main.html';
+                // 또는: window.location.href = '../index.html';
+                window.location.href = 'index.html'; // 메인 페이지 경로에 맞게 수정
             };
 
             // useEffect
@@ -780,23 +825,31 @@
                             </span>
                         </div>
 
-                        <button 
-                            className="btn btn-primary" 
-                            onClick={handleRefresh}
-                            style={{
-                                padding: '8px 16px',
-                                background: isSaving ? '#999' : '#4A9EFF',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                fontSize: '14px',
-                                cursor: isSaving ? 'not-allowed' : 'pointer',
-                                fontWeight: 'bold'
-                            }}
-                            disabled={isLoading || isSaving}
-                        >
-                            🔄 새로고침
-                        </button>
+                        <div className="button-group">
+                            <button 
+                                className="btn btn-back" 
+                                onClick={handleGoToMain}
+                                style={{
+                                    padding: '8px 16px',
+                                    cursor: isSaving ? 'not-allowed' : 'pointer',
+                                }}
+                                disabled={isSaving}
+                            >
+                                ← 메인으로
+                            </button>
+
+                            <button 
+                                className="btn btn-refresh" 
+                                onClick={handleRefresh}
+                                style={{
+                                    padding: '8px 16px',
+                                    cursor: isSaving ? 'not-allowed' : 'pointer',
+                                }}
+                                disabled={isLoading || isSaving}
+                            >
+                                🔄 새로고침
+                            </button>
+                        </div>
 
                         <div className={`selection-status ${isReady ? 'status-ready' : 'status-warning'}`}>
                             {isReady ? '✅ 실적 입력 가능' : '⚠️ 팀과 이름을 선택하세요'}
