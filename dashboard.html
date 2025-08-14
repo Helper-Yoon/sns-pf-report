@@ -916,6 +916,7 @@
             const [weeklyData, setWeeklyData] = useState({});
             const [editMode, setEditMode] = useState(false);
             const [editedData, setEditedData] = useState({});
+            const [offStatus, setOffStatus] = useState({});
 
             // 설정 로드
             const loadConfig = useCallback(async () => {
@@ -960,6 +961,9 @@
                         setVisibleMetrics(settingsData.data.visible_metrics || []);
                         setDailyTargets(settingsData.data.daily_targets || {});
                     }
+                    
+                    // 휴무 상태 로드
+                    loadOffStatus();
                 } catch (error) {
                     console.error('설정 로드 오류:', error);
                 }
@@ -983,6 +987,9 @@
                     setPerformanceData(dataMap);
                     setEditedData({}); // 수정 데이터 초기화
                     setLastUpdate(new Date());
+                    
+                    // 휴무 상태도 함께 로드
+                    loadOffStatus();
                 } catch (error) {
                     console.error('데이터 로드 오류:', error);
                 } finally {
@@ -1758,7 +1765,19 @@
                 }
             }, [loadPerformanceData, autoRefresh]);
 
-            // 주간 현황 모달이 열릴 때 데이터 로드
+            // useEffect - 자정에 날짜 자동 변경
+            useEffect(() => {
+                const checkMidnight = setInterval(() => {
+                    const now = new Date();
+                    // 자정이 되면 날짜 자동 변경
+                    if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() < 2) {
+                        setSelectedDate(now.toISOString().split('T')[0]);
+                        loadPerformanceData();
+                    }
+                }, 1000);
+                
+                return () => clearInterval(checkMidnight);
+            }, [loadPerformanceData]);
             useEffect(() => {
                 if (showWeeklyModal) {
                     loadWeeklyData();
@@ -1905,6 +1924,7 @@
                                         <table className="team-table">
                                             <thead>
                                                 <tr>
+                                                    <th style={{ width: '80px' }}>휴무설정</th>
                                                     <th>이름</th>
                                                     <th>근속기간</th>
                                                     {visibleMetrics.map(metric => (
@@ -1917,21 +1937,42 @@
                                                     const key = `${teamName}_${member.name}`;
                                                     const data = performanceData[key] || {};
                                                     const editData = editedData[key] || {};
-                                                    const isOff = member.isOff || false;
+                                                    const currentOffStatus = offStatus[key] || '';
                                                     
                                                     return (
                                                         <tr key={member.name} style={{
-                                                            background: isOff ? '#5f2a2a20' : 'transparent'
+                                                            background: currentOffStatus ? '#5f2a2a20' : 'transparent'
                                                         }}>
-                                                            <td style={{
-                                                                background: isOff ? '#5f2a2a30' : 'transparent',
-                                                                fontWeight: isOff ? 'bold' : 'normal'
-                                                            }}>
-                                                                {member.name}
-                                                                {isOff && <span style={{ color: '#FF6B6B', marginLeft: '5px' }}>(휴무)</span>}
+                                                            <td style={{ padding: '2px' }}>
+                                                                <select 
+                                                                    value={currentOffStatus}
+                                                                    onChange={(e) => handleOffStatusChange(teamName, member.name, e.target.value)}
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        padding: '4px',
+                                                                        background: currentOffStatus ? '#5f2a2a' : '#3a3a3a',
+                                                                        color: '#E0E0E0',
+                                                                        border: '1px solid #404040',
+                                                                        borderRadius: '3px',
+                                                                        fontSize: '11px',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                >
+                                                                    <option value="">출근</option>
+                                                                    <option value="휴무">휴무</option>
+                                                                    <option value="연차">연차</option>
+                                                                    <option value="반차">반차</option>
+                                                                </select>
                                                             </td>
                                                             <td style={{
-                                                                background: isOff ? '#5f2a2a30' : 'transparent'
+                                                                background: currentOffStatus ? '#5f2a2a30' : 'transparent',
+                                                                fontWeight: currentOffStatus ? 'bold' : 'normal'
+                                                            }}>
+                                                                {member.name}
+                                                                {currentOffStatus && <span style={{ color: '#FF6B6B', marginLeft: '5px', fontSize: '10px' }}>({currentOffStatus})</span>}
+                                                            </td>
+                                                            <td style={{
+                                                                background: currentOffStatus ? '#5f2a2a30' : 'transparent'
                                                             }}>{member.tenure}</td>
                                                             {visibleMetrics.map(metric => {
                                                                 const dbColumn = metricToDb[metric];
@@ -1963,14 +2004,15 @@
                                                                         </td>
                                                                     );
                                                                 } else {
-                                                                    // 휴무자인 경우 데이터가 0이면 "휴무" 표시
-                                                                    const displayValue = isOff && currentValue === 0 ? '휴무' : currentValue;
+                                                                    // 휴무자인 경우 데이터가 0이면 휴무 상태 표시
+                                                                    const displayValue = currentOffStatus && currentValue === 0 ? currentOffStatus : currentValue;
                                                                     
                                                                     return (
                                                                         <td key={metric} style={{
-                                                                            background: isOff && currentValue === 0 ? '#5f2a2a30' : 'transparent',
-                                                                            color: isOff && currentValue === 0 ? '#FF6B6B' : '#E0E0E0',
-                                                                            fontWeight: isOff && currentValue === 0 ? 'bold' : 'normal'
+                                                                            background: currentOffStatus && currentValue === 0 ? '#5f2a2a30' : 'transparent',
+                                                                            color: currentOffStatus && currentValue === 0 ? '#FF6B6B' : '#E0E0E0',
+                                                                            fontWeight: currentOffStatus && currentValue === 0 ? 'bold' : 'normal',
+                                                                            fontSize: currentOffStatus && currentValue === 0 ? '11px' : '12px'
                                                                         }}>
                                                                             {displayValue}
                                                                         </td>
@@ -1981,7 +2023,7 @@
                                                     );
                                                 })}
                                                 <tr className="team-total">
-                                                    <td colSpan="2">{teamName} 총합</td>
+                                                    <td colSpan="3">{teamName} 총합</td>
                                                     {visibleMetrics.map(metric => (
                                                         <td key={metric}>{teamTotals[metric]}</td>
                                                     ))}
