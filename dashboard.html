@@ -905,7 +905,12 @@
             const [allMetrics, setAllMetrics] = useState([]);
             const [dailyTargets, setDailyTargets] = useState({});
             const [performanceData, setPerformanceData] = useState({});
-            const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+            const [selectedDate, setSelectedDate] = useState(() => {
+                // 초기값을 KST 기준으로 설정
+                const now = new Date();
+                const kst = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                return kst.toISOString().split('T')[0];
+            });
             const [isLoading, setIsLoading] = useState(true);
             const [lastUpdate, setLastUpdate] = useState(new Date());
             const [autoRefresh, setAutoRefresh] = useState(true);
