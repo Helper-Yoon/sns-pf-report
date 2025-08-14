@@ -627,12 +627,22 @@
             const [editingMember, setEditingMember] = useState(null);
             const [newMemberName, setNewMemberName] = useState('');
             const [newMemberTenure, setNewMemberTenure] = useState('3개월미만');
+            const [offMembers, setOffMembers] = useState({}); // 휴무 상태 관리
 
             // 모달이 열릴 때마다 데이터 초기화
             useEffect(() => {
                 if (show && teams && Object.keys(teams).length > 0) {
                     setLocalTeams(JSON.parse(JSON.stringify(teams)));
                     setSelectedTeam(Object.keys(teams)[0] || '');
+                    // 휴무 상태 초기화
+                    const offStatus = {};
+                    Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                        teamInfo.members.forEach(member => {
+                            const key = `${teamName}_${member.name}`;
+                            offStatus[key] = member.isOff || false;
+                        });
+                    });
+                    setOffMembers(offStatus);
                     console.log('Team modal initialized with:', teams);
                 }
             }, [show, teams]);
@@ -648,7 +658,8 @@
                 const newTeams = {...localTeams};
                 newTeams[selectedTeam].members.push({
                     name: newMemberName,
-                    tenure: newMemberTenure
+                    tenure: newMemberTenure,
+                    isOff: false
                 });
                 setLocalTeams(newTeams);
                 setNewMemberName('');
@@ -658,8 +669,14 @@
             const handleDeleteMember = (memberIndex) => {
                 if (confirm('정말 삭제하시겠습니까?')) {
                     const newTeams = {...localTeams};
+                    const member = newTeams[selectedTeam].members[memberIndex];
+                    const key = `${selectedTeam}_${member.name}`;
                     newTeams[selectedTeam].members.splice(memberIndex, 1);
                     setLocalTeams(newTeams);
+                    
+                    const newOffMembers = {...offMembers};
+                    delete newOffMembers[key];
+                    setOffMembers(newOffMembers);
                 }
             };
 
@@ -672,10 +689,27 @@
                 const newTeams = {...localTeams};
                 newTeams[selectedTeam].members[editingMember.index] = {
                     name: editingMember.name,
-                    tenure: editingMember.tenure
+                    tenure: editingMember.tenure,
+                    isOff: editingMember.isOff || false
                 };
                 setLocalTeams(newTeams);
+                
+                const key = `${selectedTeam}_${editingMember.name}`;
+                setOffMembers({...offMembers, [key]: editingMember.isOff || false});
+                
                 setEditingMember(null);
+            };
+
+            const toggleOffStatus = (memberIndex) => {
+                const member = localTeams[selectedTeam].members[memberIndex];
+                const key = `${selectedTeam}_${member.name}`;
+                const newOffStatus = !offMembers[key];
+                
+                setOffMembers({...offMembers, [key]: newOffStatus});
+                
+                const newTeams = {...localTeams};
+                newTeams[selectedTeam].members[memberIndex].isOff = newOffStatus;
+                setLocalTeams(newTeams);
             };
 
             const handleSave = async () => {
@@ -685,7 +719,7 @@
 
             return (
                 <div className="modal active">
-                    <div className="modal-content" style={{ maxWidth: '800px' }}>
+                    <div className="modal-content" style={{ maxWidth: '900px' }}>
                         <span className="modal-close" onClick={onClose}>×</span>
                         <div className="modal-header">상담사 관리</div>
                         
@@ -731,41 +765,63 @@
 
                                 {/* 멤버 리스트 */}
                                 <div style={{ maxHeight: '400px', overflowY: 'auto', background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
-                                    {localTeams[selectedTeam]?.members.map((member, index) => (
-                                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #404040' }}>
-                                            {editingMember?.index === index ? (
-                                                <>
-                                                    <input 
-                                                        type="text"
-                                                        value={editingMember.name}
-                                                        onChange={(e) => setEditingMember({...editingMember, name: e.target.value})}
-                                                        style={{ flex: 1, marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
-                                                    />
-                                                    <select 
-                                                        value={editingMember.tenure}
-                                                        onChange={(e) => setEditingMember({...editingMember, tenure: e.target.value})}
-                                                        style={{ marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
-                                                    >
-                                                        <option value="3개월미만">3개월미만</option>
-                                                        <option value="3개월이상">3개월이상</option>
-                                                        <option value="6개월이상">6개월이상</option>
-                                                        <option value="9개월이상">9개월이상</option>
-                                                        <option value="1년이상">1년이상</option>
-                                                    </select>
-                                                    <button className="btn btn-success" onClick={handleUpdateMember} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>저장</button>
-                                                    <button className="btn" onClick={() => setEditingMember(null)} style={{ padding: '4px 10px', fontSize: '12px', background: '#666' }}>취소</button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span>{member.name} ({member.tenure})</span>
-                                                    <div>
-                                                        <button className="btn btn-info" onClick={() => handleEditMember(index)} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>수정</button>
-                                                        <button className="btn btn-danger" onClick={() => handleDeleteMember(index)} style={{ padding: '4px 10px', fontSize: '12px' }}>삭제</button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    ))}
+                                    {localTeams[selectedTeam]?.members.map((member, index) => {
+                                        const key = `${selectedTeam}_${member.name}`;
+                                        const isOff = offMembers[key] || false;
+                                        
+                                        return (
+                                            <div key={index} style={{ 
+                                                display: 'flex', 
+                                                justifyContent: 'space-between', 
+                                                alignItems: 'center', 
+                                                padding: '8px', 
+                                                borderBottom: '1px solid #404040',
+                                                background: isOff ? '#5f2a2a30' : 'transparent'
+                                            }}>
+                                                {editingMember?.index === index ? (
+                                                    <>
+                                                        <input 
+                                                            type="text"
+                                                            value={editingMember.name}
+                                                            onChange={(e) => setEditingMember({...editingMember, name: e.target.value})}
+                                                            style={{ flex: 1, marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
+                                                        />
+                                                        <select 
+                                                            value={editingMember.tenure}
+                                                            onChange={(e) => setEditingMember({...editingMember, tenure: e.target.value})}
+                                                            style={{ marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
+                                                        >
+                                                            <option value="3개월미만">3개월미만</option>
+                                                            <option value="3개월이상">3개월이상</option>
+                                                            <option value="6개월이상">6개월이상</option>
+                                                            <option value="9개월이상">9개월이상</option>
+                                                            <option value="1년이상">1년이상</option>
+                                                        </select>
+                                                        <button className="btn btn-success" onClick={handleUpdateMember} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>저장</button>
+                                                        <button className="btn" onClick={() => setEditingMember(null)} style={{ padding: '4px 10px', fontSize: '12px', background: '#666' }}>취소</button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>
+                                                            {member.name} ({member.tenure})
+                                                            {isOff && <span style={{ color: '#FF6B6B', marginLeft: '10px', fontWeight: 'bold' }}>🔴 휴무</span>}
+                                                        </span>
+                                                        <div>
+                                                            <button 
+                                                                className={`btn ${isOff ? 'btn-success' : 'btn-warning'}`} 
+                                                                onClick={() => toggleOffStatus(index)} 
+                                                                style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}
+                                                            >
+                                                                {isOff ? '출근' : '휴무'}
+                                                            </button>
+                                                            <button className="btn btn-info" onClick={() => handleEditMember(index)} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>수정</button>
+                                                            <button className="btn btn-danger" onClick={() => handleDeleteMember(index)} style={{ padding: '4px 10px', fontSize: '12px' }}>삭제</button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -783,9 +839,66 @@
             );
         }
 
+        // 목표 설정 모달 컴포넌트 추가
+        function TargetSettingModal({ show, onClose, visibleMetrics, dailyTargets, onSave }) {
+            const [localTargets, setLocalTargets] = useState({});
+
+            // 모달이 열릴 때마다 데이터 초기화
+            useEffect(() => {
+                if (show) {
+                    setLocalTargets({...dailyTargets});
+                }
+            }, [show, dailyTargets]);
+
+            if (!show) return null;
+
+            const handleSave = async () => {
+                await onSave(localTargets);
+                onClose();
+            };
+
+            return (
+                <div className="modal active">
+                    <div className="modal-content">
+                        <span className="modal-close" onClick={onClose}>×</span>
+                        <div className="modal-header">일일 목표 설정</div>
+                        {visibleMetrics.map(metric => (
+                            <div key={metric} className="form-group">
+                                <label>{metric}</label>
+                                <input 
+                                    type="number"
+                                    value={localTargets[metric] || 100}
+                                    onChange={(e) => {
+                                        setLocalTargets({
+                                            ...localTargets,
+                                            [metric]: parseInt(e.target.value) || 0
+                                        });
+                                    }}
+                                />
+                            </div>
+                        ))}
+                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                            <button 
+                                className="btn btn-success" 
+                                onClick={handleSave}
+                                style={{ marginRight: '10px' }}
+                            >
+                                저장
+                            </button>
+                            <button 
+                                className="btn" 
+                                onClick={onClose}
+                                style={{ background: '#666' }}
+                            >
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         function DashboardApp() {
-            const [isAuthenticated, setIsAuthenticated] = useState(false);
-            const [passwordInput, setPasswordInput] = useState('');
             const [teams, setTeams] = useState({});
             const [visibleMetrics, setVisibleMetrics] = useState([]);
             const [metricToDb, setMetricToDb] = useState({});
@@ -801,33 +914,8 @@
             const [showTeamModal, setShowTeamModal] = useState(false);
             const [showWeeklyModal, setShowWeeklyModal] = useState(false);
             const [weeklyData, setWeeklyData] = useState({});
-
-            // 비밀번호 확인
-            const handlePasswordSubmit = (e) => {
-                e.preventDefault();
-                if (passwordInput === '3504') {
-                    setIsAuthenticated(true);
-                    localStorage.setItem('dashboardAuth', 'true');
-                } else {
-                    alert('비밀번호가 틀렸습니다.');
-                    setPasswordInput('');
-                }
-            };
-
-            // 로그아웃
-            const handleLogout = () => {
-                setIsAuthenticated(false);
-                localStorage.removeItem('dashboardAuth');
-                setPasswordInput('');
-            };
-
-            // 페이지 로드 시 인증 상태 확인
-            useEffect(() => {
-                const auth = localStorage.getItem('dashboardAuth');
-                if (auth === 'true') {
-                    setIsAuthenticated(true);
-                }
-            }, []);
+            const [editMode, setEditMode] = useState(false);
+            const [editedData, setEditedData] = useState({});
 
             // 설정 로드
             const loadConfig = useCallback(async () => {
@@ -868,7 +956,7 @@
                         .eq('type', 'settings')
                         .single();
 
-                    if (settingsData) {
+                    if (settingsData && settingsData.data) {
                         setVisibleMetrics(settingsData.data.visible_metrics || []);
                         setDailyTargets(settingsData.data.daily_targets || {});
                     }
@@ -893,6 +981,7 @@
                         });
                     }
                     setPerformanceData(dataMap);
+                    setEditedData({}); // 수정 데이터 초기화
                     setLastUpdate(new Date());
                 } catch (error) {
                     console.error('데이터 로드 오류:', error);
@@ -940,7 +1029,79 @@
                 }
             }, [selectedDate]);
 
-            // 메트릭 색상 레벨 계산
+            // 데이터 수정 핸들러
+            const handleDataEdit = (teamName, memberName, metric, value) => {
+                const key = `${teamName}_${memberName}`;
+                const dbColumn = metricToDb[metric];
+                
+                setEditedData(prev => ({
+                    ...prev,
+                    [key]: {
+                        ...prev[key],
+                        [dbColumn]: parseInt(value) || 0
+                    }
+                }));
+            };
+
+            // 수정 데이터 저장
+            const saveEditedData = async () => {
+                try {
+                    const updates = [];
+                    
+                    for (const [key, data] of Object.entries(editedData)) {
+                        const [team, name] = key.split('_');
+                        const existingData = performanceData[key];
+                        
+                        if (existingData) {
+                            // 기존 데이터 업데이트
+                            updates.push(
+                                supabase
+                                    .from('performance')
+                                    .update({ ...existingData, ...data })
+                                    .eq('id', existingData.id)
+                            );
+                        } else {
+                            // 새 데이터 생성
+                            const newRecord = {
+                                team,
+                                name,
+                                date: selectedDate,
+                                ...data
+                            };
+                            updates.push(
+                                supabase
+                                    .from('performance')
+                                    .insert(newRecord)
+                            );
+                        }
+                    }
+                    
+                    await Promise.all(updates);
+                    alert('데이터가 저장되었습니다.');
+                    setEditMode(false);
+                    loadPerformanceData();
+                } catch (error) {
+                    console.error('저장 오류:', error);
+                    alert('데이터 저장 중 오류가 발생했습니다.');
+                }
+            };
+
+            // 수정 모드 토글
+            const toggleEditMode = () => {
+                if (editMode && Object.keys(editedData).length > 0) {
+                    if (confirm('수정한 데이터를 저장하시겠습니까?')) {
+                        saveEditedData();
+                    } else {
+                        setEditedData({});
+                        setEditMode(false);
+                    }
+                } else {
+                    setEditMode(!editMode);
+                    if (!editMode) {
+                        setAutoRefresh(false); // 수정 모드에서는 자동 새로고침 비활성화
+                    }
+                }
+            };
             const getMetricLevel = (value, metric) => {
                 if (value === 0) return 'metric-level-0';
                 
@@ -1280,7 +1441,7 @@
                 // 크기 계산
                 const colWidths = [150, 100, 100, ...visibleMetrics.map(() => 85)];
                 const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
-                const rowHeight = 26;
+                const rowHeight = 30; // 높이 증가
                 let totalRows = 4; // 제목 + 헤더
                 Object.values(teams).forEach(team => {
                     totalRows += team.members.length + 1; // 멤버 + 팀 총합
@@ -1295,7 +1456,7 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 // 폰트 설정
-                ctx.font = '10px Malgun Gothic';
+                ctx.font = '11px Malgun Gothic';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
@@ -1303,13 +1464,13 @@
                 const xStart = 40;
                 
                 // 제목
-                ctx.font = 'bold 14px Malgun Gothic';
+                ctx.font = 'bold 16px Malgun Gothic';
                 ctx.fillStyle = 'black';
                 ctx.fillText(`SNS센터 실적보고 - ${selectedDate}`, totalWidth / 2, y);
                 y += 45;
                 
                 // 헤더
-                ctx.font = '10px Malgun Gothic';
+                ctx.font = '11px Malgun Gothic';
                 const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
                 let x = xStart;
                 headers.forEach((header, i) => {
@@ -1323,6 +1484,7 @@
                     
                     // 텍스트
                     ctx.fillStyle = 'black';
+                    ctx.font = 'bold 11px Malgun Gothic';
                     ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
                     x += colWidths[i];
                 });
@@ -1338,6 +1500,14 @@
                     teamInfo.members.forEach((member, idx) => {
                         const key = `${teamName}_${member.name}`;
                         const data = performanceData[key] || {};
+                        const isOff = member.isOff || false;
+                        
+                        // 실적이 있는지 확인
+                        const hasAnyData = visibleMetrics.some(metric => {
+                            const dbColumn = metricToDb[metric];
+                            return data[dbColumn] && data[dbColumn] > 0;
+                        });
+                        
                         x = xStart;
                         
                         // 소속 (첫 번째 멤버만)
@@ -1354,14 +1524,14 @@
                             
                             // 텍스트
                             ctx.fillStyle = 'black';
-                            ctx.font = 'bold 10px Malgun Gothic';
+                            ctx.font = 'bold 11px Malgun Gothic';
                             const teamText = teamName === '5파트' 
                                 ? `의정부SNS센터` 
                                 : `SNS센터`;
-                            ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 20);
+                            ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 22);
                             ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
-                            ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 20);
-                            ctx.font = '10px Malgun Gothic';
+                            ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 22);
+                            ctx.font = '11px Malgun Gothic';
                         } else {
                             // 병합된 셀의 세로 선만 그리기
                             ctx.strokeStyle = 'black';
@@ -1372,21 +1542,34 @@
                         }
                         x += colWidths[0];
                         
-                        // 이름
-                        ctx.fillStyle = teamColor;
+                        // 이름 - 휴무인 경우 배경색 변경
+                        ctx.fillStyle = isOff && !hasAnyData ? '#FFCDD2' : teamColor;
                         ctx.fillRect(x, y, colWidths[1], rowHeight);
                         ctx.strokeStyle = 'black';
                         ctx.strokeRect(x, y, colWidths[1], rowHeight);
                         ctx.fillStyle = 'black';
-                        ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
+                        ctx.font = '11px Malgun Gothic';
+                        
+                        // 휴무 표시
+                        if (isOff && !hasAnyData) {
+                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2 - 6);
+                            ctx.font = '9px Malgun Gothic';
+                            ctx.fillStyle = '#B71C1C';
+                            ctx.fillText('(휴무)', x + colWidths[1]/2, y + rowHeight/2 + 6);
+                            ctx.fillStyle = 'black';
+                            ctx.font = '11px Malgun Gothic';
+                        } else {
+                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
+                        }
                         x += colWidths[1];
                         
-                        // 근속기간
-                        ctx.fillStyle = teamColor;
+                        // 근속기간 - 휴무인 경우 배경색 변경
+                        ctx.fillStyle = isOff && !hasAnyData ? '#FFCDD2' : teamColor;
                         ctx.fillRect(x, y, colWidths[2], rowHeight);
                         ctx.strokeStyle = 'black';
                         ctx.strokeRect(x, y, colWidths[2], rowHeight);
                         ctx.fillStyle = 'black';
+                        ctx.font = '10px Malgun Gothic';
                         ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
                         x += colWidths[2];
                         
@@ -1395,14 +1578,30 @@
                             const dbColumn = metricToDb[metric];
                             const value = data[dbColumn] || 0;
                             
-                            ctx.fillStyle = 'white';
-                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                            ctx.strokeStyle = 'black';
-                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                            ctx.fillStyle = 'black';
-                            ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                            // 휴무자는 데이터가 없을 때만 빨간색 배경과 "휴무" 텍스트
+                            if (isOff && value === 0) {
+                                ctx.fillStyle = '#FFCDD2';
+                                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                                ctx.strokeStyle = 'black';
+                                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                                
+                                ctx.fillStyle = '#B71C1C';
+                                ctx.font = 'bold 11px Malgun Gothic';
+                                ctx.fillText('휴무', x + colWidths[3 + i]/2, y + rowHeight/2);
+                            } else {
+                                // 데이터가 있거나 휴무가 아닌 경우 정상 표시
+                                ctx.fillStyle = 'white';
+                                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                                ctx.strokeStyle = 'black';
+                                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                                
+                                ctx.fillStyle = 'black';
+                                ctx.font = 'bold 13px Malgun Gothic';
+                                ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                            }
                             x += colWidths[3 + i];
                         });
+                        ctx.font = '11px Malgun Gothic';
                         
                         y += rowHeight;
                     });
@@ -1416,9 +1615,8 @@
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                     ctx.fillStyle = 'black';
-                    ctx.font = 'bold 10px Malgun Gothic';
+                    ctx.font = 'bold 12px Malgun Gothic';
                     ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                    ctx.font = '10px Malgun Gothic';
                     x += colWidths[0] + colWidths[1] + colWidths[2];
                     
                     // 팀 총합 데이터
@@ -1428,11 +1626,11 @@
                         ctx.strokeStyle = 'black';
                         ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                         ctx.fillStyle = 'black';
-                        ctx.font = 'bold 10px Malgun Gothic';
+                        ctx.font = 'bold 14px Malgun Gothic';
                         ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                         x += colWidths[3 + i];
                     });
-                    ctx.font = '10px Malgun Gothic';
+                    ctx.font = '11px Malgun Gothic';
                     
                     y += rowHeight + 8;
                 });
@@ -1447,7 +1645,7 @@
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.fillStyle = 'black';
-                ctx.font = 'bold 10px Malgun Gothic';
+                ctx.font = 'bold 12px Malgun Gothic';
                 ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
                 x += colWidths[0] + colWidths[1] + colWidths[2];
                 
@@ -1457,10 +1655,11 @@
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.fillStyle = 'black';
+                    ctx.font = 'bold 14px Malgun Gothic';
                     ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                     x += colWidths[3 + i];
                 });
-                ctx.font = '10px Malgun Gothic';
+                ctx.font = '11px Malgun Gothic';
                 y += rowHeight + 2;
                 
                 // 일 목표
@@ -1470,6 +1669,7 @@
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.fillStyle = 'black';
+                ctx.font = '12px Malgun Gothic';
                 ctx.fillText('일 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
                 x += colWidths[0] + colWidths[1] + colWidths[2];
                 
@@ -1479,9 +1679,11 @@
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.fillStyle = 'black';
+                    ctx.font = 'bold 13px Malgun Gothic';
                     ctx.fillText((dailyTargets[metric] || 100).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                     x += colWidths[3 + i];
                 });
+                ctx.font = '11px Malgun Gothic';
                 y += rowHeight + 2;
                 
                 // 달성
@@ -1491,6 +1693,7 @@
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.fillStyle = 'black';
+                ctx.font = '12px Malgun Gothic';
                 ctx.fillText('달성', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
                 x += colWidths[0] + colWidths[1] + colWidths[2];
                 
@@ -1502,7 +1705,8 @@
                     ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = 'black';
+                    ctx.fillStyle = diff > 0 ? '#B71C1C' : '#1B5E20';
+                    ctx.font = 'bold 13px Malgun Gothic';
                     ctx.fillText(status, x + colWidths[3 + i]/2, y + rowHeight/2);
                     x += colWidths[3 + i];
                 });
@@ -1514,20 +1718,26 @@
                 link.click();
             };
 
-            // 설정 저장
-            const saveSettings = async () => {
+            // 설정 저장 함수를 upsert로 수정
+            const saveSettings = async (targets) => {
                 try {
                     const settingsData = {
-                        visible_metrics: visibleMetrics,
-                        daily_targets: dailyTargets
+                        type: 'settings',
+                        data: {
+                            visible_metrics: visibleMetrics,
+                            daily_targets: targets
+                        }
                     };
 
-                    await supabase
+                    // upsert 사용 - 레코드가 없으면 생성, 있으면 업데이트
+                    const { error } = await supabase
                         .from('config')
-                        .update({ data: settingsData })
-                        .eq('type', 'settings');
+                        .upsert(settingsData, { onConflict: 'type' });
 
-                    alert('설정이 저장되었습니다.');
+                    if (error) throw error;
+
+                    setDailyTargets(targets);
+                    alert('목표가 저장되었습니다.');
                 } catch (error) {
                     console.error('설정 저장 오류:', error);
                     alert('설정 저장 중 오류가 발생했습니다.');
@@ -1536,93 +1746,24 @@
 
             // useEffect
             useEffect(() => {
-                if (isAuthenticated) {
-                    loadConfig();
-                }
-            }, [loadConfig, isAuthenticated]);
+                loadConfig();
+            }, [loadConfig]);
 
             useEffect(() => {
-                if (isAuthenticated) {
-                    loadPerformanceData();
-                    
-                    if (autoRefresh) {
-                        const interval = setInterval(loadPerformanceData, 60000); // 1분마다
-                        return () => clearInterval(interval);
-                    }
+                loadPerformanceData();
+                
+                if (autoRefresh) {
+                    const interval = setInterval(loadPerformanceData, 60000); // 1분마다
+                    return () => clearInterval(interval);
                 }
-            }, [loadPerformanceData, autoRefresh, isAuthenticated]);
+            }, [loadPerformanceData, autoRefresh]);
 
             // 주간 현황 모달이 열릴 때 데이터 로드
             useEffect(() => {
-                if (showWeeklyModal && isAuthenticated) {
+                if (showWeeklyModal) {
                     loadWeeklyData();
                 }
-            }, [showWeeklyModal, loadWeeklyData, isAuthenticated]);
-
-            // 비밀번호 화면
-            if (!isAuthenticated) {
-                return (
-                    <div className="dashboard-container">
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: '100vh'
-                        }}>
-                            <div style={{
-                                background: '#2d2d2d',
-                                padding: '40px',
-                                borderRadius: '10px',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-                                textAlign: 'center',
-                                maxWidth: '400px',
-                                width: '90%'
-                            }}>
-                                <h2 style={{ marginBottom: '30px', color: '#E0E0E0' }}>
-                                    🔒 관리자 대시보드
-                                </h2>
-                                <form onSubmit={handlePasswordSubmit}>
-                                    <input
-                                        type="password"
-                                        placeholder="비밀번호를 입력하세요"
-                                        value={passwordInput}
-                                        onChange={(e) => setPasswordInput(e.target.value)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            fontSize: '16px',
-                                            background: '#3a3a3a',
-                                            border: '1px solid #404040',
-                                            borderRadius: '5px',
-                                            color: '#E0E0E0',
-                                            marginBottom: '20px'
-                                        }}
-                                        autoFocus
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            fontSize: '16px'
-                                        }}
-                                    >
-                                        로그인
-                                    </button>
-                                </form>
-                                <p style={{
-                                    marginTop: '20px',
-                                    fontSize: '12px',
-                                    color: '#B0B0B0'
-                                }}>
-                                    SNS센터 관리자만 접근 가능합니다
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
+            }, [showWeeklyModal, loadWeeklyData]);
 
             if (isLoading) {
                 return (
@@ -1658,6 +1799,12 @@
                         <button className="btn btn-primary" onClick={loadPerformanceData}>
                             🔄 새로고침
                         </button>
+                        <button 
+                            className={`btn ${editMode ? 'btn-danger' : 'btn-success'}`} 
+                            onClick={toggleEditMode}
+                        >
+                            {editMode ? '✏️ 수정완료' : '✏️ 수정모드'}
+                        </button>
                         <button className="btn btn-info" onClick={() => setShowMetricsModal(true)}>
                             ⚙️ 항목편집
                         </button>
@@ -1683,6 +1830,7 @@
                                 type="date" 
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
+                                disabled={editMode}
                             />
                         </div>
 
@@ -1691,17 +1839,23 @@
                                 type="checkbox" 
                                 checked={autoRefresh}
                                 onChange={(e) => setAutoRefresh(e.target.checked)}
+                                disabled={editMode}
                             />
                             자동새로고침
                         </label>
-
-                        <button 
-                            className="btn btn-danger" 
-                            onClick={handleLogout}
-                            style={{ marginLeft: 'auto' }}
-                        >
-                            🚪 로그아웃
-                        </button>
+                        
+                        {editMode && (
+                            <div style={{ 
+                                padding: '5px 10px', 
+                                background: '#FF6B6B', 
+                                color: 'white', 
+                                borderRadius: '5px',
+                                fontWeight: 'bold',
+                                animation: 'pulse 2s infinite'
+                            }}>
+                                📝 수정 모드 활성화
+                            </div>
+                        )}
                     </div>
 
                     <div id="dashboard-content">
@@ -1762,18 +1916,66 @@
                                                 {teamInfo.members.map(member => {
                                                     const key = `${teamName}_${member.name}`;
                                                     const data = performanceData[key] || {};
+                                                    const editData = editedData[key] || {};
+                                                    const isOff = member.isOff || false;
                                                     
                                                     return (
-                                                        <tr key={member.name}>
-                                                            <td>{member.name}</td>
-                                                            <td>{member.tenure}</td>
+                                                        <tr key={member.name} style={{
+                                                            background: isOff ? '#5f2a2a20' : 'transparent'
+                                                        }}>
+                                                            <td style={{
+                                                                background: isOff ? '#5f2a2a30' : 'transparent',
+                                                                fontWeight: isOff ? 'bold' : 'normal'
+                                                            }}>
+                                                                {member.name}
+                                                                {isOff && <span style={{ color: '#FF6B6B', marginLeft: '5px' }}>(휴무)</span>}
+                                                            </td>
+                                                            <td style={{
+                                                                background: isOff ? '#5f2a2a30' : 'transparent'
+                                                            }}>{member.tenure}</td>
                                                             {visibleMetrics.map(metric => {
                                                                 const dbColumn = metricToDb[metric];
-                                                                return (
-                                                                    <td key={metric}>
-                                                                        {data[dbColumn] || 0}
-                                                                    </td>
-                                                                );
+                                                                const originalValue = data[dbColumn] || 0;
+                                                                const currentValue = editData[dbColumn] !== undefined ? editData[dbColumn] : originalValue;
+                                                                
+                                                                if (editMode) {
+                                                                    return (
+                                                                        <td key={metric} style={{
+                                                                            padding: '2px',
+                                                                            background: editData[dbColumn] !== undefined ? '#4A9EFF20' : 'transparent'
+                                                                        }}>
+                                                                            <input 
+                                                                                type="number"
+                                                                                value={currentValue}
+                                                                                onChange={(e) => handleDataEdit(teamName, member.name, metric, e.target.value)}
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    padding: '4px',
+                                                                                    background: '#2d2d2d',
+                                                                                    border: editData[dbColumn] !== undefined ? '2px solid #4A9EFF' : '1px solid #404040',
+                                                                                    borderRadius: '3px',
+                                                                                    color: '#E0E0E0',
+                                                                                    textAlign: 'center',
+                                                                                    fontSize: '12px'
+                                                                                }}
+                                                                                min="0"
+                                                                            />
+                                                                        </td>
+                                                                    );
+                                                                } else {
+                                                                    // 휴무자인 경우 데이터가 0이면 "휴무" 표시
+                                                                    const displayValue = isOff && currentValue === 0 ? '휴무' : currentValue;
+                                                                    
+                                                                    return (
+                                                                        <td key={metric} style={{
+                                                                            background: isOff && currentValue === 0 ? '#5f2a2a30' : 'transparent',
+                                                                            color: isOff && currentValue === 0 ? '#FF6B6B' : '#E0E0E0',
+                                                                            fontWeight: isOff && currentValue === 0 ? 'bold' : 'normal'
+                                                                        }}>
+                                                                            {displayValue}
+                                                                        </td>
+                                                                    );
+                                                                }
                                                             })}
                                                         </tr>
                                                     );
@@ -1849,19 +2051,20 @@
                                 // 메트릭 정보 저장
                                 await supabase
                                     .from('config')
-                                    .update({ data: metricsData })
-                                    .eq('type', 'metrics');
+                                    .upsert({ type: 'metrics', data: metricsData }, { onConflict: 'type' });
 
                                 // 설정 저장
                                 const settingsData = {
-                                    visible_metrics: newVisible,
-                                    daily_targets: dailyTargets
+                                    type: 'settings',
+                                    data: {
+                                        visible_metrics: newVisible,
+                                        daily_targets: dailyTargets
+                                    }
                                 };
                                 
                                 await supabase
                                     .from('config')
-                                    .update({ data: settingsData })
-                                    .eq('type', 'settings');
+                                    .upsert(settingsData, { onConflict: 'type' });
 
                                 setAllMetrics(newMetrics);
                                 setVisibleMetrics(newVisible);
@@ -1885,8 +2088,7 @@
                             try {
                                 await supabase
                                     .from('config')
-                                    .update({ data: updatedTeams })
-                                    .eq('type', 'teams');
+                                    .upsert({ type: 'teams', data: updatedTeams }, { onConflict: 'type' });
                                 
                                 setTeams(updatedTeams);
                                 alert('상담사 정보가 저장되었습니다.');
@@ -1899,38 +2101,13 @@
                     />
 
                     {/* 목표 설정 모달 */}
-                    <div className={`modal ${showTargetModal ? 'active' : ''}`}>
-                        <div className="modal-content">
-                            <span className="modal-close" onClick={() => setShowTargetModal(false)}>×</span>
-                            <div className="modal-header">일일 목표 설정</div>
-                            {visibleMetrics.map(metric => (
-                                <div key={metric} className="form-group">
-                                    <label>{metric}</label>
-                                    <input 
-                                        type="number"
-                                        value={dailyTargets[metric] || 100}
-                                        onChange={(e) => {
-                                            setDailyTargets({
-                                                ...dailyTargets,
-                                                [metric]: parseInt(e.target.value) || 0
-                                            });
-                                        }}
-                                    />
-                                </div>
-                            ))}
-                            <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                                <button 
-                                    className="btn btn-success" 
-                                    onClick={() => {
-                                        saveSettings();
-                                        setShowTargetModal(false);
-                                    }}
-                                >
-                                    저장
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <TargetSettingModal 
+                        show={showTargetModal}
+                        onClose={() => setShowTargetModal(false)}
+                        visibleMetrics={visibleMetrics}
+                        dailyTargets={dailyTargets}
+                        onSave={saveSettings}
+                    />
 
                     {/* 주간 현황 모달 */}
                     <div className={`modal ${showWeeklyModal ? 'active' : ''}`}>
