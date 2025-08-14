@@ -988,6 +988,50 @@
                     setPerformanceData(dataMap);
                     setEditedData({});
                     setLastUpdate(new Date());
+                } catch (error) {
+                    console.error('데이터 로드 오류:', error);
+                } finally {
+                    setIsLoading(false);
+                }
+            }, [selectedDate]);
+
+            // 메트릭 색상 레벨 계산
+            const getMetricLevel = (value, metric) => {
+                if (value === 0) return 'metric-level-0';
+                
+                if (metric === '제휴카드') {
+                    // 제휴카드는 30개 기준
+                    if (value < 30) return 'metric-level-1';
+                    if (value < 90) return 'metric-level-2';
+                    if (value < 150) return 'metric-level-3';
+                    if (value < 210) return 'metric-level-4';
+                    return 'metric-level-5';
+                } else {
+                    // 일반 항목은 10개 기준
+                    if (value < 10) return 'metric-level-1';
+                    if (value < 30) return 'metric-level-2';
+                    if (value < 50) return 'metric-level-3';
+                    if (value < 70) return 'metric-level-4';
+                    return 'metric-level-5';
+                }
+            };
+            const loadPerformanceData = useCallback(async () => {
+                try {
+                    const { data } = await supabase
+                        .from('performance')
+                        .select('*')
+                        .eq('date', selectedDate);
+
+                    const dataMap = {};
+                    if (data) {
+                        data.forEach(record => {
+                            const key = `${record.team}_${record.name}`;
+                            dataMap[key] = record;
+                        });
+                    }
+                    setPerformanceData(dataMap);
+                    setEditedData({});
+                    setLastUpdate(new Date());
                     
                     // 휴무 상태도 로드 (localStorage에서)
                     loadOffStatus();
