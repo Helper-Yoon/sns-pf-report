@@ -434,10 +434,11 @@
             const [currentValues, setCurrentValues] = useState({});
             const [memo, setMemo] = useState('');
             const [isLoading, setIsLoading] = useState(true);
-            const [isSaving, setIsSaving] = useState(false); // 전체 저장 상태
+            const [isSaving, setIsSaving] = useState(false);
             const [connectionStatus, setConnectionStatus] = useState(true);
             const [showSaveIndicator, setShowSaveIndicator] = useState(false);
             const [today] = useState(new Date().toISOString().split('T')[0]);
+            const [settingsLoaded, setSettingsLoaded] = useState(false);
 
             // 설정 로드
             const loadSettings = useCallback(async () => {
@@ -455,6 +456,23 @@
                             teamsObj[teamName] = teamInfo.members.map(m => m.name);
                         });
                         setTeams(teamsObj);
+                        
+                        // 로컬스토리지에서 저장된 팀과 이름 불러오기 (최초 1회만)
+                        if (!settingsLoaded) {
+                            const savedTeam = localStorage.getItem('selectedTeam');
+                            const savedName = localStorage.getItem('selectedName');
+                            
+                            // 저장된 팀이 유효한지 확인
+                            if (savedTeam && teamsObj[savedTeam]) {
+                                setSelectedTeam(savedTeam);
+                                
+                                // 저장된 이름이 해당 팀에 있는지 확인
+                                if (savedName && teamsObj[savedTeam].includes(savedName)) {
+                                    setSelectedName(savedName);
+                                }
+                            }
+                            setSettingsLoaded(true);
+                        }
                     }
 
                     // 메트릭 정보 로드
@@ -490,7 +508,7 @@
                 } finally {
                     setIsLoading(false);
                 }
-            }, []);
+            }, [settingsLoaded]);
 
             // 오래된 메모 정리 (30일 이상)
             useEffect(() => {
@@ -501,7 +519,6 @@
                     
                     keys.forEach(key => {
                         if (key.startsWith('memo_')) {
-                            // memo_팀_이름_날짜 형식에서 날짜 추출
                             const parts = key.split('_');
                             const dateStr = parts[parts.length - 1];
                             if (dateStr) {
@@ -546,7 +563,7 @@
                     setMemo(savedMemo);
                     
                 } catch (error) {
-                    if (error.code !== 'PGRST116') { // No rows found는 정상
+                    if (error.code !== 'PGRST116') {
                         console.error('데이터 로드 오류:', error);
                     }
                     resetValues();
@@ -566,65 +583,14 @@
                 });
                 setCurrentValues(values);
                 setMemo('');
-                // 로컬 스토리지 메모도 초기화
                 if (selectedTeam && selectedName) {
                     const memoKey = `memo_${selectedTeam}_${selectedName}_${today}`;
                     localStorage.removeItem(memoKey);
                 }
             };
 
-            // 자동 저장 - 즉시 실행
-            const autoSave = useCallback(async () => {
-                if (!selectedTeam || !selectedName || isSaving) return;
-
-                setIsSaving(true);
-                try {
-                    const data = {
-                        team: selectedTeam,
-                        name: selectedName,
-                        date: today,
-                        memo: memo
-                    };
-
-                    // 메트릭 데이터 추가
-                    visibleMetrics.forEach(metric => {
-                        const dbColumn = metricToDb[metric];
-                        data[dbColumn] = currentValues[metric] || 0;
-                    });
-
-                    // 기존 데이터 확인
-                    const { data: existing } = await supabaseClient
-                        .from('performance')
-                        .select('id')
-                        .eq('team', selectedTeam)
-                        .eq('name', selectedName)
-                        .eq('date', today)
-                        .single();
-
-                    if (existing) {
-                        await supabaseClient
-                            .from('performance')
-                            .update(data)
-                            .eq('id', existing.id);
-                    } else {
-                        await supabaseClient
-                            .from('performance')
-                            .insert(data);
-                    }
-
-                    // 저장 인디케이터 표시
-                    setShowSaveIndicator(true);
-                    setTimeout(() => setShowSaveIndicator(false), 1500);
-                } catch (error) {
-                    console.error('자동 저장 오류:', error);
-                } finally {
-                    setIsSaving(false);
-                }
-            }, [selectedTeam, selectedName, today, memo, currentValues, visibleMetrics, metricToDb, isSaving]);
-
-            // 값 변경 핸들러 - 완전 차단 방식
+            // 값 변경 핸들러
             const handleValueChange = async (metric, delta) => {
-                // 저장 중이면 모든 입력 차단
                 if (isSaving) {
                     return;
                 }
@@ -633,10 +599,8 @@
                 newValues[metric] = Math.max(0, (newValues[metric] || 0) + delta);
                 setCurrentValues(newValues);
                 
-                // 전체 잠금
                 setIsSaving(true);
                 
-                // 저장 실행
                 if (selectedTeam && selectedName) {
                     try {
                         const data = {
@@ -645,13 +609,11 @@
                             date: today
                         };
 
-                        // 메트릭 데이터 추가 (메모는 제외)
                         visibleMetrics.forEach(m => {
                             const dbColumn = metricToDb[m];
                             data[dbColumn] = newValues[m] || 0;
                         });
 
-                        // 기존 데이터 확인
                         const { data: existing } = await supabaseClient
                             .from('performance')
                             .select('id')
@@ -671,12 +633,10 @@
                                 .insert(data);
                         }
 
-                        // 저장 인디케이터 표시
                         setShowSaveIndicator(true);
                         setTimeout(() => setShowSaveIndicator(false), 1500);
                     } catch (error) {
                         console.error('저장 오류:', error);
-                        // 오류 시 값 롤백
                         setCurrentValues(prev => {
                             const rolled = { ...prev };
                             rolled[metric] = Math.max(0, (rolled[metric] || 0) - delta);
@@ -684,41 +644,62 @@
                         });
                         alert('저장 실패! 다시 시도해주세요.');
                     } finally {
-                        // 전체 잠금 해제
                         setIsSaving(false);
                     }
                 }
             };
 
-            // 메모 변경 핸들러 - 로컬 저장만
+            // 메모 변경 핸들러
             const handleMemoChange = (e) => {
                 const newMemo = e.target.value;
                 setMemo(newMemo);
                 
-                // 로컬 스토리지에만 저장
                 if (selectedTeam && selectedName) {
                     const memoKey = `memo_${selectedTeam}_${selectedName}_${today}`;
                     localStorage.setItem(memoKey, newMemo);
                 }
             };
 
-            // 수동 새로고침
+            // 팀 변경 핸들러
+            const handleTeamChange = (e) => {
+                const newTeam = e.target.value;
+                setSelectedTeam(newTeam);
+                setSelectedName('');
+                resetValues();
+                
+                if (newTeam) {
+                    localStorage.setItem('selectedTeam', newTeam);
+                } else {
+                    localStorage.removeItem('selectedTeam');
+                }
+                localStorage.removeItem('selectedName');
+            };
+
+            // 이름 변경 핸들러  
+            const handleNameChange = (e) => {
+                const newName = e.target.value;
+                setSelectedName(newName);
+                
+                if (newName) {
+                    localStorage.setItem('selectedName', newName);
+                } else {
+                    localStorage.removeItem('selectedName');
+                }
+            };
+
+            // 새로고침
             const handleRefresh = async () => {
                 window.location.reload();
             };
 
-            // 실적보고 메인으로 이동
+            // 메인으로 이동
             const handleGoToMain = () => {
-                // 실적보고 메인 페이지 URL로 변경해주세요
-                // 예시: window.location.href = '/main.html';
-                // 또는: window.location.href = '../index.html';
-                window.location.href = 'index.html'; // 메인 페이지 경로에 맞게 수정
+                window.location.href = 'index.html';
             };
 
             // useEffect
             useEffect(() => {
                 loadSettings();
-                // 30초마다 설정 새로고침
                 const interval = setInterval(loadSettings, 30000);
                 return () => clearInterval(interval);
             }, [loadSettings]);
@@ -733,7 +714,6 @@
                     const now = new Date();
                     if (now.getHours() === 0 && now.getMinutes() === 0) {
                         resetValues();
-                        // 오늘 날짜의 모든 메모 삭제
                         const keys = Object.keys(localStorage);
                         keys.forEach(key => {
                             if (key.startsWith('memo_') && key.includes(today)) {
@@ -742,7 +722,7 @@
                         });
                         alert('새로운 날이 시작되었습니다! 실적이 초기화되었습니다.');
                     }
-                }, 60000); // 1분마다 체크
+                }, 60000);
 
                 return () => clearInterval(checkMidnight);
             }, [visibleMetrics, today]);
@@ -786,11 +766,7 @@
                             <label>팀:</label>
                             <select 
                                 value={selectedTeam} 
-                                onChange={(e) => {
-                                    setSelectedTeam(e.target.value);
-                                    setSelectedName('');
-                                    resetValues();
-                                }}
+                                onChange={handleTeamChange}
                                 disabled={isSaving}
                             >
                                 <option value="">선택하세요</option>
@@ -804,7 +780,7 @@
                             <label>이름:</label>
                             <select 
                                 value={selectedName} 
-                                onChange={(e) => setSelectedName(e.target.value)}
+                                onChange={handleNameChange}
                                 disabled={!selectedTeam || isSaving}
                             >
                                 <option value="">선택하세요</option>
