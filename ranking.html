@@ -43,6 +43,16 @@
             margin-top: 5px;
         }
         
+        .period-info {
+            color: #FFD700;
+            font-size: 13px;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
         .nav-buttons {
             display: flex;
             gap: 10px;
@@ -271,6 +281,7 @@
         <div>
             <h1>🏆 당일 실적 랭킹</h1>
             <div class="date-info" id="currentDate"></div>
+            <div class="period-info" id="periodInfo"></div>
         </div>
         <div class="nav-buttons">
             <a href="index.html" class="nav-btn">
@@ -299,7 +310,7 @@
         const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
         
-        // 카테고리 정의 - 실제 항목으로 변경
+        // 카테고리 정의
         const categories = [
             { key: 'usim_count', name: '유심갯수', icon: '📱' },
             { key: 'sk_internet', name: 'SK 인터넷', icon: '🌐' },
@@ -312,45 +323,70 @@
             { key: 'card', name: '제휴카드', icon: '💳' }
         ];
         
-        // 테스트 데이터 생성 함수 (실제 팀과 이름 사용)
-        function generateTestData() {
-            // 실제 팀과 이름으로 변경하세요
-            const names = ['김철수', '이영희', '박민수', '정수진', '강민호', '최지훈', '윤서연'];
-            const teams = ['1팀', '2팀', '3팀', '4팀'];
-            const data = [];
+        // 12시 기준 날짜 계산 함수
+        function getEffectiveDate() {
+            const now = new Date();
+            const hours = now.getHours();
             
-            // 더 현실적인 데이터 생성
-            for (let i = 0; i < 15; i++) {
-                const record = {
-                    name: names[Math.floor(Math.random() * names.length)],
-                    team: teams[Math.floor(Math.random() * teams.length)],
-                    date: new Date().toISOString().split('T')[0],
-                    // 새로운 카테고리에 맞게 필드 추가
-                    usim_count: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    sk_internet: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    premium: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    essence: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    iot: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    one_g: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    sk_magic: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    appliance: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0,
-                    card: Math.random() > 0.3 ? Math.floor(Math.random() * 6) : 0
-                };
-                
-                data.push(record);
+            // 0시~11시59분까지는 전날 날짜 사용
+            if (hours < 12) {
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                return yesterday;
             }
             
-            return data;
+            // 12시 이후는 당일 날짜 사용
+            return now;
+        }
+        
+        // 집계 기간 표시
+        function setPeriodInfo() {
+            const now = new Date();
+            const hours = now.getHours();
+            
+            let periodText = '';
+            if (hours < 12) {
+                // 0시~11시59분: 어제 12시 ~ 오늘 12시
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                periodText = `📊 집계 기간: 어제 12:00 ~ 오늘 12:00`;
+            } else {
+                // 12시 이후: 오늘 12시 ~ 내일 12시
+                periodText = `📊 집계 기간: 오늘 12:00 ~ 내일 12:00`;
+            }
+            
+            document.getElementById('periodInfo').textContent = periodText;
         }
         
         // 날짜 설정
         function setCurrentDate() {
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+            const effectiveDate = getEffectiveDate();
+            const dateStr = `${effectiveDate.getFullYear()}년 ${effectiveDate.getMonth() + 1}월 ${effectiveDate.getDate()}일`;
             document.getElementById('currentDate').textContent = dateStr;
+            setPeriodInfo();
         }
         
-        // 랭킹 표시
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('페이지 로드 완료');
+            setCurrentDate();
+            
+            // 바로 데이터 로드
+            loadRankings();
+            
+            // 30초마다 자동 새로고침
+            setInterval(loadRankings, 30000);
+            
+            // 1분마다 날짜 확인 및 업데이트
+            setInterval(() => {
+                setCurrentDate();
+                // 12시가 되면 자동 새로고침
+                const now = new Date();
+                if (now.getHours() === 12 && now.getMinutes() === 0 && now.getSeconds() < 2) {
+                    location.reload();
+                }
+            }, 60000);
+        });
         function displayRankings(data) {
             const container = document.getElementById('rankingsContainer');
             let html = '';
@@ -393,7 +429,7 @@
                 `;
                 
                 if (sorted.length === 0) {
-                    html += '<div class="no-data">아직 아무도 없어요...</div>';
+                    html += '<div class="no-data">아직 실적이 없어요...</div>';
                 } else {
                     sorted.forEach((item, index) => {
                         const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze';
@@ -428,9 +464,11 @@
         
         // REST API로 데이터 가져오기
         async function fetchDataFromAPI() {
-            const today = new Date().toISOString().split('T')[0];
-            const url = `${supabaseUrl}/rest/v1/performance?date=eq.${today}`;
+            const effectiveDate = getEffectiveDate();
+            const dateStr = effectiveDate.toISOString().split('T')[0];
+            const url = `${supabaseUrl}/rest/v1/performance?date=eq.${dateStr}`;
             
+            console.log('조회 날짜:', dateStr);
             console.log('REST API 호출:', url);
             
             try {
@@ -451,6 +489,9 @@
                 
                 const data = await response.json();
                 console.log('REST API 데이터:', data);
+                
+                // 12시 이후 데이터만 필터링 (만약 시간 정보가 있다면)
+                // 현재는 날짜만 저장되므로 전체 데이터 사용
                 return data;
                 
             } catch (error) {
@@ -478,12 +519,8 @@
                 
             } catch (error) {
                 console.error('데이터 로드 실패:', error);
-                console.log('테스트 데이터로 대체');
-                
-                // 오류시 테스트 데이터 표시
-                setTimeout(() => {
-                    displayRankings(generateTestData());
-                }, 500);
+                // 오류시 빈 랭킹 표시
+                displayRankings([]);
             }
         }
         
@@ -495,8 +532,17 @@
             // 바로 데이터 로드
             loadRankings();
             
+            // 초기화 타이머 시작
+            updateResetTimer();
+            setInterval(updateResetTimer, 1000);
+            
             // 30초마다 자동 새로고침
             setInterval(loadRankings, 30000);
+            
+            // 1분마다 날짜 확인 및 업데이트
+            setInterval(() => {
+                setCurrentDate();
+            }, 60000);
         });
     </script>
 </body>
