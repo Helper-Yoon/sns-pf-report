@@ -328,29 +328,11 @@
             return now;
         }
         
-        // 집계 기간 표시
-        function setPeriodInfo() {
-            const now = new Date();
-            const hours = now.getHours();
-            
-            let periodText = '';
-            if (hours >= 12) {
-                // 12시 이후: 오늘 12시 ~ 내일 12시
-                periodText = `📊 집계 기간: 오늘 12:00 ~ 내일 12:00`;
-            } else {
-                // 0시~11시59분: 어제 12시 ~ 오늘 12시
-                periodText = `📊 집계 기간: 어제 12:00 ~ 오늘 12:00`;
-            }
-            
-            document.getElementById('periodInfo').textContent = periodText;
-        }
-        
         // 날짜 설정
         function setCurrentDate() {
             const effectiveDate = getEffectiveDate();
             const dateStr = `${effectiveDate.getFullYear()}년 ${effectiveDate.getMonth() + 1}월 ${effectiveDate.getDate()}일`;
             document.getElementById('currentDate').textContent = dateStr;
-            setPeriodInfo();
         }
         
         // 페이지 로드 시 실행
