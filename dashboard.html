@@ -923,7 +923,7 @@
             const [editedData, setEditedData] = useState({});
             const [offStatus, setOffStatus] = useState({});
 
-            // 설정 로드
+            // 설정 로드 - loadOffStatus 의존성 제거
             const loadConfig = useCallback(async () => {
                 try {
                     // 팀 정보
@@ -966,9 +966,6 @@
                         setVisibleMetrics(settingsData.data.visible_metrics || []);
                         setDailyTargets(settingsData.data.daily_targets || {});
                     }
-                    
-                    // 휴무 상태 로드
-                    loadOffStatus();
                 } catch (error) {
                     console.error('설정 로드 오류:', error);
                 }
@@ -990,11 +987,11 @@
                         });
                     }
                     setPerformanceData(dataMap);
-                    setEditedData({}); // 수정 데이터 초기화
+                    setEditedData({});
                     setLastUpdate(new Date());
                     
-                    // 휴무 상태도 함께 로드 (중요!)
-                    await loadOffStatus();
+                    // 휴무 상태도 로드 (localStorage에서)
+                    loadOffStatus();
                 } catch (error) {
                     console.error('데이터 로드 오류:', error);
                 } finally {
