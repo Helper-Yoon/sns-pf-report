@@ -993,14 +993,14 @@
                     setEditedData({}); // 수정 데이터 초기화
                     setLastUpdate(new Date());
                     
-                    // 휴무 상태도 함께 로드
-                    loadOffStatus();
+                    // 휴무 상태도 함께 로드 (중요!)
+                    await loadOffStatus();
                 } catch (error) {
                     console.error('데이터 로드 오류:', error);
                 } finally {
                     setIsLoading(false);
                 }
-            }, [selectedDate]);
+            }, [selectedDate, loadOffStatus]);
 
             // 주간 데이터 로드
             const loadWeeklyData = useCallback(async () => {
