@@ -1453,10 +1453,10 @@
                 Object.values(teams).forEach(team => {
                     totalRows += team.members.length + 1;
                 });
-                totalRows += 6; // 센터총합, 일목표, 달성 + 여백
+                totalRows += 7; // 센터총합, 일목표, 달성 + 여백
                 
                 canvas.width = totalWidth;
-                canvas.height = totalRows * rowHeight + 120;
+                canvas.height = totalRows * rowHeight + 140;
                 
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
