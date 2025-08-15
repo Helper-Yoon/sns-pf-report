@@ -218,11 +218,11 @@
             font-weight: bold;
         }
 
-        /* 휴무 상태별 색상 - 모두 연한 빨간색 */
+        /* 휴무 상태별 색상 - 모두 연한 빨간색 (조금 더 진하게) */
         .attendance-off td,
         .attendance-annual td,
         .attendance-half td {
-            background: #ffebee !important;
+            background: #ffcdd2 !important;
         }
         
         /* 데이터가 있는 셀은 음영 제거 */
@@ -594,7 +594,7 @@
                                                 alignItems: 'center', 
                                                 padding: '8px',
                                                 borderBottom: idx < teamInfo.members.length - 1 ? '1px solid #404040' : 'none',
-                                                background: currentStatus !== 'normal' ? '#ffebee' : 'transparent'
+                                                background: currentStatus !== 'normal' ? '#ffcdd2' : 'transparent'
                                             }}>
                                                 <span style={{ minWidth: '100px' }}>
                                                     {member.name}
@@ -1390,6 +1390,21 @@
                 const centerRow = ['센터 총합', '', '', '', ...visibleMetrics.map(metric => grandTotals[metric])];
                 XLSX.utils.sheet_add_aoa(ws, [centerRow], {origin: `A${rowNum + 1}`});
                 mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 3 } });
+                rowNum++;
+                
+                // 일 목표
+                const targetRow = ['일 목표', '', '', '', ...visibleMetrics.map(metric => dailyTargets[metric] || 100)];
+                XLSX.utils.sheet_add_aoa(ws, [targetRow], {origin: `A${rowNum + 1}`});
+                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 3 } });
+                rowNum++;
+                
+                // 달성
+                const achievementRow = ['달성', '', '', '', ...visibleMetrics.map(metric => {
+                    const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
+                    return diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
+                })];
+                XLSX.utils.sheet_add_aoa(ws, [achievementRow], {origin: `A${rowNum + 1}`});
+                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 3 } });
                 
                 ws['!merges'] = mergeRanges;
                 ws['!cols'] = [
@@ -1399,6 +1414,12 @@
                     { wch: 10 },
                     ...visibleMetrics.map(() => ({ wch: 10 }))
                 ];
+                
+                // 범위 설정
+                ws['!ref'] = XLSX.utils.encode_range({
+                    s: { r: 0, c: 0 },
+                    e: { r: rowNum, c: headers.length - 1 }
+                });
                 
                 XLSX.utils.book_append_sheet(wb, ws, '실적');
                 XLSX.writeFile(wb, `SNS센터_실적_${selectedDate.replace(/-/g, '')}.xlsx`);
@@ -1432,7 +1453,7 @@
                 Object.values(teams).forEach(team => {
                     totalRows += team.members.length + 1;
                 });
-                totalRows += 4;
+                totalRows += 6; // 센터총합, 일목표, 달성 + 여백
                 
                 canvas.width = totalWidth;
                 canvas.height = totalRows * rowHeight + 120;
@@ -1498,7 +1519,7 @@
                         
                         // 이름
                         const isOffDay = attendance !== 'normal';
-                        const nameColor = isOffDay ? '#ffebee' : teamColor;
+                        const nameColor = isOffDay ? '#ffcdd2' : teamColor;
                         ctx.fillStyle = nameColor;
                         ctx.fillRect(x, y, colWidths[1], rowHeight);
                         ctx.strokeStyle = 'black';
@@ -1519,7 +1540,7 @@
                         x += colWidths[1];
                         
                         // 근속기간
-                        ctx.fillStyle = isOffDay ? '#ffebee' : teamColor;
+                        ctx.fillStyle = isOffDay ? '#ffcdd2' : teamColor;
                         ctx.fillRect(x, y, colWidths[2], rowHeight);
                         ctx.strokeStyle = 'black';
                         ctx.strokeRect(x, y, colWidths[2], rowHeight);
@@ -1535,7 +1556,7 @@
                             const hasData = value > 0;
                             
                             if (isOffDay && !hasData) {
-                                ctx.fillStyle = '#ffebee';
+                                ctx.fillStyle = '#ffcdd2';
                                 ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
                                 ctx.strokeStyle = 'black';
                                 ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
