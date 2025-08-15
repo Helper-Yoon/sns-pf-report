@@ -1633,7 +1633,7 @@
                 // 일 목표
                 y += rowHeight;
                 x = xStart;
-                ctx.fillStyle = '#B0D4FF';
+                ctx.fillStyle = '#FFCCCC';
                 ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
@@ -1643,7 +1643,7 @@
                 x += colWidths[0] + colWidths[1] + colWidths[2];
                 
                 visibleMetrics.forEach((metric, i) => {
-                    ctx.fillStyle = '#B0D4FF';
+                    ctx.fillStyle = '#FFCCCC';
                     ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
@@ -1656,7 +1656,7 @@
                 // 달성 현황
                 y += rowHeight;
                 x = xStart;
-                ctx.fillStyle = '#E0E0E0';
+                ctx.fillStyle = '#FFCCCC';
                 ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
@@ -2216,3 +2216,4 @@
     </script>
 </body>
 </html>
+
