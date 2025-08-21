@@ -538,19 +538,21 @@
                 if (!selectedTeam || !selectedName) return;
 
                 try {
+                    // 여러 개의 중복 데이터가 있을 수 있으므로 가장 최근 것을 가져옴
                     const { data } = await supabaseClient
                         .from('performance')
                         .select('*')
                         .eq('team', selectedTeam)
                         .eq('name', selectedName)
                         .eq('date', today)
-                        .single();
+                        .order('created_at', { ascending: false })
+                        .limit(1);
 
-                    if (data) {
+                    if (data && data.length > 0) {
                         const values = {};
                         visibleMetrics.forEach(metric => {
                             const dbColumn = metricToDb[metric];
-                            values[metric] = data[dbColumn] || 0;
+                            values[metric] = data[0][dbColumn] || 0;
                         });
                         setCurrentValues(values);
                     } else {
@@ -563,9 +565,7 @@
                     setMemo(savedMemo);
                     
                 } catch (error) {
-                    if (error.code !== 'PGRST116') {
-                        console.error('데이터 로드 오류:', error);
-                    }
+                    console.error('데이터 로드 오류:', error);
                     resetValues();
                     
                     // 메모는 로컬 스토리지에서 로드
@@ -614,24 +614,15 @@
                             data[dbColumn] = newValues[m] || 0;
                         });
 
-                        const { data: existing } = await supabaseClient
+                        // upsert 사용 - team, name, date가 같으면 업데이트, 없으면 생성
+                        const { error } = await supabaseClient
                             .from('performance')
-                            .select('id')
-                            .eq('team', selectedTeam)
-                            .eq('name', selectedName)
-                            .eq('date', today)
-                            .single();
+                            .upsert(data, {
+                                onConflict: 'team,name,date',
+                                ignoreDuplicates: false
+                            });
 
-                        if (existing) {
-                            await supabaseClient
-                                .from('performance')
-                                .update(data)
-                                .eq('id', existing.id);
-                        } else {
-                            await supabaseClient
-                                .from('performance')
-                                .insert(data);
-                        }
+                        if (error) throw error;
 
                         setShowSaveIndicator(true);
                         setTimeout(() => setShowSaveIndicator(false), 1500);
