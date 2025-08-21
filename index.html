@@ -12,8 +12,9 @@
         }
         
         body {
-            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: #fff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,136 +23,139 @@
         
         .container {
             text-align: center;
-            background: #1a1a1a;
-            padding: 60px 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            max-width: 500px;
+            max-width: 600px;
             width: 90%;
+            padding: 60px 40px;
+        }
+        
+        .header {
+            margin-bottom: 60px;
         }
         
         h1 {
-            color: #ffffff;
-            margin-bottom: 20px;
-            font-size: 32px;
+            font-size: 49px;
+            font-weight: 200;
+            margin-bottom: 10px;
+        }
+        
+        h1 span {
+            color: #1E6FFF;
+            font-weight: 400;
         }
         
         .subtitle {
-            color: #8a8a8a;
-            margin-bottom: 40px;
-            font-size: 14px;
+            color: #999;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         
         .button-group {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 2px;
+            background: #111;
+            padding: 2px;
+            margin-bottom: 50px;
         }
         
         .btn {
-            padding: 20px 40px;
-            font-size: 18px;
+            padding: 31px;
+            background: #000;
             border: none;
-            border-radius: 10px;
+            text-decoration: none;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             cursor: pointer;
             transition: all 0.3s;
-            text-decoration: none;
-            color: white;
-            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            background: #050505;
+            color: #1E6FFF;
+        }
+        
+        .btn span:first-child {
+            font-size: 25px;
+        }
+        
+        .btn-dashboard {
+            border: 1px solid #1E6FFF;
+            background: rgba(30, 111, 255, 0.1);
+            color: #fff;
+            animation: pulse 2s infinite;
+        }
+        
+        .btn-dashboard:hover {
+            background: #1E6FFF;
+            color: #000;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .status {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-        }
-        
-        .btn-counselor {
-            background: #1E6FFF;
-        }
-        
-        .btn-dashboard {
-            background: #FF6B6B;
-            animation: glow 2s ease-in-out infinite;
-        }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.5); }
-        }
-        
-        .btn-ranking {
-            background: #1E6FFF;
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(30,111,255,0.3);
-        }
-        
-        .btn-counselor:hover {
-            background: #1859d6;
-        }
-        
-        .btn-dashboard:hover {
-            background: #FF5252;
-        }
-        
-        .btn-ranking:hover {
-            background: #1859d6;
-        }
-        
-        .status {
-            margin-top: 30px;
-            padding: 10px;
-            background: #0a0a0a;
-            border: 1px solid #2a2a2a;
-            border-radius: 10px;
-            font-size: 12px;
-            color: #8a8a8a;
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .status-dot {
-            display: inline-block;
             width: 8px;
             height: 8px;
-            background: #4CAF50;
+            background: #00FF00;
             border-radius: 50%;
-            margin-right: 5px;
-            animation: pulse 2s infinite;
+            animation: statusPulse 2s infinite;
+        }
+        
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         /* Settings Button */
         .settings-btn {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: #2a2a2a;
-            border: none;
+            bottom: 40px;
+            right: 40px;
+            width: 51px;
+            height: 51px;
+            background: transparent;
+            border: 1px solid #222;
             border-radius: 50%;
-            color: #8a8a8a;
-            font-size: 20px;
+            color: #666;
+            font-size: 21px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             z-index: 999;
         }
         
         .settings-btn:hover {
-            background: #3a3a3a;
+            color: #1E6FFF;
+            border-color: #1E6FFF;
             transform: rotate(90deg);
-            color: #ffffff;
         }
         
         .settings-btn.authenticated {
-            background: #FF6B6B;
-            color: white;
-            animation: settingsGlow 2s ease-in-out infinite;
-        }
-        
-        @keyframes settingsGlow {
-            0%, 100% { box-shadow: 0 0 15px rgba(255, 107, 107, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(255, 107, 107, 0.8); }
+            color: #1E6FFF;
+            border-color: #1E6FFF;
+            background: rgba(30, 111, 255, 0.1);
         }
         
         /* Modal styles */
@@ -163,42 +167,45 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            animation: fadeIn 0.3s;
+            background-color: rgba(0, 0, 0, 0.9);
         }
         
         .modal.show {
             display: flex;
             justify-content: center;
             align-items: center;
+            animation: fadeIn 0.3s;
         }
         
         .modal-content {
-            background: #1a1a1a;
+            background: #000;
+            border: 1px solid #222;
             padding: 40px;
-            border-radius: 20px;
             max-width: 400px;
             width: 90%;
             animation: slideIn 0.3s;
         }
         
         .modal-header {
-            color: #ffffff;
-            margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 25px;
+            font-weight: 200;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         
         .password-input {
             width: 100%;
             padding: 15px;
-            font-size: 18px;
-            border: 2px solid #2a2a2a;
-            border-radius: 10px;
-            background: #0a0a0a;
-            color: #ffffff;
+            font-size: 25px;
+            border: 1px solid #222;
+            background: #000;
+            color: #fff;
             margin-bottom: 20px;
             text-align: center;
-            letter-spacing: 5px;
+            letter-spacing: 10px;
+            font-weight: 200;
+            transition: all 0.3s;
         }
         
         .password-input:focus {
@@ -208,52 +215,56 @@
         
         .modal-buttons {
             display: flex;
-            gap: 10px;
+            gap: 2px;
+            background: #111;
+            padding: 2px;
         }
         
         .modal-btn {
             flex: 1;
-            padding: 12px 20px;
-            font-size: 16px;
+            padding: 15px;
+            font-size: 15px;
             border: none;
-            border-radius: 10px;
+            background: #000;
+            color: #666;
             cursor: pointer;
             transition: all 0.3s;
-            font-weight: bold;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .modal-btn:hover {
+            color: #1E6FFF;
         }
         
         .modal-btn-confirm {
-            background: #1E6FFF;
-            color: white;
+            color: #1E6FFF;
         }
         
         .modal-btn-confirm:hover {
-            background: #1859d6;
-        }
-        
-        .modal-btn-cancel {
-            background: #2a2a2a;
-            color: #8a8a8a;
-        }
-        
-        .modal-btn-cancel:hover {
-            background: #3a3a3a;
+            background: #1E6FFF;
+            color: #000;
         }
         
         .error-message {
-            color: #ff4444;
-            font-size: 14px;
+            color: #FF0000;
+            font-size: 13px;
             margin-top: -10px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             display: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .auth-info {
             text-align: center;
-            color: #4CAF50;
-            font-size: 14px;
+            color: #00FF00;
+            font-size: 13px;
             margin-bottom: 20px;
             display: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .auth-info.show {
@@ -262,25 +273,25 @@
         
         .logout-btn {
             width: 100%;
-            padding: 12px 20px;
-            font-size: 16px;
-            background: #ff4444;
-            border: none;
-            border-radius: 10px;
-            color: white;
+            padding: 15px;
+            font-size: 15px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
             cursor: pointer;
             transition: all 0.3s;
-            font-weight: bold;
-            margin-top: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .logout-btn:hover {
-            background: #ff3333;
+            color: #FF0000;
+            border-color: #FF0000;
         }
         
         .admin-btn-container {
             display: none;
-            margin-top: 20px;
         }
         
         .admin-btn-container.show {
@@ -289,26 +300,22 @@
         
         .tooltip {
             position: fixed;
-            bottom: 90px;
-            right: 30px;
-            background: #333;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
+            bottom: 100px;
+            right: 40px;
+            background: #111;
+            border: 1px solid #222;
+            color: #666;
+            padding: 8px 15px;
             font-size: 12px;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
-            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .tooltip.show {
             opacity: 1;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
         
         @keyframes fadeIn {
@@ -318,7 +325,7 @@
         
         @keyframes slideIn {
             from {
-                transform: translateY(-50px);
+                transform: translateY(-30px);
                 opacity: 0;
             }
             to {
@@ -333,18 +340,22 @@
             20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             .container {
                 padding: 40px 20px;
             }
             
             h1 {
-                font-size: 24px;
+                font-size: 37px;
             }
             
             .btn {
-                font-size: 16px;
-                padding: 15px 30px;
+                padding: 26px;
+                font-size: 15px;
+            }
+            
+            .btn span:first-child {
+                font-size: 22px;
             }
             
             .modal-content {
@@ -354,24 +365,26 @@
             .settings-btn {
                 bottom: 20px;
                 right: 20px;
-                width: 45px;
-                height: 45px;
-                font-size: 18px;
+                width: 46px;
+                height: 46px;
+                font-size: 19px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💵 SNS센터 실적보고</h1>
-        <p class="subtitle">실시간 실적관리 통합 플랫폼</p>
+        <div class="header">
+            <h1>SNS센터 <span>실적보고</span></h1>
+            <p class="subtitle">실시간 실적관리 통합 플랫폼</p>
+        </div>
         
         <div class="button-group">
-            <a href="counselor.html" class="btn btn-counselor">
+            <a href="counselor.html" class="btn">
                 <span>📝</span>
                 <span>상담사 실적입력</span>
             </a>
-            <a href="ranking.html" class="btn btn-ranking">
+            <a href="ranking.html" class="btn">
                 <span>🏆</span>
                 <span>실시간 랭킹</span>
             </a>
@@ -387,7 +400,7 @@
         
         <div class="status">
             <span class="status-dot"></span>
-            시스템 정상 작동중
+            <span>시스템 정상 작동중</span>
         </div>
     </div>
     
@@ -402,9 +415,9 @@
         <div class="modal-content">
             <h2 class="modal-header">🔐 관리자 인증</h2>
             
-            <div id="authInfo" class="auth-info" style="display:none;">
-                ✅ 관리자 인증 완료
-                <br>대시보드 접근 권한이 활성화되었습니다.
+            <div id="authInfo" class="auth-info">
+                ✅ 관리자 인증 완료<br>
+                대시보드 접근 권한 활성화
             </div>
             
             <div id="loginForm">
@@ -412,13 +425,13 @@
                     type="password" 
                     id="passwordInput" 
                     class="password-input" 
-                    placeholder="비밀번호 입력"
+                    placeholder="••••"
                     maxlength="4"
                     onkeypress="if(event.keyCode==13) checkPassword()"
                 >
                 <div class="error-message" id="errorMessage">비밀번호가 일치하지 않습니다</div>
                 <div class="modal-buttons">
-                    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">취소</button>
+                    <button class="modal-btn" onclick="closeModal()">취소</button>
                     <button class="modal-btn modal-btn-confirm" onclick="checkPassword()">확인</button>
                 </div>
             </div>
@@ -492,6 +505,7 @@
                     // 인증 유효하면 로그아웃 옵션만 표시
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('logoutBtn').style.display = 'block';
+                    document.getElementById('authInfo').classList.add('show');
                 } else {
                     // 인증 만료
                     clearAuth();
@@ -513,6 +527,7 @@
         function resetModalToLogin() {
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('authInfo').classList.remove('show');
         }
         
         function closeModal() {
