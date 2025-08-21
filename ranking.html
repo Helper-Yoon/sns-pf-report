@@ -275,7 +275,7 @@
         
         .podium-team {
             font-size: 11px;
-            color: #666;
+            color: #999;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 15px;
@@ -373,7 +373,7 @@
         
         .mini-rank-team {
             font-size: 10px;
-            color: #444;
+            color: #999;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -780,18 +780,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             displayDate();
             loadRankings();
-            
-            // 30초마다 자동 새로고침
-            setInterval(loadRankings, 30000);
-            
-            // 1분마다 날짜 확인
-            setInterval(() => {
-                displayDate();
-                const now = new Date();
-                if (now.getHours() === 12 && now.getMinutes() === 0 && now.getSeconds() < 2) {
-                    location.reload();
-                }
-            }, 60000);
         });
     </script>
 </body>
