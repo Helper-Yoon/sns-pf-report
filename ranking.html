@@ -68,6 +68,14 @@
             transform: translateY(-2px);
         }
         
+        .nav-btn.weekly {
+            background: #28a745;
+        }
+        
+        .nav-btn.weekly:hover {
+            background: #218838;
+        }
+        
         .rankings-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -252,6 +260,7 @@
             .nav-buttons {
                 justify-content: center;
                 width: 100%;
+                flex-wrap: wrap;
             }
             
             .update-time {
@@ -276,6 +285,10 @@
             <a href="index.html" class="nav-btn">
                 <span>🏠</span>
                 <span>메인으로</span>
+            </a>
+            <a href="weekly_ranking.html" class="nav-btn weekly">
+                <span>📊</span>
+                <span>주간 랭킹</span>
             </a>
         </div>
     </div>
@@ -351,6 +364,7 @@
                 setCurrentDate();
             }, 60000);
         });
+        
         function displayRankings(data) {
             const container = document.getElementById('rankingsContainer');
             let html = '';
