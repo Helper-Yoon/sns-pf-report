@@ -138,7 +138,7 @@
         .sort-tab {
             background: transparent;
             border: none;
-            color: #444;
+            color: #666;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
@@ -161,7 +161,7 @@
         }
         
         .sort-tab:hover {
-            color: #666;
+            color: #999;
         }
         
         .sort-tab.active {
@@ -212,7 +212,7 @@
         .rank-num {
             font-size: 24px;
             font-weight: 200;
-            color: #333;
+            color: #555;
         }
         
         .rank-row:hover .rank-num {
@@ -271,7 +271,7 @@
         
         .stat-label {
             font-size: 10px;
-            color: #444;
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
@@ -280,7 +280,7 @@
         .stat-value {
             font-size: 18px;
             font-weight: 300;
-            color: #666;
+            color: #777;
             transition: all 0.3s;
         }
         
@@ -305,7 +305,7 @@
         
         .total-label {
             font-size: 10px;
-            color: #444;
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -323,7 +323,7 @@
             justify-content: center;
             align-items: center;
             height: 400px;
-            color: #333;
+            color: #666;
             font-size: 14px;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -349,7 +349,7 @@
         .no-data {
             text-align: center;
             padding: 100px 20px;
-            color: #333;
+            color: #666;
             font-size: 14px;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -362,7 +362,7 @@
             padding-top: 30px;
             border-top: 1px solid #111;
             font-size: 11px;
-            color: #333;
+            color: #666;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
@@ -571,36 +571,36 @@
                         
                         <div class="stats-bar">
                             <div class="stat">
-                                <div class="stat-label">유심</div>
-                                <div class="stat-value ${counselor.usim_count > 0 ? 'highlight' : ''}">${counselor.usim_count}</div>
+                                <div class="stat-label" style="${currentSort === 'usim' ? 'color: #1E6FFF;' : ''}">유심</div>
+                                <div class="stat-value ${counselor.usim_count > 0 ? 'highlight' : ''}" style="${currentSort === 'usim' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.usim_count}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">인터넷</div>
-                                <div class="stat-value ${counselor.sk_internet > 0 ? 'highlight' : ''}">${counselor.sk_internet}</div>
+                                <div class="stat-label" style="${currentSort === 'internet' ? 'color: #1E6FFF;' : ''}">인터넷</div>
+                                <div class="stat-value ${counselor.sk_internet > 0 ? 'highlight' : ''}" style="${currentSort === 'internet' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.sk_internet}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">프리미엄</div>
-                                <div class="stat-value ${counselor.premium > 0 ? 'highlight' : ''}">${counselor.premium}</div>
+                                <div class="stat-label" style="${currentSort === 'premium' ? 'color: #1E6FFF;' : ''}">프리미엄</div>
+                                <div class="stat-value ${counselor.premium > 0 ? 'highlight' : ''}" style="${currentSort === 'premium' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.premium}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">에센스</div>
-                                <div class="stat-value ${counselor.essence > 0 ? 'highlight' : ''}">${counselor.essence}</div>
+                                <div class="stat-label" style="${currentSort === 'essence' ? 'color: #1E6FFF;' : ''}">에센스</div>
+                                <div class="stat-value ${counselor.essence > 0 ? 'highlight' : ''}" style="${currentSort === 'essence' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.essence}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">IOT</div>
-                                <div class="stat-value ${counselor.iot > 0 ? 'highlight' : ''}">${counselor.iot}</div>
+                                <div class="stat-label" style="${currentSort === 'iot' ? 'color: #1E6FFF;' : ''}">IOT</div>
+                                <div class="stat-value ${counselor.iot > 0 ? 'highlight' : ''}" style="${currentSort === 'iot' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.iot}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">1G</div>
-                                <div class="stat-value ${counselor.one_g > 0 ? 'highlight' : ''}">${counselor.one_g}</div>
+                                <div class="stat-label" style="${currentSort === 'one_g' ? 'color: #1E6FFF;' : ''}">1G</div>
+                                <div class="stat-value ${counselor.one_g > 0 ? 'highlight' : ''}" style="${currentSort === 'one_g' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.one_g}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">매직</div>
-                                <div class="stat-value ${counselor.sk_magic > 0 ? 'highlight' : ''}">${counselor.sk_magic}</div>
+                                <div class="stat-label" style="${currentSort === 'magic' ? 'color: #1E6FFF;' : ''}">매직</div>
+                                <div class="stat-value ${counselor.sk_magic > 0 ? 'highlight' : ''}" style="${currentSort === 'magic' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.sk_magic}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">가전</div>
-                                <div class="stat-value ${counselor.appliance > 0 ? 'highlight' : ''}">${counselor.appliance}</div>
+                                <div class="stat-label" style="${currentSort === 'appliance' ? 'color: #1E6FFF;' : ''}">가전</div>
+                                <div class="stat-value ${counselor.appliance > 0 ? 'highlight' : ''}" style="${currentSort === 'appliance' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.appliance}</div>
                             </div>
                             <div class="stat">
                                 <div class="stat-label">카드</div>
@@ -609,8 +609,8 @@
                         </div>
                         
                         <div class="total-score">
-                            <div class="total-label">Total</div>
-                            <div class="total-value">${counselor.total}</div>
+                            <div class="total-label" style="${currentSort === 'total' ? 'color: #1E6FFF;' : ''}">Total</div>
+                            <div class="total-value" style="${currentSort === 'total' ? 'font-weight: 400;' : ''}">${counselor.total}</div>
                         </div>
                     </div>
                 `;
