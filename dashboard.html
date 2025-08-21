@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNS센터 실시간 대시보드</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -42,6 +36,7 @@
         .header h1 {
             font-size: 24px;
             margin-bottom: 10px;
+            color: white;
         }
 
         .header-info {
@@ -49,7 +44,7 @@
             justify-content: center;
             gap: 30px;
             font-size: 13px;
-            color: #B0B0B0;
+            color: #E0E0E0;
         }
 
         .control-panel {
@@ -61,6 +56,7 @@
             justify-content: center;
             gap: 15px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .btn {
@@ -85,6 +81,7 @@
         .btn-danger { background: #E57373; }
         .btn-info { background: #00BCD4; }
         .btn-purple { background: #9C27B0; }
+        .btn-orange { background: #FF6B35; }
 
         .date-selector {
             display: flex;
@@ -130,6 +127,7 @@
             min-width: 120px;
             text-align: center;
             transition: transform 0.3s;
+            background: #3a3a3a;
         }
 
         .metric-item:hover {
@@ -145,32 +143,7 @@
         .metric-value {
             font-size: 18px;
             font-weight: bold;
-        }
-
-        /* 메트릭 색상 - 실적량에 따른 동적 색상 */
-        .metric-level-0 { 
-            background: #3a3a3a;
-            color: #B0B0B0;
-        }
-        .metric-level-1 { 
-            background: #2a3f5f;
-            color: #87CEEB;
-        }
-        .metric-level-2 { 
-            background: #3a5f3a;
-            color: #98FB98;
-        }
-        .metric-level-3 { 
-            background: #5f5f2a;
-            color: #FFFFE0;
-        }
-        .metric-level-4 { 
-            background: #5f3a2a;
-            color: #FFA07A;
-        }
-        .metric-level-5 { 
-            background: #5f2a2a;
-            color: #FFB6C1;
+            color: #4A9EFF;
         }
 
         .team-section {
@@ -185,6 +158,7 @@
             padding: 12px;
             text-align: center;
             font-weight: bold;
+            color: white;
         }
 
         .team-table {
@@ -198,6 +172,7 @@
             text-align: center;
             font-size: 12px;
             border: 1px solid #404040;
+            color: #E0E0E0;
         }
 
         .team-table td {
@@ -206,85 +181,33 @@
             font-size: 12px;
             border: 1px solid #404040;
             background: #2d2d2d;
+            color: #E0E0E0;
         }
 
         .team-table tr:hover td {
             background: #3a3a3a;
         }
 
-        .team-total {
+        .team-total td {
             background: #FFD700 !important;
             color: #000 !important;
             font-weight: bold;
         }
 
-        /* 휴무 상태별 색상 - 모두 연한 빨간색 (조금 더 진하게) */
-        .attendance-off td,
-        .attendance-annual td,
-        .attendance-half td {
-            background: #ffcdd2 !important;
-        }
-        
-        /* 데이터가 있는 셀은 음영 제거 */
-        .attendance-off td.has-data,
-        .attendance-annual td.has-data,
-        .attendance-half td.has-data {
-            background: #2d2d2d !important;
+        .rental-badge {
+            display: inline-block;
+            background: #FF6B35;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 5px;
         }
 
-        .attendance-text {
-            color: #d32f2f;
+        .skill-rental {
+            background: #FFB74D !important;
+            color: #5D4037 !important;
             font-weight: bold;
-            font-size: 11px;
-        }
-
-        .bottom-summary {
-            background: #2d2d2d;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .summary-row {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-
-        .summary-label {
-            width: 120px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .summary-values {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .summary-item {
-            font-size: 12px;
-        }
-
-        .achievement-status {
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: bold;
-            margin: 0 3px;
-        }
-
-        .achievement-success {
-            background: #C8E6C9;
-            color: darkgreen;
-        }
-
-        .achievement-fail {
-            background: #FFCDD2;
-            color: darkred;
         }
 
         .modal {
@@ -308,7 +231,7 @@
             background: #2d2d2d;
             padding: 30px;
             border-radius: 10px;
-            max-width: 600px;
+            max-width: 900px;
             max-height: 80vh;
             overflow-y: auto;
             width: 90%;
@@ -319,6 +242,7 @@
             font-weight: bold;
             margin-bottom: 20px;
             text-align: center;
+            color: white;
         }
 
         .modal-close {
@@ -332,1888 +256,349 @@
             color: #E0E0E0;
         }
 
-        .form-group {
-            margin-bottom: 15px;
+        .team-modal-section {
+            margin-bottom: 20px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 13px;
+        .team-modal-title {
+            color: #4A9EFF;
+            margin-bottom: 10px;
             font-weight: bold;
         }
 
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 8px;
+        .member-list {
             background: #3a3a3a;
-            color: #E0E0E0;
-            border: 1px solid #404040;
             border-radius: 5px;
+            padding: 10px;
         }
 
-        .checkbox-group {
+        .member-item {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .checkbox-item {
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            background: #3a3a3a;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 8px;
+            border-bottom: 1px solid #404040;
         }
 
-        .checkbox-item:hover {
-            background: #4a4a4a;
+        .member-item:last-child {
+            border-bottom: none;
         }
 
-        .checkbox-item input {
-            cursor: pointer;
-        }
-
-        .attendance-buttons {
+        .skill-buttons {
             display: flex;
             gap: 5px;
         }
 
-        .attendance-btn {
+        .skill-btn {
             padding: 4px 8px;
             font-size: 11px;
             border: none;
             border-radius: 3px;
             cursor: pointer;
-            transition: all 0.2s;
             color: white;
         }
 
-        .attendance-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .attendance-btn.active {
+        .skill-btn.active {
             box-shadow: 0 0 0 2px #4ADE80;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 18px;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #404040;
-            border-top-color: #4A9EFF;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .auto-refresh-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            background: rgba(74, 158, 255, 0.2);
-            border-radius: 20px;
-            font-size: 12px;
-        }
-
-        .pulse {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #4ADE80;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-container {
-                padding: 10px;
-            }
-
-            .control-panel {
-                padding: 15px;
-            }
-
-            .btn {
-                font-size: 11px;
-                padding: 6px 10px;
-            }
-
-            .metric-item {
-                min-width: 100px;
-                padding: 10px;
-            }
-
-            .team-table {
-                font-size: 10px;
-            }
-
-            .team-table th,
-            .team-table td {
-                padding: 5px;
-            }
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>SNS센터 실시간 대시보드</h1>
+            <div class="header-info">
+                <span>조회 날짜: <span id="currentDate"></span></span>
+                <span>🟢 로컬 모드</span>
+                <span>마지막 업데이트: <span id="lastUpdate"></span></span>
+            </div>
+        </div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useCallback, useRef } = React;
+        <div class="control-panel">
+            <button class="btn btn-primary" onclick="refreshData()">🔄 새로고침</button>
+            <button class="btn btn-success" onclick="alert('수정모드')">✏️ 수정모드</button>
+            <button class="btn btn-danger" onclick="alert('휴무관리')">📅 휴무관리</button>
+            <button class="btn btn-orange" onclick="openSkillModal()">🔧 스킬관리</button>
+            <button class="btn btn-info" onclick="alert('항목편집')">⚙️ 항목편집</button>
+            <button class="btn btn-warning" onclick="alert('목표설정')">🎯 목표설정</button>
+            <button class="btn btn-purple" onclick="alert('상담사')">👥 상담사</button>
+            <button class="btn btn-success" onclick="alert('JPG 내보내기')">📷 JPG</button>
+            <button class="btn btn-info" onclick="alert('엑셀 내보내기')">📊 엑셀</button>
+            
+            <div class="date-selector">
+                <label>날짜:</label>
+                <input type="date" id="dateSelector" onchange="changeDate()">
+            </div>
+        </div>
 
-        // Supabase 클라이언트 초기화
-        const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        <div id="dashboardContent"></div>
+    </div>
 
-        // 휴무 상태 관리 함수들
-        const AttendanceManager = {
-            // 특정 날짜의 모든 휴무 상태 가져오기
-            getDateAttendance: (date) => {
-                const stored = localStorage.getItem('attendance_status');
-                if (!stored) return {};
-                const allData = JSON.parse(stored);
-                return allData[date] || {};
+    <!-- 스킬 관리 모달 -->
+    <div id="skillModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeSkillModal()">×</span>
+            <div class="modal-header">🔧 스킬 관리 - <span id="modalDate"></span></div>
+            
+            <div style="margin-bottom: 20px; padding: 10px; background: #3a3a3a; border-radius: 5px;">
+                <p style="font-size: 13px; color: #B0B0B0; margin-bottom: 10px;">
+                    렌탈 스킬로 지정된 상담사는 유심갯수, SK인터넷, 프리미엄, 에센스, IoT, 1G, 가전제품 항목에서 "스킬없음"으로 표시됩니다.
+                </p>
+                <p style="font-size: 12px; color: #FFB74D;">
+                    ⚠️ 렌탈 스킬 상담사는 해당 항목들이 주황색으로 표시되며, 실적 입력이 제한됩니다.
+                </p>
+            </div>
+            
+            <div id="skillModalContent"></div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-primary" onclick="closeSkillModal()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 기본 데이터
+        const teams = {
+            '1파트': {
+                members: [
+                    { name: '이종민', tenure: '1년이상' },
+                    { name: '김민수', tenure: '6개월이상' },
+                    { name: '박지영', tenure: '3개월이상' }
+                ]
             },
-
-            // 특정 사람의 휴무 상태 가져오기
-            getPersonAttendance: (date, teamName, memberName) => {
-                const dateData = AttendanceManager.getDateAttendance(date);
-                const key = `${teamName}_${memberName}`;
-                return dateData[key] || 'normal';
+            '2파트': {
+                members: [
+                    { name: '윤도우리', tenure: '1년이상' },
+                    { name: '최서연', tenure: '9개월이상' },
+                    { name: '정태호', tenure: '3개월미만' }
+                ]
             },
-
-            // 휴무 상태 설정
-            setAttendance: (date, teamName, memberName, status) => {
-                const stored = localStorage.getItem('attendance_status');
-                const allData = stored ? JSON.parse(stored) : {};
-                
-                if (!allData[date]) {
-                    allData[date] = {};
-                }
-                
-                const key = `${teamName}_${memberName}`;
-                
-                if (status === 'normal') {
-                    delete allData[date][key];
-                } else {
-                    allData[date][key] = status;
-                }
-                
-                // 빈 날짜 데이터 제거
-                if (Object.keys(allData[date]).length === 0) {
-                    delete allData[date];
-                }
-                
-                localStorage.setItem('attendance_status', JSON.stringify(allData));
+            '3파트': {
+                members: [
+                    { name: '김진후', tenure: '1년이상' },
+                    { name: '이수진', tenure: '6개월이상' },
+                    { name: '강민정', tenure: '3개월이상' }
+                ]
             },
-
-            // 상태별 표시 텍스트
-            getStatusText: (status) => {
-                const texts = {
-                    'off': '휴무',
-                    'annual': '연차',
-                    'half': '반차',
-                    'normal': ''
-                };
-                return texts[status] || '';
+            '4파트': {
+                members: [
+                    { name: '이민주', tenure: '1년이상' },
+                    { name: '박준혁', tenure: '6개월이상' },
+                    { name: '송지은', tenure: '3개월미만' }
+                ]
+            },
+            '5파트': {
+                members: [
+                    { name: '차정환', tenure: '1년이상' },
+                    { name: '한예슬', tenure: '9개월이상' },
+                    { name: '노현우', tenure: '3개월이상' }
+                ]
             }
         };
 
-        // 휴무 관리 모달 컴포넌트
-        function AttendanceModal({ show, onClose, teams, selectedDate }) {
-            const [attendanceData, setAttendanceData] = useState({});
-
-            useEffect(() => {
-                if (show) {
-                    const data = AttendanceManager.getDateAttendance(selectedDate);
-                    setAttendanceData(data);
-                }
-            }, [show, selectedDate]);
-
-            if (!show) return null;
-
-            const handleStatusChange = (teamName, memberName, status) => {
-                const key = `${teamName}_${memberName}`;
-                const newData = {...attendanceData};
-                
-                if (status === 'normal') {
-                    delete newData[key];
-                } else {
-                    newData[key] = status;
-                }
-                
-                setAttendanceData(newData);
-                AttendanceManager.setAttendance(selectedDate, teamName, memberName, status);
-            };
-
-            return (
-                <div className="modal active">
-                    <div className="modal-content" style={{ maxWidth: '900px' }}>
-                        <span className="modal-close" onClick={onClose}>×</span>
-                        <div className="modal-header">📅 휴무/연차 관리 - {selectedDate}</div>
-                        
-                        <div style={{ marginBottom: '20px', padding: '10px', background: '#3a3a3a', borderRadius: '5px' }}>
-                            <p style={{ fontSize: '13px', color: '#B0B0B0' }}>
-                                각 상담사의 근무 상태를 설정하세요. 설정한 내용은 대시보드에 표시되며, 엑셀/JPG 내보내기에도 반영됩니다.
-                            </p>
-                        </div>
-
-                        {Object.entries(teams).map(([teamName, teamInfo]) => (
-                            <div key={teamName} style={{ marginBottom: '20px' }}>
-                                <h4 style={{ marginBottom: '10px', color: '#4A9EFF' }}>{teamName}</h4>
-                                <div style={{ background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
-                                    {teamInfo.members.map((member, idx) => {
-                                        const key = `${teamName}_${member.name}`;
-                                        const currentStatus = attendanceData[key] || 'normal';
-                                        
-                                        return (
-                                            <div key={idx} style={{ 
-                                                display: 'flex', 
-                                                justifyContent: 'space-between', 
-                                                alignItems: 'center', 
-                                                padding: '8px',
-                                                borderBottom: idx < teamInfo.members.length - 1 ? '1px solid #404040' : 'none',
-                                                background: currentStatus !== 'normal' ? '#ffcdd2' : 'transparent'
-                                            }}>
-                                                <span style={{ minWidth: '100px' }}>
-                                                    {member.name}
-                                                    {currentStatus !== 'normal' && (
-                                                        <span className="attendance-text">
-                                                            {` (${AttendanceManager.getStatusText(currentStatus)})`}
-                                                        </span>
-                                                    )}
-                                                </span>
-                                                <div className="attendance-buttons">
-                                                    <button 
-                                                        className={`attendance-btn btn-success ${currentStatus === 'normal' ? 'active' : ''}`}
-                                                        onClick={() => handleStatusChange(teamName, member.name, 'normal')}
-                                                    >
-                                                        정상
-                                                    </button>
-                                                    <button 
-                                                        className={`attendance-btn btn-danger ${currentStatus === 'off' ? 'active' : ''}`}
-                                                        onClick={() => handleStatusChange(teamName, member.name, 'off')}
-                                                    >
-                                                        휴무
-                                                    </button>
-                                                    <button 
-                                                        className={`attendance-btn btn-info ${currentStatus === 'annual' ? 'active' : ''}`}
-                                                        onClick={() => handleStatusChange(teamName, member.name, 'annual')}
-                                                    >
-                                                        연차
-                                                    </button>
-                                                    <button 
-                                                        className={`attendance-btn btn-warning ${currentStatus === 'half' ? 'active' : ''}`}
-                                                        onClick={() => handleStatusChange(teamName, member.name, 'half')}
-                                                    >
-                                                        반차
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button className="btn btn-primary" onClick={onClose}>
-                                확인
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // 항목 편집 모달 컴포넌트
-        function MetricsEditModal({ show, onClose, allMetrics, visibleMetrics, metricToDb, onSave }) {
-            const [activeTab, setActiveTab] = useState('display');
-            const [localVisible, setLocalVisible] = useState([]);
-            const [localMetrics, setLocalMetrics] = useState([]);
-            const [localMapping, setLocalMapping] = useState({});
-            const [newMetricName, setNewMetricName] = useState('');
-            const [newMetricDb, setNewMetricDb] = useState('');
-
-            useEffect(() => {
-                if (show) {
-                    setLocalVisible([...visibleMetrics]);
-                    setLocalMetrics([...allMetrics]);
-                    setLocalMapping({...metricToDb});
-                }
-            }, [show, allMetrics, visibleMetrics, metricToDb]);
-
-            if (!show) return null;
-
-            const handleAddMetric = () => {
-                if (!newMetricName || !newMetricDb) {
-                    alert('모든 필드를 입력해주세요!');
-                    return;
-                }
-                
-                if (localMetrics.includes(newMetricName)) {
-                    alert('이미 존재하는 항목명입니다!');
-                    return;
-                }
-
-                if (!/^[a-z][a-z0-9_]*$/.test(newMetricDb)) {
-                    alert('DB 컬럼명은 영문 소문자로 시작하고 영문, 숫자, 언더스코어만 사용 가능합니다!');
-                    return;
-                }
-
-                setLocalMetrics([...localMetrics, newMetricName]);
-                setLocalMapping({...localMapping, [newMetricName]: newMetricDb});
-                setNewMetricName('');
-                setNewMetricDb('');
-            };
-
-            const handleDeleteMetric = (metric) => {
-                const defaultMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', 'SK매직', '가전제품', '제휴카드'];
-                if (defaultMetrics.includes(metric)) {
-                    alert('기본 항목은 삭제할 수 없습니다!');
-                    return;
-                }
-
-                if (confirm(`'${metric}' 항목을 삭제하시겠습니까?`)) {
-                    setLocalMetrics(localMetrics.filter(m => m !== metric));
-                    setLocalVisible(localVisible.filter(m => m !== metric));
-                    const newMapping = {...localMapping};
-                    delete newMapping[metric];
-                    setLocalMapping(newMapping);
-                }
-            };
-
-            const handleSave = async () => {
-                const metricsData = {
-                    items: localMetrics.map(metric => ({
-                        name: metric,
-                        db_column: localMapping[metric],
-                        is_default: true,
-                        previous_columns: localMapping[metric + '_history'] || []
-                    }))
-                };
-
-                await onSave(localMetrics, localVisible, localMapping, metricsData);
-                onClose();
-            };
-
-            return (
-                <div className="modal active">
-                    <div className="modal-content" style={{ maxWidth: '700px' }}>
-                        <span className="modal-close" onClick={onClose}>×</span>
-                        <div className="modal-header">항목 관리</div>
-                        
-                        <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                            <button 
-                                className={`btn ${activeTab === 'display' ? 'btn-primary' : ''}`}
-                                onClick={() => setActiveTab('display')}
-                                style={{ flex: 1 }}
-                            >
-                                표시 설정
-                            </button>
-                            <button 
-                                className={`btn ${activeTab === 'manage' ? 'btn-primary' : ''}`}
-                                onClick={() => setActiveTab('manage')}
-                                style={{ flex: 1 }}
-                            >
-                                항목 추가/삭제
-                            </button>
-                        </div>
-
-                        {activeTab === 'display' ? (
-                            <div>
-                                <p style={{ marginBottom: '15px' }}>대시보드에 표시할 항목을 선택하세요:</p>
-                                <div className="checkbox-group">
-                                    {localMetrics.map(metric => (
-                                        <label key={metric} className="checkbox-item">
-                                            <input 
-                                                type="checkbox"
-                                                checked={localVisible.includes(metric)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setLocalVisible([...localVisible, metric]);
-                                                    } else {
-                                                        setLocalVisible(localVisible.filter(m => m !== metric));
-                                                    }
-                                                }}
-                                            />
-                                            {metric}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                                <div style={{ marginBottom: '20px' }}>
-                                    <h4 style={{ marginBottom: '10px' }}>새 항목 추가</h4>
-                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                        <input 
-                                            type="text"
-                                            placeholder="한글명 (예: 새항목)"
-                                            value={newMetricName}
-                                            onChange={(e) => setNewMetricName(e.target.value)}
-                                            style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                        />
-                                        <input 
-                                            type="text"
-                                            placeholder="DB컬럼명 (예: new_item)"
-                                            value={newMetricDb}
-                                            onChange={(e) => setNewMetricDb(e.target.value)}
-                                            style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                        />
-                                        <button className="btn btn-success" onClick={handleAddMetric}>추가</button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4 style={{ marginBottom: '10px' }}>현재 항목 목록</h4>
-                                    <div style={{ maxHeight: '300px', overflowY: 'auto', background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
-                                        {localMetrics.map(metric => (
-                                            <div key={metric} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #404040' }}>
-                                                <span>{metric} → {localMapping[metric]}</span>
-                                                <button 
-                                                    className="btn btn-danger" 
-                                                    onClick={() => handleDeleteMetric(metric)}
-                                                    style={{ padding: '4px 10px', fontSize: '12px' }}
-                                                >
-                                                    삭제
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button className="btn btn-success" onClick={handleSave} style={{ marginRight: '10px' }}>
-                                저장
-                            </button>
-                            <button className="btn" onClick={onClose} style={{ background: '#666' }}>
-                                취소
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // 상담사 관리 모달 컴포넌트
-        function TeamManagementModal({ show, onClose, teams, onSave }) {
-            const [localTeams, setLocalTeams] = useState({});
-            const [selectedTeam, setSelectedTeam] = useState('');
-            const [editingMember, setEditingMember] = useState(null);
-            const [newMemberName, setNewMemberName] = useState('');
-            const [newMemberTenure, setNewMemberTenure] = useState('3개월미만');
-
-            useEffect(() => {
-                if (show && teams && Object.keys(teams).length > 0) {
-                    setLocalTeams(JSON.parse(JSON.stringify(teams)));
-                    setSelectedTeam(Object.keys(teams)[0] || '');
-                }
-            }, [show, teams]);
-
-            if (!show) return null;
-
-            const handleAddMember = () => {
-                if (!newMemberName) {
-                    alert('이름을 입력해주세요!');
-                    return;
-                }
-
-                const newTeams = {...localTeams};
-                newTeams[selectedTeam].members.push({
-                    name: newMemberName,
-                    tenure: newMemberTenure
-                });
-                setLocalTeams(newTeams);
-                setNewMemberName('');
-                setNewMemberTenure('3개월미만');
-            };
-
-            const handleDeleteMember = (memberIndex) => {
-                if (confirm('정말 삭제하시겠습니까?')) {
-                    const newTeams = {...localTeams};
-                    newTeams[selectedTeam].members.splice(memberIndex, 1);
-                    setLocalTeams(newTeams);
-                }
-            };
-
-            const handleEditMember = (memberIndex) => {
-                const member = localTeams[selectedTeam].members[memberIndex];
-                setEditingMember({ index: memberIndex, ...member });
-            };
-
-            const handleUpdateMember = () => {
-                const newTeams = {...localTeams};
-                newTeams[selectedTeam].members[editingMember.index] = {
-                    name: editingMember.name,
-                    tenure: editingMember.tenure
-                };
-                setLocalTeams(newTeams);
-                setEditingMember(null);
-            };
-
-            const handleSave = async () => {
-                await onSave(localTeams);
-                onClose();
-            };
-
-            return (
-                <div className="modal active">
-                    <div className="modal-content" style={{ maxWidth: '900px' }}>
-                        <span className="modal-close" onClick={onClose}>×</span>
-                        <div className="modal-header">상담사 관리</div>
-                        
-                        <div style={{ display: 'flex', gap: '20px' }}>
-                            <div style={{ width: '200px' }}>
-                                <h4 style={{ marginBottom: '10px' }}>팀 선택</h4>
-                                <select 
-                                    value={selectedTeam} 
-                                    onChange={(e) => setSelectedTeam(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                >
-                                    {Object.keys(localTeams).map(team => (
-                                        <option key={team} value={team}>{team}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div style={{ flex: 1 }}>
-                                <h4 style={{ marginBottom: '10px' }}>팀원 목록</h4>
-                                
-                                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                                    <input 
-                                        type="text"
-                                        placeholder="이름"
-                                        value={newMemberName}
-                                        onChange={(e) => setNewMemberName(e.target.value)}
-                                        style={{ flex: 1, padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                    />
-                                    <select 
-                                        value={newMemberTenure}
-                                        onChange={(e) => setNewMemberTenure(e.target.value)}
-                                        style={{ padding: '8px', background: '#3a3a3a', border: '1px solid #404040', borderRadius: '5px', color: '#E0E0E0' }}
-                                    >
-                                        <option value="3개월미만">3개월미만</option>
-                                        <option value="3개월이상">3개월이상</option>
-                                        <option value="6개월이상">6개월이상</option>
-                                        <option value="9개월이상">9개월이상</option>
-                                        <option value="1년이상">1년이상</option>
-                                    </select>
-                                    <button className="btn btn-success" onClick={handleAddMember}>추가</button>
-                                </div>
-
-                                <div style={{ maxHeight: '400px', overflowY: 'auto', background: '#3a3a3a', borderRadius: '5px', padding: '10px' }}>
-                                    {localTeams[selectedTeam]?.members.map((member, index) => (
-                                        <div key={index} style={{ 
-                                            display: 'flex', 
-                                            justifyContent: 'space-between', 
-                                            alignItems: 'center', 
-                                            padding: '8px', 
-                                            borderBottom: '1px solid #404040'
-                                        }}>
-                                            {editingMember?.index === index ? (
-                                                <>
-                                                    <input 
-                                                        type="text"
-                                                        value={editingMember.name}
-                                                        onChange={(e) => setEditingMember({...editingMember, name: e.target.value})}
-                                                        style={{ flex: 1, marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
-                                                    />
-                                                    <select 
-                                                        value={editingMember.tenure}
-                                                        onChange={(e) => setEditingMember({...editingMember, tenure: e.target.value})}
-                                                        style={{ marginRight: '10px', padding: '4px', background: '#2d2d2d', border: '1px solid #4A9EFF', borderRadius: '3px', color: '#E0E0E0' }}
-                                                    >
-                                                        <option value="3개월미만">3개월미만</option>
-                                                        <option value="3개월이상">3개월이상</option>
-                                                        <option value="6개월이상">6개월이상</option>
-                                                        <option value="9개월이상">9개월이상</option>
-                                                        <option value="1년이상">1년이상</option>
-                                                    </select>
-                                                    <button className="btn btn-success" onClick={handleUpdateMember} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>저장</button>
-                                                    <button className="btn" onClick={() => setEditingMember(null)} style={{ padding: '4px 10px', fontSize: '12px', background: '#666' }}>취소</button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span>{member.name} ({member.tenure})</span>
-                                                    <div>
-                                                        <button className="btn btn-info" onClick={() => handleEditMember(index)} style={{ padding: '4px 10px', fontSize: '12px', marginRight: '5px' }}>수정</button>
-                                                        <button className="btn btn-danger" onClick={() => handleDeleteMember(index)} style={{ padding: '4px 10px', fontSize: '12px' }}>삭제</button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button className="btn btn-success" onClick={handleSave} style={{ marginRight: '10px' }}>
-                                저장
-                            </button>
-                            <button className="btn" onClick={onClose} style={{ background: '#666' }}>
-                                취소
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // 목표 설정 모달 컴포넌트
-        function TargetSettingModal({ show, onClose, visibleMetrics, dailyTargets, onSave }) {
-            const [localTargets, setLocalTargets] = useState({});
-
-            useEffect(() => {
-                if (show) {
-                    setLocalTargets({...dailyTargets});
-                }
-            }, [show, dailyTargets]);
-
-            if (!show) return null;
-
-            const handleSave = async () => {
-                await onSave(localTargets);
-                onClose();
-            };
-
-            return (
-                <div className="modal active">
-                    <div className="modal-content">
-                        <span className="modal-close" onClick={onClose}>×</span>
-                        <div className="modal-header">일일 목표 설정</div>
-                        {visibleMetrics.map(metric => (
-                            <div key={metric} className="form-group">
-                                <label>{metric}</label>
-                                <input 
-                                    type="number"
-                                    value={localTargets[metric] || 100}
-                                    onChange={(e) => {
-                                        setLocalTargets({
-                                            ...localTargets,
-                                            [metric]: parseInt(e.target.value) || 0
-                                        });
-                                    }}
-                                />
-                            </div>
-                        ))}
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button 
-                                className="btn btn-success" 
-                                onClick={handleSave}
-                                style={{ marginRight: '10px' }}
-                            >
-                                저장
-                            </button>
-                            <button 
-                                className="btn" 
-                                onClick={onClose}
-                                style={{ background: '#666' }}
-                            >
-                                취소
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function DashboardApp() {
-            const [teams, setTeams] = useState({});
-            const [visibleMetrics, setVisibleMetrics] = useState([]);
-            const [metricToDb, setMetricToDb] = useState({});
-            const [allMetrics, setAllMetrics] = useState([]);
-            const [dailyTargets, setDailyTargets] = useState({});
-            const [performanceData, setPerformanceData] = useState({});
-            const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-            const [isLoading, setIsLoading] = useState(true);
-            const [lastUpdate, setLastUpdate] = useState(new Date());
-            const [autoRefresh, setAutoRefresh] = useState(true);
-            const [showMetricsModal, setShowMetricsModal] = useState(false);
-            const [showTargetModal, setShowTargetModal] = useState(false);
-            const [showTeamModal, setShowTeamModal] = useState(false);
-            const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-            const [showWeeklyModal, setShowWeeklyModal] = useState(false);
-            const [weeklyData, setWeeklyData] = useState({});
-            const [editMode, setEditMode] = useState(false);
-            const [editedData, setEditedData] = useState({});
-            const [, forceUpdate] = useState();
-
-            // 설정 로드
-            const loadConfig = useCallback(async () => {
-                try {
-                    // 팀 정보
-                    const { data: teamsData } = await supabase
-                        .from('config')
-                        .select('*')
-                        .eq('type', 'teams')
-                        .single();
-
-                    if (teamsData) {
-                        setTeams(teamsData.data);
-                    }
-
-                    // 메트릭 정보
-                    const { data: metricsData } = await supabase
-                        .from('config')
-                        .select('*')
-                        .eq('type', 'metrics')
-                        .single();
-
-                    if (metricsData) {
-                        const mapping = {};
-                        const metrics = [];
-                        metricsData.data.items.forEach(item => {
-                            mapping[item.name] = item.db_column;
-                            metrics.push(item.name);
-                        });
-                        setMetricToDb(mapping);
-                        setAllMetrics(metrics);
-                    }
-
-                    // 설정
-                    const { data: settingsData } = await supabase
-                        .from('config')
-                        .select('*')
-                        .eq('type', 'settings')
-                        .single();
-
-                    if (settingsData && settingsData.data) {
-                        setVisibleMetrics(settingsData.data.visible_metrics || []);
-                        setDailyTargets(settingsData.data.daily_targets || {});
-                    }
-                } catch (error) {
-                    console.error('설정 로드 오류:', error);
-                }
-            }, []);
-
-            // 실적 데이터 로드
-            const loadPerformanceData = useCallback(async () => {
-                try {
-                    const { data } = await supabase
-                        .from('performance')
-                        .select('*')
-                        .eq('date', selectedDate);
-
-                    const dataMap = {};
-                    if (data) {
-                        data.forEach(record => {
-                            const key = `${record.team}_${record.name}`;
-                            dataMap[key] = record;
-                        });
-                    }
-                    setPerformanceData(dataMap);
-                    setEditedData({});
-                    setLastUpdate(new Date());
-                } catch (error) {
-                    console.error('데이터 로드 오류:', error);
-                } finally {
-                    setIsLoading(false);
-                }
-            }, [selectedDate]);
-
-            // 주간 데이터 로드
-            const loadWeeklyData = useCallback(async () => {
-                try {
-                    const currentDate = new Date(selectedDate);
-                    const dayOfWeek = currentDate.getDay();
-                    const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-                    const monday = new Date(currentDate.setDate(diff));
-                    
-                    const weekDates = [];
-                    for (let i = 0; i < 5; i++) {
-                        const date = new Date(monday);
-                        date.setDate(monday.getDate() + i);
-                        weekDates.push(date.toISOString().split('T')[0]);
-                    }
-                    
-                    const { data } = await supabase
-                        .from('performance')
-                        .select('*')
-                        .in('date', weekDates);
-                    
-                    const weeklyMap = {};
-                    if (data) {
-                        data.forEach(record => {
-                            if (!weeklyMap[record.date]) {
-                                weeklyMap[record.date] = {};
-                            }
-                            const key = `${record.team}_${record.name}`;
-                            weeklyMap[record.date][key] = record;
-                        });
-                    }
-                    
-                    setWeeklyData(weeklyMap);
-                } catch (error) {
-                    console.error('주간 데이터 로드 오류:', error);
-                }
-            }, [selectedDate]);
-
-            // 데이터 수정 핸들러
-            const handleDataEdit = (teamName, memberName, metric, value) => {
-                const key = `${teamName}_${memberName}`;
-                const dbColumn = metricToDb[metric];
-                
-                setEditedData(prev => ({
-                    ...prev,
-                    [key]: {
-                        ...prev[key],
-                        [dbColumn]: parseInt(value) || 0
-                    }
-                }));
-            };
-
-            // 수정 데이터 저장
-            const saveEditedData = async () => {
-                try {
-                    const updates = [];
-                    
-                    for (const [key, data] of Object.entries(editedData)) {
-                        const [team, name] = key.split('_');
-                        const existingData = performanceData[key];
-                        
-                        if (existingData) {
-                            updates.push(
-                                supabase
-                                    .from('performance')
-                                    .update({ ...existingData, ...data })
-                                    .eq('id', existingData.id)
-                            );
-                        } else {
-                            const newRecord = {
-                                team,
-                                name,
-                                date: selectedDate,
-                                ...data
-                            };
-                            updates.push(
-                                supabase
-                                    .from('performance')
-                                    .insert(newRecord)
-                            );
-                        }
-                    }
-                    
-                    await Promise.all(updates);
-                    alert('데이터가 저장되었습니다.');
-                    setEditMode(false);
-                    loadPerformanceData();
-                } catch (error) {
-                    console.error('저장 오류:', error);
-                    alert('데이터 저장 중 오류가 발생했습니다.');
-                }
-            };
-
-            // 수정 모드 토글
-            const toggleEditMode = () => {
-                if (editMode && Object.keys(editedData).length > 0) {
-                    if (confirm('수정한 데이터를 저장하시겠습니까?')) {
-                        saveEditedData();
-                    } else {
-                        setEditedData({});
-                        setEditMode(false);
-                    }
-                } else {
-                    setEditMode(!editMode);
-                    if (!editMode) {
-                        setAutoRefresh(false);
-                    }
-                }
-            };
-
-            const getMetricLevel = (value, metric) => {
-                if (value === 0) return 'metric-level-0';
-                
-                if (metric === '제휴카드') {
-                    if (value < 30) return 'metric-level-1';
-                    if (value < 90) return 'metric-level-2';
-                    if (value < 150) return 'metric-level-3';
-                    if (value < 210) return 'metric-level-4';
-                    return 'metric-level-5';
-                } else {
-                    if (value < 10) return 'metric-level-1';
-                    if (value < 30) return 'metric-level-2';
-                    if (value < 50) return 'metric-level-3';
-                    if (value < 70) return 'metric-level-4';
-                    return 'metric-level-5';
-                }
-            };
-
-            // 전체 합계 계산
-            const calculateTotals = () => {
-                const totals = {};
-                visibleMetrics.forEach(metric => {
-                    totals[metric] = 0;
-                });
-
-                Object.values(performanceData).forEach(data => {
-                    visibleMetrics.forEach(metric => {
-                        const dbColumn = metricToDb[metric];
-                        totals[metric] += data[dbColumn] || 0;
-                    });
-                });
-
-                return totals;
-            };
-
-            // 팀별 합계 계산
-            const calculateTeamTotals = (teamName) => {
-                const totals = {};
-                visibleMetrics.forEach(metric => {
-                    totals[metric] = 0;
-                });
-
-                const teamInfo = teams[teamName];
-                if (teamInfo) {
-                    teamInfo.members.forEach(member => {
-                        const key = `${teamName}_${member.name}`;
-                        const data = performanceData[key];
-                        if (data) {
-                            visibleMetrics.forEach(metric => {
-                                const dbColumn = metricToDb[metric];
-                                totals[metric] += data[dbColumn] || 0;
-                            });
-                        }
-                    });
-                }
-
-                return totals;
-            };
-
-            // 엑셀 내보내기
-            const exportToExcel = () => {
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet([]);
-                
-                const teamColors = {
-                    '1파트': 'FFE2F0D9',
-                    '2파트': 'FFDDEBF7',
-                    '3파트': 'FFFCE4D6',
-                    '4파트': 'FFFFF2CC',
-                    '5파트': 'FFD9E2F3'
-                };
-                
-                const teamLeaders = {
-                    '1파트': '이종민',
-                    '2파트': '윤도우리',
-                    '3파트': '김진후',
-                    '4파트': '이민주',
-                    '5파트': '차정환'
-                };
-                
-                XLSX.utils.sheet_add_aoa(ws, [[`SNS센터 실적보고 - ${selectedDate}`]], {origin: 'A1'});
-                
-                const headers = ['소속', '이름', '근속기간', '상태', ...visibleMetrics];
-                XLSX.utils.sheet_add_aoa(ws, [headers], {origin: 'A3'});
-                
-                let rowNum = 3;
-                const mergeRanges = [];
-                
-                Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                    const startRow = rowNum;
-                    const teamColor = teamColors[teamName] || 'FFE2F0D9';
-                    const leader = teamLeaders[teamName] || '';
-                    const teamTotals = calculateTeamTotals(teamName);
-                    
-                    teamInfo.members.forEach((member, idx) => {
-                        const key = `${teamName}_${member.name}`;
-                        const data = performanceData[key] || {};
-                        const attendance = AttendanceManager.getPersonAttendance(selectedDate, teamName, member.name);
-                        const isOffDay = attendance !== 'normal';
-                        const rowData = [];
-                        
-                        if (idx === 0) {
-                            const teamDisplay = teamName === '5파트' 
-                                ? `의정부SNS센터\n${teamName}\n${leader}`
-                                : `SNS센터\n${teamName}\n${leader}`;
-                            rowData.push(teamDisplay);
-                        } else {
-                            rowData.push('');
-                        }
-                        
-                        rowData.push(member.name, member.tenure);
-                        rowData.push(AttendanceManager.getStatusText(attendance) || '정상');
-                        
-                        visibleMetrics.forEach(metric => {
-                            const dbColumn = metricToDb[metric];
-                            const value = data[dbColumn] || 0;
-                            rowData.push(isOffDay && value === 0 ? AttendanceManager.getStatusText(attendance) : value);
-                        });
-                        
-                        XLSX.utils.sheet_add_aoa(ws, [rowData], {origin: `A${rowNum + 1}`});
-                        rowNum++;
-                    });
-                    
-                    if (teamInfo.members.length > 1) {
-                        mergeRanges.push({
-                            s: { r: startRow, c: 0 },
-                            e: { r: rowNum - 1, c: 0 }
-                        });
-                    }
-                    
-                    const totalRow = [`${teamName} 총합`, '', '', '', ...visibleMetrics.map(metric => teamTotals[metric])];
-                    XLSX.utils.sheet_add_aoa(ws, [totalRow], {origin: `A${rowNum + 1}`});
-                    
-                    mergeRanges.push({
-                        s: { r: rowNum, c: 0 },
-                        e: { r: rowNum, c: 3 }
-                    });
-                    
-                    rowNum++;
-                });
-                
-                const grandTotals = calculateTotals();
-                const centerRow = ['센터 총합', '', '', '', ...visibleMetrics.map(metric => grandTotals[metric])];
-                XLSX.utils.sheet_add_aoa(ws, [centerRow], {origin: `A${rowNum + 1}`});
-                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 3 } });
-                rowNum++;
-                
-                // 일 목표
-                const targetRow = ['일 목표', '', '', '', ...visibleMetrics.map(metric => dailyTargets[metric] || 100)];
-                XLSX.utils.sheet_add_aoa(ws, [targetRow], {origin: `A${rowNum + 1}`});
-                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 3 } });
-                rowNum++;
-                
-                // 달성
-                const achievementRow = ['달성', '', '', '', ...visibleMetrics.map(metric => {
-                    const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
-                    return diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`;
-                })];
-                XLSX.utils.sheet_add_aoa(ws, [achievementRow], {origin: `A${rowNum + 1}`});
-                mergeRanges.push({ s: { r: rowNum, c: 0 }, e: { r: rowNum, c: 3 } });
-                
-                ws['!merges'] = mergeRanges;
-                ws['!cols'] = [
-                    { wch: 20 },
-                    { wch: 12 },
-                    { wch: 12 },
-                    { wch: 10 },
-                    ...visibleMetrics.map(() => ({ wch: 10 }))
-                ];
-                
-                // 범위 설정
-                ws['!ref'] = XLSX.utils.encode_range({
-                    s: { r: 0, c: 0 },
-                    e: { r: rowNum, c: headers.length - 1 }
-                });
-                
-                XLSX.utils.book_append_sheet(wb, ws, '실적');
-                XLSX.writeFile(wb, `SNS센터_실적_${selectedDate.replace(/-/g, '')}.xlsx`);
-            };
-
-            // JPG 내보내기 - 수정된 버전
-            const exportToJPG = async () => {
-                const teamColors = {
-                    '1파트': '#E2F0D9',
-                    '2파트': '#DDEBF7',
-                    '3파트': '#FCE4D6',
-                    '4파트': '#FFF2CC',
-                    '5파트': '#D9E2F3'
-                };
-                
-                const teamLeaders = {
-                    '1파트': '이종민',
-                    '2파트': '윤도우리',
-                    '3파트': '김진후',
-                    '4파트': '이민주',
-                    '5파트': '차정환'
-                };
-                
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
-                const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
-                const rowHeight = 35;
-                let totalRows = 4;
-                Object.values(teams).forEach(team => {
-                    totalRows += team.members.length + 1;
-                });
-                totalRows += 6; // 센터총합, 일목표, 달성 + 여백
-                
-                canvas.width = totalWidth;
-                canvas.height = totalRows * rowHeight + 140;
-                
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.font = '13px Malgun Gothic';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                let y = 30;
-                const xStart = 40;
-                
-                ctx.font = 'bold 20px Malgun Gothic';
-                ctx.fillStyle = 'black';
-                ctx.fillText(`SNS센터 실적보고 - ${selectedDate}`, totalWidth / 2, y);
-                y += 50;
-                
-                ctx.font = 'bold 14px Malgun Gothic';
-                const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
-                let x = xStart;
-                headers.forEach((header, i) => {
-                    ctx.fillStyle = '#D9D9D9';
-                    ctx.fillRect(x, y, colWidths[i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[i], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 14px Malgun Gothic';
-                    ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
-                    x += colWidths[i];
-                });
-                y += rowHeight;
-                
-                Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                    const teamColor = teamColors[teamName] || '#E2F0D9';
-                    const leader = teamLeaders[teamName] || '';
-                    const startY = y;
-                    const teamTotals = calculateTeamTotals(teamName);
-                    
-                    teamInfo.members.forEach((member, idx) => {
-                        const key = `${teamName}_${member.name}`;
-                        const data = performanceData[key] || {};
-                        const attendance = AttendanceManager.getPersonAttendance(selectedDate, teamName, member.name);
-                        
-                        x = xStart;
-                        
-                        if (idx === 0) {
-                            const mergeHeight = teamInfo.members.length * rowHeight;
-                            ctx.fillStyle = teamColor;
-                            ctx.fillRect(x, y, colWidths[0], mergeHeight);
-                            ctx.strokeStyle = 'black';
-                            ctx.strokeRect(x, y, colWidths[0], mergeHeight);
-                            ctx.fillStyle = 'black';
-                            ctx.font = 'bold 13px Malgun Gothic';
-                            const teamText = teamName === '5파트' ? `의정부SNS센터` : `SNS센터`;
-                            ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
-                            ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
-                            ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
-                            ctx.font = '13px Malgun Gothic';
-                        }
-                        x += colWidths[0];
-                        
-                        // 이름
-                        const isOffDay = attendance !== 'normal';
-                        const nameColor = isOffDay ? '#ffcdd2' : teamColor;
-                        ctx.fillStyle = nameColor;
-                        ctx.fillRect(x, y, colWidths[1], rowHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[1], rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = '13px Malgun Gothic';
-                        
-                        if (isOffDay) {
-                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2 - 7);
-                            ctx.font = '11px Malgun Gothic';
-                            ctx.fillStyle = '#d32f2f';
-                            ctx.fillText(`(${AttendanceManager.getStatusText(attendance)})`, x + colWidths[1]/2, y + rowHeight/2 + 8);
-                            ctx.fillStyle = 'black';
-                            ctx.font = '13px Malgun Gothic';
-                        } else {
-                            ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
-                        }
-                        x += colWidths[1];
-                        
-                        // 근속기간
-                        ctx.fillStyle = isOffDay ? '#ffcdd2' : teamColor;
-                        ctx.fillRect(x, y, colWidths[2], rowHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[2], rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = '12px Malgun Gothic';
-                        ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
-                        x += colWidths[2];
-                        
-                        // 실적 데이터
-                        visibleMetrics.forEach((metric, i) => {
-                            const dbColumn = metricToDb[metric];
-                            const value = data[dbColumn] || 0;
-                            const hasData = value > 0;
-                            
-                            if (isOffDay && !hasData) {
-                                ctx.fillStyle = '#ffcdd2';
-                                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                                ctx.strokeStyle = 'black';
-                                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                                ctx.fillStyle = '#d32f2f';
-                                ctx.font = 'bold 13px Malgun Gothic';
-                                ctx.fillText(AttendanceManager.getStatusText(attendance), x + colWidths[3 + i]/2, y + rowHeight/2);
-                            } else {
-                                ctx.fillStyle = 'white';
-                                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                                ctx.strokeStyle = 'black';
-                                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                                ctx.fillStyle = 'black';
-                                ctx.font = 'bold 16px Malgun Gothic';
-                                ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                            }
-                            x += colWidths[3 + i];
-                        });
-                        ctx.font = '13px Malgun Gothic';
-                        
-                        y += rowHeight;
-                    });
-                    
-                    // 팀 총합
-                    x = xStart;
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 14px Malgun Gothic';
-                    ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                    x += colWidths[0] + colWidths[1] + colWidths[2];
-                    
-                    visibleMetrics.forEach((metric, i) => {
-                        ctx.fillStyle = '#FFD700';
-                        ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = 'bold 17px Malgun Gothic';
-                        ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                        x += colWidths[3 + i];
-                    });
-                    ctx.font = '13px Malgun Gothic';
-                    
-                    y += rowHeight + 10;
-                });
-                
-                const grandTotals = calculateTotals();
-                
-                // 센터 총합
-                y += 10; // 추가 여백
-                x = xStart;
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 15px Malgun Gothic';
-                ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                x += colWidths[0] + colWidths[1] + colWidths[2];
-                
-                visibleMetrics.forEach((metric, i) => {
-                    ctx.fillStyle = '#FFCCCC';
-                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 18px Malgun Gothic';
-                    ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                    x += colWidths[3 + i];
-                });
-                
-                // 일 목표
-                y += rowHeight;
-                x = xStart;
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 15px Malgun Gothic';
-                ctx.fillText('일 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                x += colWidths[0] + colWidths[1] + colWidths[2];
-                
-                visibleMetrics.forEach((metric, i) => {
-                    ctx.fillStyle = '#FFCCCC';
-                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 16px Malgun Gothic';
-                    ctx.fillText((dailyTargets[metric] || 100).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                    x += colWidths[3 + i];
-                });
-                
-                // 달성 현황
-                y += rowHeight;
-                x = xStart;
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 15px Malgun Gothic';
-                ctx.fillText('달성 현황', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                x += colWidths[0] + colWidths[1] + colWidths[2];
-                
-                visibleMetrics.forEach((metric, i) => {
-                    const target = dailyTargets[metric] || 100;
-                    const actual = grandTotals[metric];
-                    const diff = target - actual;
-                    const isAchieved = diff <= 0;
-                    
-                    ctx.fillStyle = isAchieved ? '#C8E6C9' : '#FFCDD2';
-                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = isAchieved ? 'darkgreen' : 'darkred';
-                    ctx.font = 'bold 16px Malgun Gothic';
-                    ctx.fillText(diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`, x + colWidths[3 + i]/2, y + rowHeight/2);
-                    x += colWidths[3 + i];
-                });
-                
-                const link = document.createElement('a');
-                link.download = `SNS센터_실적_${selectedDate.replace(/-/g, '')}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.click();
-            };
-
-            // 설정 저장
-            const saveSettings = async (targets) => {
-                try {
-                    const settingsData = {
-                        type: 'settings',
-                        data: {
-                            visible_metrics: visibleMetrics,
-                            daily_targets: targets
-                        }
-                    };
-
-                    const { error } = await supabase
-                        .from('config')
-                        .upsert(settingsData, { onConflict: 'type' });
-
-                    if (error) throw error;
-
-                    setDailyTargets(targets);
-                    alert('목표가 저장되었습니다.');
-                } catch (error) {
-                    console.error('설정 저장 오류:', error);
-                    alert('설정 저장 중 오류가 발생했습니다.');
-                }
-            };
-
-            useEffect(() => {
-                loadConfig();
-            }, [loadConfig]);
-
-            useEffect(() => {
-                loadPerformanceData();
-                
-                if (autoRefresh) {
-                    const interval = setInterval(loadPerformanceData, 60000);
-                    return () => clearInterval(interval);
-                }
-            }, [loadPerformanceData, autoRefresh]);
-
-            useEffect(() => {
-                if (showWeeklyModal) {
-                    loadWeeklyData();
-                }
-            }, [showWeeklyModal, loadWeeklyData]);
-
-            if (isLoading) {
-                return (
-                    <div className="dashboard-container">
-                        <div className="loading">
-                            <div className="spinner"></div>
-                            <p>데이터를 불러오는 중...</p>
-                        </div>
-                    </div>
-                );
+        const metrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', 'SK매직', '가전제품', '제휴카드'];
+        const rentalMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', '가전제품'];
+        
+        let currentDate = new Date().toISOString().split('T')[0];
+
+        // 스킬 상태 관리
+        function getSkillStatus(date, teamName, memberName) {
+            try {
+                const stored = localStorage.getItem('skill_status');
+                if (!stored) return 'normal';
+                const data = JSON.parse(stored);
+                const key = `${date}_${teamName}_${memberName}`;
+                return data[key] || 'normal';
+            } catch {
+                return 'normal';
             }
-
-            const grandTotals = calculateTotals();
-
-            return (
-                <div className="dashboard-container">
-                    <div className="header">
-                        <h1>SNS센터 실시간 대시보드</h1>
-                        <div className="header-info">
-                            <span>조회 날짜: {selectedDate}</span>
-                            <span>🟢 서버 연결됨</span>
-                            <span>마지막 업데이트: {lastUpdate.toLocaleTimeString('ko-KR')}</span>
-                            {autoRefresh && (
-                                <div className="auto-refresh-indicator">
-                                    <span className="pulse"></span>
-                                    자동 새로고침
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="control-panel">
-                        <button className="btn btn-primary" onClick={loadPerformanceData}>
-                            🔄 새로고침
-                        </button>
-                        <button 
-                            className={`btn ${editMode ? 'btn-danger' : 'btn-success'}`} 
-                            onClick={toggleEditMode}
-                        >
-                            {editMode ? '✏️ 수정완료' : '✏️ 수정모드'}
-                        </button>
-                        <button className="btn btn-danger" onClick={() => {
-                            setShowAttendanceModal(true);
-                            forceUpdate({});
-                        }}>
-                            📅 휴무관리
-                        </button>
-                        <button className="btn btn-info" onClick={() => setShowMetricsModal(true)}>
-                            ⚙️ 항목편집
-                        </button>
-                        <button className="btn btn-warning" onClick={() => setShowTargetModal(true)}>
-                            🎯 목표설정
-                        </button>
-                        <button className="btn btn-purple" onClick={() => setShowTeamModal(true)}>
-                            👥 상담사
-                        </button>
-                        <button className="btn" onClick={() => setShowWeeklyModal(true)} style={{ background: '#8B4513' }}>
-                            📊 주간현황
-                        </button>
-                        <button className="btn btn-success" onClick={exportToJPG}>
-                            📷 JPG
-                        </button>
-                        <button className="btn btn-info" onClick={exportToExcel}>
-                            📊 엑셀
-                        </button>
-                        
-                        <div className="date-selector">
-                            <label>날짜:</label>
-                            <input 
-                                type="date" 
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                disabled={editMode}
-                            />
-                        </div>
-
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <input 
-                                type="checkbox" 
-                                checked={autoRefresh}
-                                onChange={(e) => setAutoRefresh(e.target.checked)}
-                                disabled={editMode}
-                            />
-                            자동새로고침
-                        </label>
-                        
-                        {editMode && (
-                            <div style={{ 
-                                padding: '5px 10px', 
-                                background: '#FF6B6B', 
-                                color: 'white', 
-                                borderRadius: '5px',
-                                fontWeight: 'bold',
-                                animation: 'pulse 2s infinite'
-                            }}>
-                                📝 수정 모드 활성화
-                            </div>
-                        )}
-                    </div>
-
-                    <div id="dashboard-content">
-                        <div className="summary-section">
-                            <div className="summary-title">📊 전체 실적 요약</div>
-                            <div className="metrics-row">
-                                {visibleMetrics.map(metric => (
-                                    <div 
-                                        key={metric} 
-                                        className={`metric-item ${getMetricLevel(grandTotals[metric], metric)}`}
-                                    >
-                                        <div className="metric-name">{metric}</div>
-                                        <div className="metric-value">{grandTotals[metric]}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {Object.entries(teams).map(([teamName, teamInfo]) => {
-                            const teamTotals = calculateTeamTotals(teamName);
-                            
-                            return (
-                                <div key={teamName}>
-                                    <div className="summary-section">
-                                        <div className="summary-title">📈 {teamName} 실적 요약</div>
-                                        <div className="metrics-row">
-                                            {visibleMetrics.map(metric => (
-                                                <div 
-                                                    key={metric} 
-                                                    className={`metric-item ${getMetricLevel(teamTotals[metric], metric)}`}
-                                                >
-                                                    <div className="metric-name">{metric}</div>
-                                                    <div className="metric-value">{teamTotals[metric]}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="team-section">
-                                        <div className="team-header">
-                                            SNS센터 {teamName}
-                                        </div>
-                                        <table className="team-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>이름</th>
-                                                    <th>근속기간</th>
-                                                    {visibleMetrics.map(metric => (
-                                                        <th key={metric}>{metric}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {teamInfo.members.map(member => {
-                                                    const key = `${teamName}_${member.name}`;
-                                                    const data = performanceData[key] || {};
-                                                    const editData = editedData[key] || {};
-                                                    const attendance = AttendanceManager.getPersonAttendance(selectedDate, teamName, member.name);
-                                                    const isOffDay = attendance !== 'normal';
-                                                    
-                                                    return (
-                                                        <tr key={member.name} className={isOffDay ? 'attendance-off' : ''}>
-                                                            <td>
-                                                                {member.name}
-                                                                {isOffDay && (
-                                                                    <span className="attendance-text">
-                                                                        {` (${AttendanceManager.getStatusText(attendance)})`}
-                                                                    </span>
-                                                                )}
-                                                            </td>
-                                                            <td>{member.tenure}</td>
-                                                            {visibleMetrics.map(metric => {
-                                                                const dbColumn = metricToDb[metric];
-                                                                const originalValue = data[dbColumn] || 0;
-                                                                const currentValue = editData[dbColumn] !== undefined ? editData[dbColumn] : originalValue;
-                                                                const hasData = currentValue > 0;
-                                                                
-                                                                if (editMode) {
-                                                                    return (
-                                                                        <td key={metric} className={hasData ? 'has-data' : ''} style={{
-                                                                            padding: '2px',
-                                                                            background: editData[dbColumn] !== undefined ? '#4A9EFF20' : (hasData && isOffDay ? '#2d2d2d' : '')
-                                                                        }}>
-                                                                            <input 
-                                                                                type="number"
-                                                                                value={currentValue}
-                                                                                onChange={(e) => handleDataEdit(teamName, member.name, metric, e.target.value)}
-                                                                                style={{
-                                                                                    width: '100%',
-                                                                                    padding: '4px',
-                                                                                    background: '#2d2d2d',
-                                                                                    border: editData[dbColumn] !== undefined ? '2px solid #4A9EFF' : '1px solid #404040',
-                                                                                    borderRadius: '3px',
-                                                                                    color: '#E0E0E0',
-                                                                                    textAlign: 'center',
-                                                                                    fontSize: '12px'
-                                                                                }}
-                                                                                min="0"
-                                                                            />
-                                                                        </td>
-                                                                    );
-                                                                } else {
-                                                                    const displayValue = isOffDay && !hasData
-                                                                        ? AttendanceManager.getStatusText(attendance) 
-                                                                        : currentValue;
-                                                                    
-                                                                    return (
-                                                                        <td key={metric} className={hasData ? 'has-data' : ''} style={{
-                                                                            color: isOffDay && !hasData ? '#d32f2f' : '#E0E0E0',
-                                                                            fontWeight: isOffDay && !hasData ? 'bold' : 'normal'
-                                                                        }}>
-                                                                            {displayValue}
-                                                                        </td>
-                                                                    );
-                                                                }
-                                                            })}
-                                                        </tr>
-                                                    );
-                                                })}
-                                                <tr className="team-total">
-                                                    <td colSpan="2">{teamName} 총합</td>
-                                                    {visibleMetrics.map(metric => (
-                                                        <td key={metric}>{teamTotals[metric]}</td>
-                                                    ))}
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                        <div className="bottom-summary">
-                            <div className="summary-row" style={{ background: '#1f3a5f' }}>
-                                <div className="summary-label">센터 총합</div>
-                                <div className="summary-values">
-                                    {visibleMetrics.map(metric => (
-                                        <span key={metric} className="summary-item">
-                                            {metric}: {grandTotals[metric]}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="summary-row" style={{ background: '#3a3a3a' }}>
-                                <div className="summary-label">일 목표</div>
-                                <div className="summary-values">
-                                    {visibleMetrics.map(metric => (
-                                        <span key={metric} className="summary-item">
-                                            {metric}: {dailyTargets[metric] || 100}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="summary-row" style={{ background: '#2d2d2d' }}>
-                                <div className="summary-label">달성현황</div>
-                                <div className="summary-values">
-                                    {visibleMetrics.map(metric => {
-                                        const target = dailyTargets[metric] || 100;
-                                        const actual = grandTotals[metric];
-                                        const diff = target - actual;
-                                        
-                                        return (
-                                            <span 
-                                                key={metric} 
-                                                className={`achievement-status ${diff <= 0 ? 'achievement-success' : 'achievement-fail'}`}
-                                            >
-                                                {metric}: {diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 휴무 관리 모달 */}
-                    <AttendanceModal
-                        show={showAttendanceModal}
-                        onClose={() => {
-                            setShowAttendanceModal(false);
-                            forceUpdate({});
-                        }}
-                        teams={teams}
-                        selectedDate={selectedDate}
-                    />
-
-                    {/* 항목 편집 모달 */}
-                    <MetricsEditModal 
-                        show={showMetricsModal}
-                        onClose={() => setShowMetricsModal(false)}
-                        allMetrics={allMetrics}
-                        visibleMetrics={visibleMetrics}
-                        metricToDb={metricToDb}
-                        onSave={async (newMetrics, newVisible, newMapping, metricsData) => {
-                            try {
-                                await supabase
-                                    .from('config')
-                                    .upsert({ type: 'metrics', data: metricsData }, { onConflict: 'type' });
-
-                                const settingsData = {
-                                    type: 'settings',
-                                    data: {
-                                        visible_metrics: newVisible,
-                                        daily_targets: dailyTargets
-                                    }
-                                };
-                                
-                                await supabase
-                                    .from('config')
-                                    .upsert(settingsData, { onConflict: 'type' });
-
-                                setAllMetrics(newMetrics);
-                                setVisibleMetrics(newVisible);
-                                setMetricToDb(newMapping);
-                                
-                                alert('항목 설정이 저장되었습니다.');
-                                loadPerformanceData();
-                            } catch (error) {
-                                console.error('저장 오류:', error);
-                                alert('저장 중 오류가 발생했습니다.');
-                            }
-                        }}
-                    />
-
-                    {/* 상담사 관리 모달 */}
-                    <TeamManagementModal 
-                        show={showTeamModal}
-                        onClose={() => setShowTeamModal(false)}
-                        teams={teams}
-                        onSave={async (updatedTeams) => {
-                            try {
-                                await supabase
-                                    .from('config')
-                                    .upsert({ type: 'teams', data: updatedTeams }, { onConflict: 'type' });
-                                
-                                setTeams(updatedTeams);
-                                alert('상담사 정보가 저장되었습니다.');
-                                loadPerformanceData();
-                            } catch (error) {
-                                console.error('저장 오류:', error);
-                                alert('저장 중 오류가 발생했습니다.');
-                            }
-                        }}
-                    />
-
-                    {/* 목표 설정 모달 */}
-                    <TargetSettingModal 
-                        show={showTargetModal}
-                        onClose={() => setShowTargetModal(false)}
-                        visibleMetrics={visibleMetrics}
-                        dailyTargets={dailyTargets}
-                        onSave={saveSettings}
-                    />
-
-                    {/* 주간 현황 모달 */}
-                    <div className={`modal ${showWeeklyModal ? 'active' : ''}`}>
-                        <div className="modal-content" style={{ maxWidth: '900px' }}>
-                            <span className="modal-close" onClick={() => setShowWeeklyModal(false)}>×</span>
-                            <div className="modal-header">📅 주간 목표 달성 현황</div>
-                            
-                            <button 
-                                className="btn btn-primary" 
-                                onClick={loadWeeklyData}
-                                style={{ marginBottom: '15px' }}
-                            >
-                                데이터 새로고침
-                            </button>
-                            
-                            {(() => {
-                                const currentDate = new Date(selectedDate);
-                                const dayOfWeek = currentDate.getDay();
-                                const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-                                const monday = new Date(currentDate.setDate(diff));
-                                
-                                const weekDates = [];
-                                const weekDays = ['월', '화', '수', '목', '금'];
-                                for (let i = 0; i < 5; i++) {
-                                    const date = new Date(monday);
-                                    date.setDate(monday.getDate() + i);
-                                    weekDates.push(date.toISOString().split('T')[0]);
-                                }
-                                
-                                return (
-                                    <div>
-                                        <p style={{ marginBottom: '15px', color: '#B0B0B0', fontSize: '13px' }}>
-                                            {weekDates[0]} ~ {weekDates[4]} 주간 실적
-                                        </p>
-                                        
-                                        <div style={{ overflowX: 'auto' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                                <thead>
-                                                    <tr>
-                                                        <th style={{ padding: '10px', background: '#3a3a3a', border: '1px solid #404040', color: '#E0E0E0' }}>
-                                                            구분
-                                                        </th>
-                                                        {weekDays.map((day, i) => (
-                                                            <th key={day} style={{ padding: '10px', background: '#3a3a3a', border: '1px solid #404040', color: '#E0E0E0', minWidth: '100px' }}>
-                                                                {day}요일<br/>
-                                                                <span style={{ fontSize: '11px', color: '#B0B0B0' }}>
-                                                                    {weekDates[i]}
-                                                                </span>
-                                                            </th>
-                                                        ))}
-                                                        <th style={{ padding: '10px', background: '#4A9EFF', border: '1px solid #404040', color: 'white' }}>
-                                                            주간 합계
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {visibleMetrics.map(metric => {
-                                                        const dbColumn = metricToDb[metric];
-                                                        let weekTotal = 0;
-                                                        const dayValues = weekDates.map(date => {
-                                                            const dayData = weeklyData[date] || {};
-                                                            let dayTotal = 0;
-                                                            Object.values(dayData).forEach(record => {
-                                                                dayTotal += record[dbColumn] || 0;
-                                                            });
-                                                            weekTotal += dayTotal;
-                                                            return dayTotal;
-                                                        });
-                                                        
-                                                        const weeklyTarget = (dailyTargets[metric] || 100) * 5;
-                                                        const achievement = ((weekTotal / weeklyTarget) * 100).toFixed(1);
-                                                        
-                                                        return (
-                                                            <tr key={metric}>
-                                                                <td style={{ padding: '8px', background: '#2d2d2d', border: '1px solid #404040', color: '#E0E0E0', fontWeight: 'bold' }}>
-                                                                    {metric}
-                                                                </td>
-                                                                {dayValues.map((value, i) => {
-                                                                    const dayTarget = dailyTargets[metric] || 100;
-                                                                    const isAchieved = value >= dayTarget;
-                                                                    return (
-                                                                        <td key={i} style={{ 
-                                                                            padding: '8px', 
-                                                                            background: isAchieved ? '#4CAF5030' : '#E5737330',
-                                                                            border: '1px solid #404040', 
-                                                                            color: '#E0E0E0', 
-                                                                            textAlign: 'center' 
-                                                                        }}>
-                                                                            {value}
-                                                                            <br/>
-                                                                            <span style={{ 
-                                                                                fontSize: '11px', 
-                                                                                color: isAchieved ? '#4CAF50' : '#E57373' 
-                                                                            }}>
-                                                                                (목표: {dayTarget})
-                                                                            </span>
-                                                                        </td>
-                                                                    );
-                                                                })}
-                                                                <td style={{ 
-                                                                    padding: '8px', 
-                                                                    background: weekTotal >= weeklyTarget ? '#4CAF50' : '#E57373',
-                                                                    border: '1px solid #404040', 
-                                                                    color: 'white', 
-                                                                    textAlign: 'center',
-                                                                    fontWeight: 'bold'
-                                                                }}>
-                                                                    {weekTotal}
-                                                                    <br/>
-                                                                    <span style={{ fontSize: '11px' }}>
-                                                                        ({achievement}%)
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                        </div>
-                    </div>
-                </div>
-            );
         }
 
-        // 앱 렌더링
-        ReactDOM.render(<DashboardApp />, document.getElementById('root'));
+        function setSkillStatus(date, teamName, memberName, status) {
+            try {
+                const stored = localStorage.getItem('skill_status') || '{}';
+                const data = JSON.parse(stored);
+                const key = `${date}_${teamName}_${memberName}`;
+                if (status === 'normal') {
+                    delete data[key];
+                } else {
+                    data[key] = status;
+                }
+                localStorage.setItem('skill_status', JSON.stringify(data));
+            } catch (e) {
+                console.error('스킬 저장 오류:', e);
+            }
+        }
+
+        // 대시보드 렌더링
+        function renderDashboard() {
+            const content = document.getElementById('dashboardContent');
+            let html = '';
+
+            // 전체 요약
+            html += '<div class="summary-section">';
+            html += '<div class="summary-title">📊 전체 실적 요약</div>';
+            html += '<div class="metrics-row">';
+            metrics.forEach(metric => {
+                const total = Math.floor(Math.random() * 500 + 100);
+                html += `
+                    <div class="metric-item">
+                        <div class="metric-name">${metric}</div>
+                        <div class="metric-value">${total}</div>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+
+            // 각 팀별 섹션
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                // 팀 요약
+                html += '<div class="summary-section">';
+                html += `<div class="summary-title">📈 ${teamName} 실적 요약</div>`;
+                html += '<div class="metrics-row">';
+                metrics.forEach(metric => {
+                    const total = Math.floor(Math.random() * 100 + 20);
+                    html += `
+                        <div class="metric-item">
+                            <div class="metric-name">${metric}</div>
+                            <div class="metric-value">${total}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+
+                // 팀 테이블
+                html += '<div class="team-section">';
+                html += `<div class="team-header">SNS센터 ${teamName}</div>`;
+                html += '<table class="team-table">';
+                html += '<thead><tr>';
+                html += '<th>이름</th><th>근속기간</th>';
+                metrics.forEach(metric => {
+                    html += `<th>${metric}</th>`;
+                });
+                html += '</tr></thead>';
+                html += '<tbody>';
+
+                // 팀원별 데이터
+                teamInfo.members.forEach(member => {
+                    const skillStatus = getSkillStatus(currentDate, teamName, member.name);
+                    const isRental = skillStatus === 'rental';
+                    
+                    html += '<tr>';
+                    html += `<td>${member.name}${isRental ? '<span class="rental-badge">렌탈</span>' : ''}</td>`;
+                    html += `<td>${member.tenure}</td>`;
+                    
+                    metrics.forEach(metric => {
+                        const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                        const value = Math.floor(Math.random() * 30 + 5);
+                        html += `<td class="${isRentalMetric ? 'skill-rental' : ''}">`;
+                        html += isRentalMetric ? '스킬없음' : value;
+                        html += '</td>';
+                    });
+                    html += '</tr>';
+                });
+
+                // 팀 총합
+                html += '<tr class="team-total">';
+                html += `<td colspan="2">${teamName} 총합</td>`;
+                metrics.forEach(metric => {
+                    const total = Math.floor(Math.random() * 100 + 50);
+                    html += `<td>${total}</td>`;
+                });
+                html += '</tr>';
+
+                html += '</tbody></table></div>';
+            });
+
+            content.innerHTML = html;
+        }
+
+        // 스킬 모달 열기
+        function openSkillModal() {
+            const modal = document.getElementById('skillModal');
+            const modalDate = document.getElementById('modalDate');
+            const content = document.getElementById('skillModalContent');
+            
+            modalDate.textContent = currentDate;
+            
+            let html = '';
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                html += '<div class="team-modal-section">';
+                html += `<h4 class="team-modal-title">${teamName}</h4>`;
+                html += '<div class="member-list">';
+                
+                teamInfo.members.forEach((member, idx) => {
+                    const skillStatus = getSkillStatus(currentDate, teamName, member.name);
+                    const isRental = skillStatus === 'rental';
+                    
+                    html += `
+                        <div class="member-item" style="${isRental ? 'background: #FFB74D30;' : ''}">
+                            <span>${member.name}</span>
+                            <div class="skill-buttons">
+                                <button 
+                                    class="skill-btn btn-success ${!isRental ? 'active' : ''}"
+                                    onclick="changeSkill('${teamName}', '${member.name}', 'normal')"
+                                >
+                                    일반
+                                </button>
+                                <button 
+                                    class="skill-btn btn-orange ${isRental ? 'active' : ''}"
+                                    onclick="changeSkill('${teamName}', '${member.name}', 'rental')"
+                                >
+                                    렌탈 스킬
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            content.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        // 스킬 모달 닫기
+        function closeSkillModal() {
+            const modal = document.getElementById('skillModal');
+            modal.classList.remove('active');
+            renderDashboard(); // 대시보드 새로고침
+        }
+
+        // 스킬 변경
+        function changeSkill(teamName, memberName, skill) {
+            setSkillStatus(currentDate, teamName, memberName, skill);
+            openSkillModal(); // 모달 새로고침
+        }
+
+        // 날짜 변경
+        function changeDate() {
+            const selector = document.getElementById('dateSelector');
+            currentDate = selector.value;
+            document.getElementById('currentDate').textContent = currentDate;
+            renderDashboard();
+        }
+
+        // 데이터 새로고침
+        function refreshData() {
+            renderDashboard();
+            updateTime();
+        }
+
+        // 시간 업데이트
+        function updateTime() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ko-KR');
+        }
+
+        // 초기화
+        window.onload = function() {
+            document.getElementById('dateSelector').value = currentDate;
+            document.getElementById('currentDate').textContent = currentDate;
+            updateTime();
+            renderDashboard();
+        };
     </script>
 </body>
 </html>
-
