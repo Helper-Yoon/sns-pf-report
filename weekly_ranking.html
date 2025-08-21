@@ -12,368 +12,459 @@
         }
         
         body {
-            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', sans-serif;
+            background: #000000;
             color: #ffffff;
             min-height: 100vh;
-            padding: 20px;
+            line-height: 1.6;
         }
         
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* 헤더 */
         .header {
-            background: rgba(26, 26, 26, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(30, 111, 255, 0.2);
+            margin-bottom: 60px;
+            text-align: center;
         }
         
         .header h1 {
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            font-size: 48px;
+            font-weight: 200;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        
+        .header h1 span {
             color: #1E6FFF;
+            font-weight: 400;
         }
         
-        .week-info {
-            color: #8a8a8a;
+        .week-display {
             font-size: 14px;
-            margin-top: 8px;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
         }
         
-        .nav-buttons {
+        /* 네비게이션 */
+        .nav-bar {
             display: flex;
-            gap: 10px;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 50px;
         }
         
-        .nav-btn {
-            padding: 10px 20px;
-            background: #1E6FFF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+        .nav-link {
+            padding: 12px 30px;
+            background: transparent;
+            color: #666;
             text-decoration: none;
-            font-weight: bold;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+            border: 1px solid #111;
         }
         
-        .nav-btn:hover {
-            background: #1859d6;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(30, 111, 255, 0.3);
+        .nav-link:first-child {
+            border-radius: 30px 0 0 30px;
         }
         
+        .nav-link:last-child {
+            border-radius: 0 30px 30px 0;
+        }
+        
+        .nav-link:hover {
+            color: #1E6FFF;
+            background: rgba(30, 111, 255, 0.05);
+            border-color: #1E6FFF;
+        }
+        
+        /* 컨트롤 바 */
         .controls {
-            background: rgba(26, 26, 26, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #111;
         }
         
-        .week-selector {
+        .week-control {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 30px;
         }
         
         .week-btn {
-            padding: 8px 15px;
-            background: rgba(30, 111, 255, 0.1);
-            color: #1E6FFF;
-            border: 1px solid #1E6FFF;
-            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
             cursor: pointer;
             transition: all 0.3s;
-            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .week-btn:hover {
-            background: rgba(30, 111, 255, 0.2);
-        }
-        
-        .current-week {
-            font-weight: bold;
-            color: #ffffff;
-            font-size: 16px;
-        }
-        
-        .sort-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .sort-select {
-            padding: 8px 15px;
-            background: rgba(26, 26, 26, 0.95);
-            color: #ffffff;
-            border: 1px solid #1E6FFF;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .sort-select option {
-            background: #1a1a1a;
-        }
-        
-        .ranking-table-container {
-            background: rgba(26, 26, 26, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            overflow-x: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        
-        .ranking-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        
-        .ranking-table thead {
-            background: linear-gradient(135deg, #1E6FFF 0%, #1859d6 100%);
-        }
-        
-        .ranking-table th {
-            padding: 15px 10px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 13px;
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .ranking-table th:first-child {
-            border-radius: 10px 0 0 0;
-        }
-        
-        .ranking-table th:last-child {
-            border-radius: 0 10px 0 0;
-        }
-        
-        .ranking-table tbody tr {
-            transition: all 0.3s;
-            border-bottom: 1px solid rgba(42, 42, 42, 0.5);
-        }
-        
-        .ranking-table tbody tr:hover {
-            background: rgba(30, 111, 255, 0.1);
-            transform: scale(1.01);
-        }
-        
-        .ranking-table td {
-            padding: 12px 10px;
-            text-align: center;
-            font-size: 14px;
-            color: #e0e0e0;
-        }
-        
-        .rank-number {
-            font-weight: bold;
-            font-size: 16px;
+            border-color: #1E6FFF;
             color: #1E6FFF;
         }
         
-        .rank-1 { color: #FFD700 !important; }
-        .rank-2 { color: #C0C0C0 !important; }
-        .rank-3 { color: #CD7F32 !important; }
+        .week-text {
+            font-size: 14px;
+            color: #999;
+            min-width: 250px;
+            text-align: center;
+        }
         
-        .counselor-info {
-            text-align: left !important;
-            padding-left: 15px !important;
+        /* 정렬 탭 */
+        .sort-tabs {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .sort-tab {
+            background: transparent;
+            border: none;
+            color: #444;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 5px 0;
+            position: relative;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .sort-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #1E6FFF;
+            transition: width 0.3s;
+        }
+        
+        .sort-tab:hover {
+            color: #666;
+        }
+        
+        .sort-tab.active {
+            color: #1E6FFF;
+        }
+        
+        .sort-tab.active::after {
+            width: 100%;
+        }
+        
+        /* 랭킹 리스트 */
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .rank-row {
+            display: grid;
+            grid-template-columns: 60px 200px 1fr 120px;
+            align-items: center;
+            padding: 20px;
+            background: #000;
+            border: 1px solid #0a0a0a;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .rank-row:hover {
+            background: #050505;
+            border-color: #1E6FFF;
+            transform: translateX(10px);
+        }
+        
+        .rank-row.top-1 {
+            border-left: 3px solid #FFD700;
+        }
+        
+        .rank-row.top-2 {
+            border-left: 3px solid #C0C0C0;
+        }
+        
+        .rank-row.top-3 {
+            border-left: 3px solid #CD7F32;
+        }
+        
+        /* 순위 번호 */
+        .rank-num {
+            font-size: 24px;
+            font-weight: 200;
+            color: #333;
+        }
+        
+        .rank-row:hover .rank-num {
+            color: #1E6FFF;
+        }
+        
+        .rank-row.top-1 .rank-num {
+            color: #FFD700;
+            font-weight: 400;
+        }
+        
+        .rank-row.top-2 .rank-num {
+            color: #C0C0C0;
+            font-weight: 400;
+        }
+        
+        .rank-row.top-3 .rank-num {
+            color: #CD7F32;
+            font-weight: 400;
+        }
+        
+        /* 상담사 정보 */
+        .counselor {
+            display: flex;
+            flex-direction: column;
         }
         
         .counselor-name {
-            font-weight: bold;
-            color: #ffffff;
-            font-size: 15px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #fff;
         }
         
         .counselor-team {
             font-size: 12px;
-            color: #8a8a8a;
-            margin-top: 2px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .total-score {
-            font-weight: bold;
-            font-size: 16px;
-            color: #1E6FFF;
-            background: rgba(30, 111, 255, 0.1);
-            border-radius: 6px;
-            padding: 5px 10px;
+        /* 실적 바 */
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 0 20px;
         }
         
-        .category-value {
-            font-weight: 500;
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 300;
+            color: #666;
             transition: all 0.3s;
         }
         
-        .category-value:hover {
-            color: #1E6FFF;
-            transform: scale(1.1);
+        .stat-value.highlight {
+            color: #fff;
+            font-weight: 400;
         }
         
+        .rank-row:hover .stat-value {
+            color: #999;
+        }
+        
+        .rank-row:hover .stat-value.highlight {
+            color: #1E6FFF;
+        }
+        
+        /* 전체 점수 */
+        .total-score {
+            text-align: right;
+            padding-right: 10px;
+        }
+        
+        .total-label {
+            font-size: 10px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .total-value {
+            font-size: 28px;
+            font-weight: 200;
+            color: #1E6FFF;
+            margin-top: 2px;
+        }
+        
+        /* 로딩 */
         .loading {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 300px;
-            color: #8a8a8a;
+            height: 400px;
+            color: #333;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
         
-        .loading-spinner {
-            border: 3px solid rgba(42, 42, 42, 0.5);
-            border-top: 3px solid #1E6FFF;
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid #1E6FFF;
+            border-right-color: transparent;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
             animation: spin 1s linear infinite;
         }
         
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
         
-        .update-time {
-            text-align: center;
-            margin-top: 20px;
-            color: #8a8a8a;
-            font-size: 12px;
-        }
-        
+        /* 데이터 없음 */
         .no-data {
             text-align: center;
-            padding: 60px;
-            color: #8a8a8a;
-            font-size: 16px;
+            padding: 100px 20px;
+            color: #333;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
         
+        /* 업데이트 시간 */
+        .update-info {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #111;
+            font-size: 11px;
+            color: #333;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        /* 새로고침 버튼 */
         .refresh-btn {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: #1E6FFF;
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 24px;
+            bottom: 40px;
+            right: 40px;
+            width: 48px;
+            height: 48px;
+            background: #000;
+            border: 1px solid #1E6FFF;
+            color: #1E6FFF;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(30, 111, 255, 0.5);
             transition: all 0.3s;
-            z-index: 100;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .refresh-btn:hover {
-            transform: rotate(180deg) scale(1.1);
+            background: #1E6FFF;
+            color: #000;
+            transform: rotate(180deg);
         }
         
+        /* 반응형 */
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
+            .header h1 {
+                font-size: 32px;
             }
             
             .controls {
                 flex-direction: column;
+                gap: 30px;
             }
             
-            .ranking-table {
+            .sort-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .rank-row {
+                grid-template-columns: 40px 1fr 80px;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .stats-bar {
+                display: none;
+            }
+            
+            .week-text {
+                min-width: auto;
                 font-size: 12px;
-            }
-            
-            .ranking-table th,
-            .ranking-table td {
-                padding: 8px 5px;
-                font-size: 11px;
-            }
-            
-            .counselor-name {
-                font-size: 13px;
-            }
-            
-            .total-score {
-                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1>📊 주간 실적 랭킹</h1>
-            <div class="week-info" id="weekInfo"></div>
+    <div class="container">
+        <div class="header">
+            <h1>주간 <span>실적</span></h1>
+            <div class="week-display" id="weekDisplay"></div>
         </div>
-        <div class="nav-buttons">
-            <a href="index.html" class="nav-btn">
-                <span>🏠</span>
-                <span>메인으로</span>
-            </a>
-            <a href="ranking.html" class="nav-btn">
-                <span>📅</span>
-                <span>당일 랭킹</span>
-            </a>
+        
+        <div class="nav-bar">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="ranking.html" class="nav-link">Daily</a>
+            <a href="weekly_ranking.html" class="nav-link" style="color: #1E6FFF; background: rgba(30, 111, 255, 0.05); border-color: #1E6FFF;">Weekly</a>
         </div>
-    </div>
-    
-    <div class="controls">
-        <div class="week-selector">
-            <button class="week-btn" onclick="changeWeek(-1)">◀ 이전 주</button>
-            <div class="current-week" id="currentWeek"></div>
-            <button class="week-btn" onclick="changeWeek(1)">다음 주 ▶</button>
-        </div>
-        <div class="sort-controls">
-            <label style="color: #8a8a8a; font-size: 14px;">정렬:</label>
-            <select class="sort-select" id="sortSelect" onchange="sortTable()">
-                <option value="usim">유심갯수</option>
-                <option value="internet">SK 인터넷</option>
-                <option value="premium">프리미엄</option>
-                <option value="essence">에센스</option>
-                <option value="iot">IOT</option>
-                <option value="one_g">1G</option>
-                <option value="magic">SK매직</option>
-                <option value="appliance">가전제품</option>
-                <option value="card">제휴카드</option>
-                <option value="total">전체 점수</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="ranking-table-container">
-        <div id="tableContent">
-            <div class="loading">
-                <div class="loading-spinner"></div>
+        
+        <div class="controls">
+            <div class="week-control">
+                <button class="week-btn" onclick="changeWeek(-1)">←</button>
+                <div class="week-text" id="weekText"></div>
+                <button class="week-btn" onclick="changeWeek(1)">→</button>
+            </div>
+            
+            <div class="sort-tabs">
+                <button class="sort-tab active" onclick="setSortBy(this, 'usim')">유심</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'internet')">인터넷</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'premium')">프리미엄</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'essence')">에센스</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'iot')">IOT</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'one_g')">1G</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'magic')">매직</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'appliance')">가전</button>
+                <button class="sort-tab" onclick="setSortBy(this, 'total')">전체</button>
             </div>
         </div>
+        
+        <div class="ranking-list" id="rankingList">
+            <div class="loading">Loading</div>
+        </div>
+        
+        <div class="update-info" id="updateInfo"></div>
     </div>
     
-    <div class="update-time" id="updateTime"></div>
-    
-    <button class="refresh-btn" onclick="loadWeeklyData()" title="새로고침">
-        🔄
-    </button>
+    <button class="refresh-btn" onclick="loadWeeklyData()">↻</button>
     
     <script>
         // Supabase 설정
@@ -382,12 +473,13 @@
         
         let currentWeekOffset = 0;
         let weeklyData = [];
+        let currentSort = 'usim';
         
-        // 주의 시작과 끝 날짜 계산 (월요일 ~ 일요일)
+        // 주 날짜 계산
         function getWeekDates(offset = 0) {
             const today = new Date();
             const currentDay = today.getDay();
-            const diff = currentDay === 0 ? -6 : 1 - currentDay; // 월요일까지의 차이
+            const diff = currentDay === 0 ? -6 : 1 - currentDay;
             
             const monday = new Date(today);
             monday.setDate(today.getDate() + diff + (offset * 7));
@@ -403,10 +495,12 @@
         // 주간 정보 표시
         function displayWeekInfo() {
             const { monday, sunday } = getWeekDates(currentWeekOffset);
-            const weekText = `${monday.getFullYear()}년 ${monday.getMonth() + 1}월 ${monday.getDate()}일 ~ ${sunday.getMonth() + 1}월 ${sunday.getDate()}일`;
             
-            document.getElementById('weekInfo').textContent = weekText;
-            document.getElementById('currentWeek').textContent = weekText;
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const displayText = `${monthNames[monday.getMonth()]} ${monday.getDate()} - ${monthNames[sunday.getMonth()]} ${sunday.getDate()}, ${monday.getFullYear()}`;
+            
+            document.getElementById('weekDisplay').textContent = displayText;
+            document.getElementById('weekText').textContent = `${monday.getMonth() + 1}월 ${monday.getDate()}일 - ${sunday.getMonth() + 1}월 ${sunday.getDate()}일`;
         }
         
         // 주 변경
@@ -416,17 +510,124 @@
             loadWeeklyData();
         }
         
-        // 주간 데이터 로드
+        // 정렬 설정
+        function setSortBy(btn, sortType) {
+            currentSort = sortType;
+            
+            document.querySelectorAll('.sort-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
+            sortAndDisplay();
+        }
+        
+        // 정렬 및 표시
+        function sortAndDisplay() {
+            const sorted = [...weeklyData].sort((a, b) => {
+                if (currentSort === 'total') {
+                    return b.total - a.total;
+                } else {
+                    const fieldMap = {
+                        'usim': 'usim_count',
+                        'internet': 'sk_internet',
+                        'premium': 'premium',
+                        'essence': 'essence',
+                        'iot': 'iot',
+                        'one_g': 'one_g',
+                        'magic': 'sk_magic',
+                        'appliance': 'appliance'
+                    };
+                    const field = fieldMap[currentSort];
+                    return b[field] - a[field];
+                }
+            });
+            
+            displayRankings(sorted);
+        }
+        
+        // 랭킹 표시
+        function displayRankings(data) {
+            const list = document.getElementById('rankingList');
+            
+            if (data.length === 0) {
+                list.innerHTML = '<div class="no-data">No Data Available</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            data.forEach((counselor, index) => {
+                const topClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                
+                html += `
+                    <div class="rank-row ${topClass}">
+                        <div class="rank-num">${(index + 1).toString().padStart(2, '0')}</div>
+                        
+                        <div class="counselor">
+                            <div class="counselor-name">${counselor.name}</div>
+                            <div class="counselor-team">${counselor.team}</div>
+                        </div>
+                        
+                        <div class="stats-bar">
+                            <div class="stat">
+                                <div class="stat-label">유심</div>
+                                <div class="stat-value ${counselor.usim_count > 0 ? 'highlight' : ''}">${counselor.usim_count}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">인터넷</div>
+                                <div class="stat-value ${counselor.sk_internet > 0 ? 'highlight' : ''}">${counselor.sk_internet}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">프리미엄</div>
+                                <div class="stat-value ${counselor.premium > 0 ? 'highlight' : ''}">${counselor.premium}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">에센스</div>
+                                <div class="stat-value ${counselor.essence > 0 ? 'highlight' : ''}">${counselor.essence}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">IOT</div>
+                                <div class="stat-value ${counselor.iot > 0 ? 'highlight' : ''}">${counselor.iot}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">1G</div>
+                                <div class="stat-value ${counselor.one_g > 0 ? 'highlight' : ''}">${counselor.one_g}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">매직</div>
+                                <div class="stat-value ${counselor.sk_magic > 0 ? 'highlight' : ''}">${counselor.sk_magic}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">가전</div>
+                                <div class="stat-value ${counselor.appliance > 0 ? 'highlight' : ''}">${counselor.appliance}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">카드</div>
+                                <div class="stat-value" style="color: #333;">${counselor.card}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="total-score">
+                            <div class="total-label">Total</div>
+                            <div class="total-value">${counselor.total}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+        
+        // 데이터 로드
         async function loadWeeklyData() {
-            const tableContent = document.getElementById('tableContent');
-            tableContent.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+            const list = document.getElementById('rankingList');
+            list.innerHTML = '<div class="loading">Loading</div>';
             
             try {
                 const { monday, sunday } = getWeekDates(currentWeekOffset);
                 const startDate = monday.toISOString().split('T')[0];
                 const endDate = sunday.toISOString().split('T')[0];
-                
-                console.log(`주간 데이터 로드: ${startDate} ~ ${endDate}`);
                 
                 const url = `${supabaseUrl}/rest/v1/performance?date=gte.${startDate}&date=lte.${endDate}`;
                 
@@ -444,9 +645,8 @@
                 }
                 
                 const data = await response.json();
-                console.log(`주간 데이터 ${data.length}개 로드 완료`);
                 
-                // 상담사별로 데이터 집계
+                // 상담사별 집계
                 const counselorTotals = {};
                 
                 data.forEach(record => {
@@ -468,7 +668,6 @@
                         };
                     }
                     
-                    // 각 카테고리 합산
                     counselorTotals[key].usim_count += record.usim_count || 0;
                     counselorTotals[key].sk_internet += record.sk_internet || 0;
                     counselorTotals[key].premium += record.premium || 0;
@@ -480,7 +679,7 @@
                     counselorTotals[key].card += record.card || 0;
                 });
                 
-                // 전체 점수 계산 (제휴카드 제외)
+                // 전체 점수 계산 (카드 제외)
                 Object.values(counselorTotals).forEach(counselor => {
                     counselor.total = counselor.usim_count + counselor.sk_internet + 
                                      counselor.premium + counselor.essence + counselor.iot + 
@@ -488,107 +687,20 @@
                 });
                 
                 weeklyData = Object.values(counselorTotals);
-                sortTable(); // 정렬 후 표시
+                sortAndDisplay();
                 
                 // 업데이트 시간
                 const now = new Date();
-                const timeStr = `마지막 업데이트: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-                document.getElementById('updateTime').textContent = timeStr;
+                const timeStr = `Last Updated: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                document.getElementById('updateInfo').textContent = timeStr;
                 
             } catch (error) {
                 console.error('데이터 로드 실패:', error);
-                tableContent.innerHTML = '<div class="no-data">데이터를 불러올 수 없습니다.</div>';
+                list.innerHTML = '<div class="no-data">Error Loading Data</div>';
             }
         }
         
-        // 테이블 정렬
-        function sortTable() {
-            const sortBy = document.getElementById('sortSelect').value;
-            
-            const sorted = [...weeklyData].sort((a, b) => {
-                if (sortBy === 'total') {
-                    return b.total - a.total;
-                } else {
-                    const fieldMap = {
-                        'usim': 'usim_count',
-                        'internet': 'sk_internet',
-                        'premium': 'premium',
-                        'essence': 'essence',
-                        'iot': 'iot',
-                        'one_g': 'one_g',
-                        'magic': 'sk_magic',
-                        'appliance': 'appliance',
-                        'card': 'card'
-                    };
-                    const field = fieldMap[sortBy];
-                    return b[field] - a[field];
-                }
-            });
-            
-            displayTable(sorted);
-        }
-        
-        // 테이블 표시
-        function displayTable(data) {
-            if (data.length === 0) {
-                document.getElementById('tableContent').innerHTML = '<div class="no-data">이번 주 데이터가 없습니다.</div>';
-                return;
-            }
-            
-            let html = `
-                <table class="ranking-table">
-                    <thead>
-                        <tr>
-                            <th>순위</th>
-                            <th>상담사</th>
-                            <th>유심</th>
-                            <th>인터넷</th>
-                            <th>프리미엄</th>
-                            <th>에센스</th>
-                            <th>IOT</th>
-                            <th>1G</th>
-                            <th>SK매직</th>
-                            <th>가전</th>
-                            <th>카드</th>
-                            <th>전체</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            data.forEach((counselor, index) => {
-                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-                
-                html += `
-                    <tr>
-                        <td><span class="rank-number ${rankClass}">${index + 1}</span></td>
-                        <td class="counselor-info">
-                            <div class="counselor-name">${counselor.name}</div>
-                            <div class="counselor-team">${counselor.team}</div>
-                        </td>
-                        <td class="category-value">${counselor.usim_count}</td>
-                        <td class="category-value">${counselor.sk_internet}</td>
-                        <td class="category-value">${counselor.premium}</td>
-                        <td class="category-value">${counselor.essence}</td>
-                        <td class="category-value">${counselor.iot}</td>
-                        <td class="category-value">${counselor.one_g}</td>
-                        <td class="category-value">${counselor.sk_magic}</td>
-                        <td class="category-value">${counselor.appliance}</td>
-                        <td class="category-value">${counselor.card}</td>
-                        <td><span class="total-score">${counselor.total}</span></td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                    </tbody>
-                </table>
-            `;
-            
-            document.getElementById('tableContent').innerHTML = html;
-        }
-        
-        // 페이지 로드 시 실행
+        // 초기화
         document.addEventListener('DOMContentLoaded', function() {
             displayWeekInfo();
             loadWeeklyData();
