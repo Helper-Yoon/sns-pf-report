@@ -12,300 +12,547 @@
         }
         
         body {
-            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', sans-serif;
+            background: #000000;
             color: #ffffff;
             min-height: 100vh;
-            padding: 20px;
+            line-height: 1.6;
         }
         
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* 헤더 */
         .header {
-            background: #1a1a1a;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 60px;
+            text-align: center;
         }
         
         .header h1 {
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            font-size: 48px;
+            font-weight: 200;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            color: #ffffff;
         }
         
-        .date-info {
-            color: #8a8a8a;
+        .header h1 span {
+            color: #1E6FFF;
+            font-weight: 400;
+        }
+        
+        .date-display {
             font-size: 14px;
-            margin-top: 5px;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .nav-btn {
-            padding: 10px 20px;
-            background: #1E6FFF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .nav-btn:hover {
-            background: #1859d6;
-            transform: translateY(-2px);
-        }
-        
-        .nav-btn.weekly {
-            background: #28a745;
-        }
-        
-        .nav-btn.weekly:hover {
-            background: #218838;
-        }
-        
-        .rankings-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             margin-bottom: 30px;
         }
         
-        .ranking-card {
-            background: #1a1a1a;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #2a2a2a;
-            transition: all 0.3s;
+        /* 네비게이션 */
+        .nav-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 50px;
         }
         
-        .ranking-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(30,111,255,0.2);
+        .nav-link {
+            padding: 12px 30px;
+            background: transparent;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            border: 1px solid #111;
+        }
+        
+        .nav-link:first-child {
+            border-radius: 30px 0 0 30px;
+        }
+        
+        .nav-link:last-child {
+            border-radius: 0 30px 30px 0;
+        }
+        
+        .nav-link:hover {
+            color: #1E6FFF;
+            background: rgba(30, 111, 255, 0.05);
             border-color: #1E6FFF;
         }
         
-        .card-header {
+        /* 카테고리 탭 */
+        .category-tabs {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #2a2a2a;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #111;
+            flex-wrap: wrap;
         }
         
-        .card-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1E6FFF;
+        .category-tab {
+            background: transparent;
+            border: none;
+            color: #444;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 5px 0;
+            position: relative;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
         
-        .card-icon {
-            font-size: 20px;
+        .category-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -22px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #1E6FFF;
+            transition: width 0.3s;
         }
         
+        .category-tab:hover {
+            color: #666;
+        }
+        
+        .category-tab.active {
+            color: #1E6FFF;
+        }
+        
+        .category-tab.active::after {
+            width: 100%;
+        }
+        
+        .tab-icon {
+            font-size: 16px;
+        }
+        
+        /* 랭킹 섹션 */
+        .ranking-section {
+            min-height: 400px;
+        }
+        
+        .category-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .category-name {
+            font-size: 32px;
+            font-weight: 200;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .category-name span {
+            color: #1E6FFF;
+        }
+        
+        .category-subtitle {
+            font-size: 12px;
+            color: #444;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* TOP 3 포디움 */
         .podium {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 40px;
+            margin-bottom: 60px;
+            height: 300px;
         }
         
-        .rank-item {
+        .podium-item {
+            flex: 1;
+            max-width: 250px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 15px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .podium-rank {
+            font-size: 72px;
+            font-weight: 100;
+            margin-bottom: 20px;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+        
+        .podium-item:hover .podium-rank {
+            opacity: 1;
+        }
+        
+        .podium-item.rank-1 .podium-rank {
+            color: #FFD700;
+            opacity: 1;
+        }
+        
+        .podium-item.rank-2 {
+            margin-top: 50px;
+        }
+        
+        .podium-item.rank-2 .podium-rank {
+            color: #C0C0C0;
+            opacity: 0.8;
+        }
+        
+        .podium-item.rank-3 {
+            margin-top: 100px;
+        }
+        
+        .podium-item.rank-3 .podium-rank {
+            color: #CD7F32;
+            opacity: 0.8;
+        }
+        
+        .podium-bar {
+            width: 100%;
             background: #0a0a0a;
-            border-radius: 10px;
+            border: 1px solid #111;
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
         }
         
-        .rank-item:hover {
-            transform: translateX(5px);
+        .podium-item.rank-1 .podium-bar {
+            height: 200px;
+            border-color: #FFD700;
+            background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), transparent);
         }
         
-        .rank-item.gold {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #000;
+        .podium-item.rank-2 .podium-bar {
+            height: 150px;
+            border-color: #C0C0C0;
+            background: linear-gradient(180deg, rgba(192, 192, 192, 0.1), transparent);
         }
         
-        .rank-item.silver {
-            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
-            color: #000;
+        .podium-item.rank-3 .podium-bar {
+            height: 100px;
+            border-color: #CD7F32;
+            background: linear-gradient(180deg, rgba(205, 127, 50, 0.1), transparent);
         }
         
-        .rank-item.bronze {
-            background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+        .podium-item:hover .podium-bar {
+            border-color: #1E6FFF;
+            transform: translateY(-10px);
+        }
+        
+        .podium-content {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            text-align: center;
+        }
+        
+        .podium-name {
+            font-size: 16px;
+            font-weight: 500;
             color: #fff;
+            margin-bottom: 5px;
         }
         
-        .rank-medal {
-            font-size: 28px;
-            margin-right: 15px;
+        .podium-team {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
         }
         
-        .rank-info {
+        .podium-score {
+            font-size: 36px;
+            font-weight: 200;
+            color: #1E6FFF;
+        }
+        
+        /* 전체 카테고리 그리드 */
+        .all-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        
+        .category-card {
+            background: #000;
+            border: 1px solid #0a0a0a;
+            padding: 30px;
+            transition: all 0.3s;
+        }
+        
+        .category-card:hover {
+            border-color: #1E6FFF;
+            background: #050505;
+        }
+        
+        .category-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #111;
+        }
+        
+        .category-card-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .category-card-icon {
+            font-size: 18px;
+        }
+        
+        .mini-ranks {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .mini-rank {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .mini-rank-num {
+            font-size: 20px;
+            font-weight: 200;
+            color: #333;
+            width: 30px;
+        }
+        
+        .mini-rank.top-1 .mini-rank-num {
+            color: #FFD700;
+        }
+        
+        .mini-rank.top-2 .mini-rank-num {
+            color: #C0C0C0;
+        }
+        
+        .mini-rank.top-3 .mini-rank-num {
+            color: #CD7F32;
+        }
+        
+        .mini-rank-info {
             flex: 1;
         }
         
-        .rank-name {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 3px;
-        }
-        
-        .rank-team {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-        
-        .rank-value {
-            font-size: 20px;
-            font-weight: bold;
-            margin-left: auto;
-        }
-        
-        .no-data {
-            text-align: center;
-            color: #8a8a8a;
-            padding: 40px;
-            background: #0a0a0a;
-            border-radius: 10px;
+        .mini-rank-name {
             font-size: 14px;
+            color: #fff;
+            margin-bottom: 2px;
         }
         
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: #1E6FFF;
-            border: none;
-            border-radius: 50%;
-            color: white;
+        .mini-rank-team {
+            font-size: 10px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .mini-rank-score {
             font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(30,111,255,0.5);
-            transition: all 0.3s;
-            z-index: 100;
+            font-weight: 200;
+            color: #1E6FFF;
         }
         
-        .refresh-btn:hover {
-            transform: rotate(180deg) scale(1.1);
-        }
-        
+        /* 로딩 */
         .loading {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 200px;
-            color: #8a8a8a;
+            height: 400px;
+            color: #333;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
         
-        .loading-spinner {
-            border: 3px solid #2a2a2a;
-            border-top: 3px solid #1E6FFF;
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid #1E6FFF;
+            border-right-color: transparent;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
             animation: spin 1s linear infinite;
         }
         
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
         
-        .update-time {
+        /* 데이터 없음 */
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #333;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* 업데이트 시간 */
+        .update-info {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #111;
+            font-size: 11px;
+            color: #333;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        /* 새로고침 버튼 */
+        .refresh-btn {
             position: fixed;
-            bottom: 30px;
-            left: 30px;
-            background: #1a1a1a;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 12px;
-            color: #8a8a8a;
-            border: 1px solid #2a2a2a;
+            bottom: 40px;
+            right: 40px;
+            width: 48px;
+            height: 48px;
+            background: #000;
+            border: 1px solid #1E6FFF;
+            color: #1E6FFF;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
+        .refresh-btn:hover {
+            background: #1E6FFF;
+            color: #000;
+            transform: rotate(180deg);
+        }
+        
+        /* 반응형 */
         @media (max-width: 768px) {
-            .header {
+            .header h1 {
+                font-size: 32px;
+            }
+            
+            .category-tabs {
+                gap: 15px;
+            }
+            
+            .podium {
                 flex-direction: column;
+                height: auto;
                 gap: 20px;
-                text-align: center;
             }
             
-            .rankings-container {
+            .podium-item.rank-2,
+            .podium-item.rank-3 {
+                margin-top: 0;
+            }
+            
+            .podium-bar {
+                height: 80px !important;
+            }
+            
+            .all-categories {
                 grid-template-columns: 1fr;
-            }
-            
-            .nav-buttons {
-                justify-content: center;
-                width: 100%;
-                flex-wrap: wrap;
-            }
-            
-            .update-time {
-                position: static;
-                margin-top: 20px;
-                text-align: center;
-            }
-            
-            .refresh-btn {
-                bottom: 100px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1>🏆 당일 실적 랭킹</h1>
-            <div class="date-info" id="currentDate"></div>
+    <div class="container">
+        <div class="header">
+            <h1>당일 <span>실적</span></h1>
+            <div class="date-display" id="dateDisplay"></div>
         </div>
-        <div class="nav-buttons">
-            <a href="index.html" class="nav-btn">
-                <span>🏠</span>
-                <span>메인으로</span>
-            </a>
-            <a href="weekly_ranking.html" class="nav-btn weekly">
-                <span>📊</span>
-                <span>주간 랭킹</span>
-            </a>
+        
+        <div class="nav-bar">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="ranking.html" class="nav-link" style="color: #1E6FFF; background: rgba(30, 111, 255, 0.05); border-color: #1E6FFF;">Daily</a>
+            <a href="weekly_ranking.html" class="nav-link">Weekly</a>
         </div>
+        
+        <div class="category-tabs" id="categoryTabs">
+            <button class="category-tab active" onclick="showCategory('all')">
+                <span class="tab-icon">📊</span>
+                <span>전체</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('usim')">
+                <span class="tab-icon">📱</span>
+                <span>유심</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('internet')">
+                <span class="tab-icon">🌐</span>
+                <span>인터넷</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('premium')">
+                <span class="tab-icon">⭐</span>
+                <span>프리미엄</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('essence')">
+                <span class="tab-icon">💎</span>
+                <span>에센스</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('iot')">
+                <span class="tab-icon">📡</span>
+                <span>IOT</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('1g')">
+                <span class="tab-icon">📶</span>
+                <span>1G</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('magic')">
+                <span class="tab-icon">✨</span>
+                <span>SK매직</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('appliance')">
+                <span class="tab-icon">🏠</span>
+                <span>가전</span>
+            </button>
+            <button class="category-tab" onclick="showCategory('card')">
+                <span class="tab-icon">💳</span>
+                <span>카드</span>
+            </button>
+        </div>
+        
+        <div class="ranking-section" id="rankingSection">
+            <div class="loading">Loading</div>
+        </div>
+        
+        <div class="update-info" id="updateInfo"></div>
     </div>
     
-    <div class="rankings-container" id="rankingsContainer">
-        <div class="loading">
-            <div class="loading-spinner"></div>
-        </div>
-    </div>
-    
-    <button class="refresh-btn" onclick="loadRankings()" title="새로고침">
-        🔄
-    </button>
-    
-    <div class="update-time" id="updateTime">
-        마지막 업데이트: -
-    </div>
+    <button class="refresh-btn" onclick="loadRankings()">↻</button>
     
     <script>
         // Supabase 설정
@@ -313,114 +560,143 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
         
         // 카테고리 정의
-        const categories = [
-            { key: 'usim_count', name: '유심갯수', icon: '📱' },
-            { key: 'sk_internet', name: 'SK 인터넷', icon: '🌐' },
-            { key: 'premium', name: '프리미엄', icon: '⭐' },
-            { key: 'essence', name: '에센스', icon: '💎' },
-            { key: 'iot', name: 'IOT', icon: '📡' },
-            { key: 'one_g', name: '1G', icon: '📶' },
-            { key: 'sk_magic', name: 'SK매직', icon: '✨' },
-            { key: 'appliance', name: '가전제품', icon: '🏠' },
-            { key: 'card', name: '제휴카드', icon: '💳' }
-        ];
+        const categories = {
+            usim: { key: 'usim_count', name: '유심갯수', icon: '📱' },
+            internet: { key: 'sk_internet', name: 'SK 인터넷', icon: '🌐' },
+            premium: { key: 'premium', name: '프리미엄', icon: '⭐' },
+            essence: { key: 'essence', name: '에센스', icon: '💎' },
+            iot: { key: 'iot', name: 'IOT', icon: '📡' },
+            '1g': { key: 'one_g', name: '1G', icon: '📶' },
+            magic: { key: 'sk_magic', name: 'SK매직', icon: '✨' },
+            appliance: { key: 'appliance', name: '가전제품', icon: '🏠' },
+            card: { key: 'card', name: '제휴카드', icon: '💳' }
+        };
         
-        // 12시 기준 날짜 계산 함수
+        let currentCategory = 'all';
+        let dailyData = [];
+        let processedData = {};
+        
+        // 12시 기준 날짜 계산
         function getEffectiveDate() {
             const now = new Date();
             const hours = now.getHours();
             
-            // 12시 이후는 다음날 날짜 사용 (내일 날짜의 랭킹을 미리 집계)
             if (hours >= 12) {
                 const tomorrow = new Date(now);
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 return tomorrow;
             }
             
-            // 0시~11시59분까지는 당일 날짜 사용
             return now;
         }
         
-        // 날짜 설정
-        function setCurrentDate() {
+        // 날짜 표시
+        function displayDate() {
             const effectiveDate = getEffectiveDate();
-            const dateStr = `${effectiveDate.getFullYear()}년 ${effectiveDate.getMonth() + 1}월 ${effectiveDate.getDate()}일`;
-            document.getElementById('currentDate').textContent = dateStr;
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const dateStr = `${monthNames[effectiveDate.getMonth()]} ${effectiveDate.getDate()}, ${effectiveDate.getFullYear()}`;
+            document.getElementById('dateDisplay').textContent = dateStr;
         }
         
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('페이지 로드 완료');
-            setCurrentDate();
+        // 카테고리 전환
+        function showCategory(category) {
+            currentCategory = category;
             
-            // 바로 데이터 로드
-            loadRankings();
+            // 탭 활성화 상태 업데이트
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.closest('.category-tab').classList.add('active');
             
-            // 30초마다 자동 새로고침
-            setInterval(loadRankings, 30000);
-            
-            // 1분마다 날짜 확인 및 업데이트
-            setInterval(() => {
-                setCurrentDate();
-            }, 60000);
-        });
+            displayRankings();
+        }
         
-        function displayRankings(data) {
-            const container = document.getElementById('rankingsContainer');
-            let html = '';
+        // 랭킹 표시
+        function displayRankings() {
+            const section = document.getElementById('rankingSection');
             
-            // 각 카테고리별로 랭킹 생성
-            categories.forEach(category => {
-                const counselorTotals = {};
-                
-                // 상담사별로 집계
-                if (data && data.length > 0) {
-                    data.forEach(record => {
-                        const key = `${record.name}_${record.team}`;
-                        if (!counselorTotals[key]) {
-                            counselorTotals[key] = {
-                                name: record.name,
-                                team: record.team,
-                                value: 0
-                            };
-                        }
-                        counselorTotals[key].value += record[category.key] || 0;
-                    });
-                }
-                
-                // TOP 3 추출
-                const sorted = Object.values(counselorTotals)
-                    .filter(item => item.value > 0)
-                    .sort((a, b) => b.value - a.value)
-                    .slice(0, 3);
-                
-                // HTML 생성
+            if (!dailyData || dailyData.length === 0) {
+                section.innerHTML = '<div class="no-data">No Data Available</div>';
+                return;
+            }
+            
+            if (currentCategory === 'all') {
+                displayAllCategories();
+            } else {
+                displaySingleCategory(currentCategory);
+            }
+        }
+        
+        // 단일 카테고리 표시
+        function displaySingleCategory(categoryKey) {
+            const category = categories[categoryKey];
+            const rankings = processedData[categoryKey] || [];
+            
+            if (rankings.length === 0) {
+                document.getElementById('rankingSection').innerHTML = '<div class="no-data">No Data Available</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="category-title">
+                    <div class="category-name">${category.icon} <span>${category.name}</span></div>
+                    <div class="category-subtitle">Top Performers</div>
+                </div>
+                <div class="podium">
+            `;
+            
+            rankings.slice(0, 3).forEach((item, index) => {
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : 'rank-3';
                 html += `
-                    <div class="ranking-card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <span class="card-icon">${category.icon}</span>
+                    <div class="podium-item ${rankClass}">
+                        <div class="podium-rank">${index + 1}</div>
+                        <div class="podium-bar">
+                            <div class="podium-content">
+                                <div class="podium-name">${item.name}</div>
+                                <div class="podium-team">${item.team}</div>
+                                <div class="podium-score">${item.value}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            document.getElementById('rankingSection').innerHTML = html;
+        }
+        
+        // 전체 카테고리 표시
+        function displayAllCategories() {
+            let html = '<div class="all-categories">';
+            
+            Object.keys(categories).forEach(categoryKey => {
+                const category = categories[categoryKey];
+                const rankings = processedData[categoryKey] || [];
+                
+                html += `
+                    <div class="category-card">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">${category.icon}</span>
                                 <span>${category.name}</span>
                             </div>
                         </div>
-                        <div class="podium">
+                        <div class="mini-ranks">
                 `;
                 
-                if (sorted.length === 0) {
-                    html += '<div class="no-data">아직 실적이 없어요...</div>';
+                if (rankings.length === 0) {
+                    html += '<div class="no-data">No Data</div>';
                 } else {
-                    sorted.forEach((item, index) => {
-                        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze';
-                        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
-                        
+                    rankings.slice(0, 3).forEach((item, index) => {
+                        const topClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : 'top-3';
                         html += `
-                            <div class="rank-item ${rankClass}">
-                                <span class="rank-medal">${medal}</span>
-                                <div class="rank-info">
-                                    <div class="rank-name">${item.name}</div>
-                                    <div class="rank-team">${item.team}</div>
+                            <div class="mini-rank ${topClass}">
+                                <div class="mini-rank-num">${(index + 1).toString().padStart(2, '0')}</div>
+                                <div class="mini-rank-info">
+                                    <div class="mini-rank-name">${item.name}</div>
+                                    <div class="mini-rank-team">${item.team}</div>
                                 </div>
-                                <div class="rank-value">${item.value}</div>
+                                <div class="mini-rank-score">${item.value}</div>
                             </div>
                         `;
                     });
@@ -432,24 +708,46 @@
                 `;
             });
             
-            container.innerHTML = html;
-            
-            // 업데이트 시간
-            const now = new Date();
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-            document.getElementById('updateTime').textContent = `마지막 업데이트: ${timeStr}`;
+            html += '</div>';
+            document.getElementById('rankingSection').innerHTML = html;
         }
         
-        // REST API로 데이터 가져오기
-        async function fetchDataFromAPI() {
-            const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
-            const url = `${supabaseUrl}/rest/v1/performance?date=eq.${dateStr}`;
+        // 데이터 처리
+        function processData(data) {
+            processedData = {};
             
-            console.log('조회 날짜:', dateStr);
-            console.log('REST API 호출:', url);
+            Object.keys(categories).forEach(categoryKey => {
+                const category = categories[categoryKey];
+                const counselorTotals = {};
+                
+                data.forEach(record => {
+                    const key = `${record.name}_${record.team}`;
+                    if (!counselorTotals[key]) {
+                        counselorTotals[key] = {
+                            name: record.name,
+                            team: record.team,
+                            value: 0
+                        };
+                    }
+                    counselorTotals[key].value += record[category.key] || 0;
+                });
+                
+                processedData[categoryKey] = Object.values(counselorTotals)
+                    .filter(item => item.value > 0)
+                    .sort((a, b) => b.value - a.value);
+            });
+        }
+        
+        // 데이터 로드
+        async function loadRankings() {
+            const section = document.getElementById('rankingSection');
+            section.innerHTML = '<div class="loading">Loading</div>';
             
             try {
+                const today = new Date();
+                const dateStr = today.toISOString().split('T')[0];
+                const url = `${supabaseUrl}/rest/v1/performance?date=eq.${dateStr}`;
+                
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
@@ -459,62 +757,36 @@
                     }
                 });
                 
-                console.log('응답 상태:', response.status);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                const data = await response.json();
-                console.log('REST API 데이터:', data);
+                dailyData = await response.json();
+                processData(dailyData);
+                displayRankings();
                 
-                return data;
-                
-            } catch (error) {
-                console.error('REST API 오류:', error.message);
-                throw error;
-            }
-        }
-        
-        // 랭킹 로드
-        async function loadRankings() {
-            const container = document.getElementById('rankingsContainer');
-            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
-            
-            try {
-                // REST API로 데이터 가져오기
-                const data = await fetchDataFromAPI();
-                
-                if (data && data.length > 0) {
-                    console.log(`실제 데이터 ${data.length}개 로드 성공`);
-                    displayRankings(data);
-                } else {
-                    console.log('데이터가 비어있음, 빈 랭킹 표시');
-                    displayRankings([]);
-                }
+                // 업데이트 시간
+                const now = new Date();
+                const timeStr = `Last Updated: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                document.getElementById('updateInfo').textContent = timeStr;
                 
             } catch (error) {
                 console.error('데이터 로드 실패:', error);
-                // 오류시 빈 랭킹 표시
-                displayRankings([]);
+                section.innerHTML = '<div class="no-data">Error Loading Data</div>';
             }
         }
         
-        // 페이지 로드 시 실행
+        // 초기화
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('페이지 로드 완료');
-            setCurrentDate();
-            
-            // 바로 데이터 로드
+            displayDate();
             loadRankings();
             
             // 30초마다 자동 새로고침
             setInterval(loadRankings, 30000);
             
-            // 1분마다 날짜 확인 및 업데이트
+            // 1분마다 날짜 확인
             setInterval(() => {
-                setCurrentDate();
-                // 12시가 되면 자동 새로고침
+                displayDate();
                 const now = new Date();
                 if (now.getHours() === 12 && now.getMinutes() === 0 && now.getSeconds() < 2) {
                     location.reload();
