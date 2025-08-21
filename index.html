@@ -3,824 +3,581 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS센터 도움 카운팅 프로그램</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>SNS센터 실적보고</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #fff; min-height: 100vh; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        .header { text-align: center; margin-bottom: 50px; }
-        .header h1 { font-size: 48px; font-weight: 200; margin-bottom: 10px; }
-        .header h1 span { color: #1E6FFF; font-weight: 400; }
-        .date-display { color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
-        .today-info { color: #1E6FFF; font-size: 18px; margin-top: 10px; }
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         
-        /* 프로그레스 바 추가 */
-        .progress-container { margin-bottom: 30px; padding: 20px; background: #111; border: 1px solid #222; display: none; }
-        .progress-container.active { display: block; }
-        .progress-title { font-size: 14px; color: #999; margin-bottom: 10px; }
-        .progress-bar { width: 100%; height: 4px; background: #222; position: relative; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #1E6FFF, #00D4FF); transition: width 0.3s; }
-        .progress-info { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #666; }
+        .container {
+            text-align: center;
+            background: #1a1a1a;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            max-width: 500px;
+            width: 90%;
+        }
         
-        .control-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: #000; border: 1px solid #222; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
-        .control-buttons { display: flex; gap: 15px; }
+        h1 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
         
-        .btn { padding: 10px 25px; background: transparent; color: #666; border: 1px solid #333; font-size: 14px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.3s; }
-        .btn:hover { color: #1E6FFF; border-color: #1E6FFF; }
-        .btn.primary { color: #1E6FFF; border-color: #1E6FFF; }
-        .btn.primary:hover { background: #1E6FFF; color: #000; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .subtitle {
+            color: #8a8a8a;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
         
-        .status-indicator { display: flex; align-items: center; gap: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #666; animation: pulse 2s infinite; }
-        .status-dot.active { background: #00FF00; }
-        .status-dot.loading { background: #1E6FFF; }
-        .status-dot.error { background: #FF0000; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2px; margin-bottom: 50px; background: #111; padding: 2px; }
-        .stat-card { background: #000; padding: 30px; text-align: center; position: relative; overflow: hidden; }
-        .stat-card.updating::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #1E6FFF, transparent); animation: slide 1s infinite; }
-        @keyframes slide { to { left: 100%; } }
-        .stat-value { font-size: 48px; font-weight: 200; color: #1E6FFF; margin-bottom: 10px; }
-        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 2px; }
-        .stat-change { font-size: 13px; color: #00FF00; margin-top: 10px; }
-        .stat-change.down { color: #FF0000; }
+        .btn {
+            padding: 20px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
         
-        .podium { display: flex; justify-content: center; align-items: flex-end; gap: 40px; margin-bottom: 60px; height: 400px; opacity: 0; transition: opacity 0.5s; }
-        .podium.show { opacity: 1; }
-        .podium-item { flex: 1; max-width: 280px; display: flex; flex-direction: column; align-items: center; position: relative; animation: fadeInUp 0.5s backwards; }
-        .podium-item.rank-1 { animation-delay: 0.2s; }
-        .podium-item.rank-2 { animation-delay: 0.1s; margin-top: 50px; }
-        .podium-item.rank-3 { animation-delay: 0.3s; margin-top: 100px; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-counselor {
+            background: #1E6FFF;
+        }
         
-        .podium-rank { font-size: 60px; font-weight: 100; margin-bottom: 20px; opacity: 0.8; }
-        .podium-item.rank-1 .podium-rank { color: #FFD700; opacity: 1; }
-        .podium-item.rank-2 .podium-rank { color: #C0C0C0; }
-        .podium-item.rank-3 .podium-rank { color: #CD7F32; }
-        .podium-bar { width: 100%; background: #0a0a0a; border: 1px solid #222; position: relative; overflow: hidden; }
-        .podium-item.rank-1 .podium-bar { height: 250px; border-color: #FFD700; background: linear-gradient(180deg, rgba(255,215,0,0.1), transparent); }
-        .podium-item.rank-2 .podium-bar { height: 200px; border-color: #C0C0C0; background: linear-gradient(180deg, rgba(192,192,192,0.1), transparent); }
-        .podium-item.rank-3 .podium-bar { height: 150px; border-color: #CD7F32; background: linear-gradient(180deg, rgba(205,127,50,0.1), transparent); }
-        .podium-content { position: absolute; bottom: 20px; left: 0; right: 0; padding: 0 15px; text-align: center; }
-        .podium-name { font-size: 18px; font-weight: 500; margin-bottom: 5px; }
-        .podium-helps { font-size: 36px; font-weight: 200; color: #1E6FFF; }
-        .podium-chars { font-size: 12px; color: #999; }
+        .btn-dashboard {
+            background: #FF6B6B;
+            animation: glow 2s ease-in-out infinite;
+        }
         
-        .ranking-table { background: #000; border: 1px solid #222; margin-bottom: 40px; }
-        .table-header { padding: 25px 30px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        .table-title { font-size: 16px; font-weight: 300; letter-spacing: 1px; text-transform: uppercase; }
-        .table-count { font-size: 12px; color: #666; }
-        table { width: 100%; border-collapse: collapse; }
-        th { padding: 20px; text-align: left; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #222; }
-        td { padding: 20px; font-size: 15px; border-bottom: 1px solid #111; }
-        tr { opacity: 0; animation: fadeIn 0.3s forwards; }
-        tr:nth-child(1) { animation-delay: 0.05s; }
-        tr:nth-child(2) { animation-delay: 0.1s; }
-        tr:nth-child(3) { animation-delay: 0.15s; }
-        tr:nth-child(4) { animation-delay: 0.2s; }
-        tr:nth-child(5) { animation-delay: 0.25s; }
-        @keyframes fadeIn { to { opacity: 1; } }
-        tr:hover { background: #050505; }
-        tr.new-entry { animation: highlight 1s; }
-        @keyframes highlight { 0% { background: rgba(30,111,255,0.2); } 100% { background: transparent; } }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.5); }
+        }
         
-        .rank-number { display: inline-block; width: 32px; height: 32px; line-height: 32px; text-align: center; font-size: 16px; color: #666; }
-        .rank-number.gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; border-radius: 50%; }
-        .rank-number.silver { background: linear-gradient(135deg, #C0C0C0, #808080); color: #000; border-radius: 50%; }
-        .rank-number.bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; border-radius: 50%; }
+        .btn-ranking {
+            background: #1E6FFF;
+        }
         
-        .update-info { text-align: center; padding: 30px 0; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(30,111,255,0.3);
+        }
         
-        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 9999; }
-        .loading-overlay.active { display: flex; }
-        .spinner { width: 50px; height: 50px; border: 2px solid #222; border-top-color: #1E6FFF; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-counselor:hover {
+            background: #1859d6;
+        }
         
-        /* 실시간 알림 */
-        .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: #111; border: 1px solid #1E6FFF; color: #fff; font-size: 14px; z-index: 1000; animation: slideIn 0.3s; display: none; }
-        .notification.show { display: block; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .btn-dashboard:hover {
+            background: #FF5252;
+        }
         
-        @media (max-width: 768px) {
-            .control-bar { flex-direction: column; }
-            .podium { flex-direction: column; height: auto; gap: 30px; }
-            .podium-item.rank-2, .podium-item.rank-3 { margin-top: 0; }
-            .stats-grid { grid-template-columns: 1fr; }
+        .btn-ranking:hover {
+            background: #1859d6;
+        }
+        
+        .status {
+            margin-top: 30px;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #8a8a8a;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+        
+        /* Settings Button */
+        .settings-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 50%;
+            color: #8a8a8a;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .settings-btn:hover {
+            background: #3a3a3a;
+            transform: rotate(90deg);
+            color: #ffffff;
+        }
+        
+        .settings-btn.authenticated {
+            background: #FF6B6B;
+            color: white;
+            animation: settingsGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes settingsGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 107, 107, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(255, 107, 107, 0.8); }
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            animation: slideIn 0.3s;
+        }
+        
+        .modal-header {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #2a2a2a;
+            border-radius: 10px;
+            background: #0a0a0a;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 5px;
+        }
+        
+        .password-input:focus {
+            outline: none;
+            border-color: #1E6FFF;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .modal-btn-confirm {
+            background: #1E6FFF;
+            color: white;
+        }
+        
+        .modal-btn-confirm:hover {
+            background: #1859d6;
+        }
+        
+        .modal-btn-cancel {
+            background: #2a2a2a;
+            color: #8a8a8a;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #3a3a3a;
+        }
+        
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
+        .auth-info {
+            text-align: center;
+            color: #4CAF50;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .auth-info.show {
+            display: block;
+        }
+        
+        .logout-btn {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            background: #ff4444;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .logout-btn:hover {
+            background: #ff3333;
+        }
+        
+        .admin-btn-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .admin-btn-container.show {
+            display: block;
+        }
+        
+        .tooltip {
+            position: fixed;
+            bottom: 90px;
+            right: 30px;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .btn {
+                font-size: 16px;
+                padding: 15px 30px;
+            }
+            
+            .modal-content {
+                padding: 30px 20px;
+            }
+            
+            .settings-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>SNS센터 <span>도움 카운팅 프로그램</span></h1>
-            <div class="date-display" id="dateDisplay"></div>
-            <div class="today-info">오늘 하루 (00:00 - 23:59) 실시간 집계</div>
-        </div>
+        <h1>💵 SNS센터 실적보고</h1>
+        <p class="subtitle">실시간 실적관리 통합 플랫폼</p>
         
-        <!-- 프로그레스 바 -->
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-title" id="progressTitle">데이터 동기화 중...</div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-            </div>
-            <div class="progress-info">
-                <span id="progressCurrent">0</span>
-                <span id="progressPercent">0%</span>
-                <span id="progressTotal">0</span>
-            </div>
-        </div>
-        
-        <div class="control-bar">
-            <div class="control-buttons">
-                <button class="btn primary" onclick="quickSync()" id="quickSyncBtn">빠른 새로고침</button>
-                <button class="btn" onclick="fullSync()" id="fullSyncBtn">전체 동기화</button>
-                <button class="btn" onclick="toggleAuto()" id="autoBtn">자동 새로고침 시작</button>
-                <button class="btn" onclick="analyzeData()" id="analyzeBtn">데이터 분석</button>
-            </div>
-            <div class="status-indicator">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">대기 중</span>
-                <span id="lastUpdate" style="margin-left: 20px; color: #666;"></span>
+        <div class="button-group">
+            <a href="counselor.html" class="btn btn-counselor">
+                <span>📝</span>
+                <span>상담사 실적입력</span>
+            </a>
+            <a href="ranking.html" class="btn btn-ranking">
+                <span>🏆</span>
+                <span>실시간 랭킹</span>
+            </a>
+            
+            <!-- 관리자 인증 후에만 표시되는 대시보드 버튼 -->
+            <div id="adminBtnContainer" class="admin-btn-container">
+                <a href="dashboard.html" class="btn btn-dashboard">
+                    <span>📊</span>
+                    <span>관리자 대시보드</span>
+                </a>
             </div>
         </div>
         
-        <div class="stats-grid">
-            <div class="stat-card" id="card-helps">
-                <div class="stat-value" id="totalHelps">0</div>
-                <div class="stat-label">오늘 도움 횟수</div>
-                <div class="stat-change" id="helpsChange"></div>
-            </div>
-            <div class="stat-card" id="card-chars">
-                <div class="stat-value" id="totalChars">0</div>
-                <div class="stat-label">오늘 총 글자수</div>
-                <div class="stat-change" id="charsChange"></div>
-            </div>
-            <div class="stat-card" id="card-counselors">
-                <div class="stat-value" id="activeCounselors">0</div>
-                <div class="stat-label">오늘 참여 상담사</div>
-                <div class="stat-change" id="counselorsChange"></div>
-            </div>
-            <div class="stat-card" id="card-avg">
-                <div class="stat-value" id="avgChars">0</div>
-                <div class="stat-label">평균 글자수</div>
-                <div class="stat-change" id="avgChange"></div>
-            </div>
+        <div class="status">
+            <span class="status-dot"></span>
+            시스템 정상 작동중
         </div>
-        
-        <div class="podium" id="podium"></div>
-        
-        <div class="ranking-table">
-            <div class="table-header">
-                <div class="table-title">오늘의 상담사 랭킹</div>
-                <div class="table-count" id="tableCount">0명 참여</div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>순위</th>
-                        <th>상담사</th>
-                        <th>도움 횟수</th>
-                        <th>총 글자수</th>
-                        <th>평균 글자수</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="5" style="text-align:center;padding:50px;color:#666;">데이터를 불러오는 중...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="update-info" id="updateInfo">수동 새로고침 모드</div>
     </div>
     
-    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
-    <div class="notification" id="notification"></div>
+    <!-- Settings Button -->
+    <button class="settings-btn" id="settingsBtn" onclick="showPasswordModal()" title="관리자 설정">
+        ⚙️
+    </button>
+    <div class="tooltip" id="tooltip">관리자 설정</div>
+    
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">🔐 관리자 인증</h2>
+            
+            <div id="authInfo" class="auth-info" style="display:none;">
+                ✅ 관리자 인증 완료
+                <br>대시보드 접근 권한이 활성화되었습니다.
+            </div>
+            
+            <div id="loginForm">
+                <input 
+                    type="password" 
+                    id="passwordInput" 
+                    class="password-input" 
+                    placeholder="비밀번호 입력"
+                    maxlength="4"
+                    onkeypress="if(event.keyCode==13) checkPassword()"
+                >
+                <div class="error-message" id="errorMessage">비밀번호가 일치하지 않습니다</div>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">취소</button>
+                    <button class="modal-btn modal-btn-confirm" onclick="checkPassword()">확인</button>
+                </div>
+            </div>
+            
+            <button id="logoutBtn" class="logout-btn" style="display:none;" onclick="logout()">
+                로그아웃
+            </button>
+        </div>
+    </div>
     
     <script>
-        // Supabase 설정
-        const SUPABASE_URL = 'https://bhtqjipygkawoyieidgp.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const CORRECT_PASSWORD = '1250';
+        const AUTH_KEY = 'sns_admin_auth';
+        const AUTH_EXPIRY_KEY = 'sns_admin_auth_expiry';
+        const AUTH_DURATION = 24 * 60 * 60 * 1000; // 24시간
         
-        let currentData = [];
-        let autoInterval = null;
-        let lastData = null;
-        let isLoading = false;
-        let realtimeSubscription = null;
+        // 페이지 로드 시 실행
+        window.onload = function() {
+            checkAuthStatus();
+            setupTooltip();
+        };
         
-        // 오늘 날짜 가져오기
-        function getTodayRange() {
-            const today = new Date();
-            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-            return {
-                startDate: start.toISOString().split('T')[0],
-                endDate: end.toISOString().split('T')[0],
-                startTime: start.toISOString(),
-                endTime: end.toISOString()
-            };
-        }
-        
-        // 초기화
-        async function init() {
-            console.log('앱 초기화 시작');
+        function setupTooltip() {
+            const settingsBtn = document.getElementById('settingsBtn');
+            const tooltip = document.getElementById('tooltip');
             
-            // 날짜 표시
-            const now = new Date();
-            const days = ['일', '월', '화', '수', '목', '금', '토'];
-            document.getElementById('dateDisplay').textContent = 
-                `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
-            
-            // 테이블 체크
-            await checkTables();
-            
-            // 초기 데이터 로드
-            await quickSync();
-            
-            // 실시간 구독 설정
-            setupRealtimeSubscription();
-            
-            // 자동 새로고침 시작하지 않음 (수동 모드 기본)
-            // startAutoRefresh();
-        }
-        
-        // 테이블 체크 (생성 시도 없이)
-        async function checkTables() {
-            try {
-                // 테이블 존재 여부만 확인
-                const { data, error } = await supabase
-                    .from('counselor_stats')
-                    .select('id')
-                    .limit(1);
-                
-                if (error && error.code === '42P01') {
-                    console.log('테이블이 없습니다. 관리자에게 문의하세요.');
-                    showNotification('데이터베이스 초기화 필요', 'error');
-                } else {
-                    console.log('테이블 확인 완료');
-                }
-            } catch (e) {
-                console.log('테이블 확인 중 오류:', e);
-            }
-        }
-        
-        // 빠른 동기화 (캐시 데이터 우선)
-        async function quickSync() {
-            if (isLoading) return;
-            isLoading = true;
-            
-            const btn = document.getElementById('quickSyncBtn');
-            btn.disabled = true;
-            
-            setStatus('loading', '빠른 동기화 중...');
-            
-            try {
-                // 먼저 캐시된 데이터 로드
-                await loadData();
-                
-                // 백그라운드에서 API 호출
-                if (window.location.hostname !== 'localhost') {
-                    fetch('/api/sync', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(getTodayRange())
-                    }).then(() => {
-                        loadData(); // API 응답 후 재로드
-                    }).catch(console.error);
-                }
-                
-                setStatus('active', '업데이트 완료');
-                updateLastTime();
-                
-            } catch (error) {
-                console.error('빠른 동기화 실패:', error);
-                setStatus('error', '오류 발생');
-            } finally {
-                isLoading = false;
-                btn.disabled = false;
-            }
-        }
-        
-        // 전체 동기화 (API 호출 후 데이터 로드)
-        async function fullSync() {
-            if (isLoading) return;
-            isLoading = true;
-            
-            const btn = document.getElementById('fullSyncBtn');
-            btn.disabled = true;
-            
-            showProgress(true);
-            setStatus('loading', '전체 동기화 중...');
-            updateProgress('채널톡 연결 중...', 0, 100);
-            
-            const { startDate, endDate } = getTodayRange();
-            
-            try {
-                // API 호출 또는 데모 데이터 생성
-                if (window.location.hostname !== 'localhost') {
-                    // 실제 API 호출
-                    updateProgress('대화 목록 가져오는 중...', 20, 100);
-                    
-                    const response = await fetch('/api/sync', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ startDate, endDate })
-                    });
-                    
-                    if (!response.ok) throw new Error('API 호출 실패');
-                    
-                    updateProgress('데이터 처리 중...', 80, 100);
-                    
-                } else {
-                    // 데모 데이터 생성
-                    await generateDemoData(startDate, endDate);
-                }
-                
-                updateProgress('완료!', 100, 100);
-                await loadData();
-                
-                setStatus('active', '동기화 완료');
-                updateLastTime();
-                showNotification('전체 동기화가 완료되었습니다');
-                
-                setTimeout(() => showProgress(false), 1000);
-                
-            } catch (error) {
-                console.error('전체 동기화 실패:', error);
-                setStatus('error', '동기화 실패');
-                showNotification('동기화 중 오류가 발생했습니다', 'error');
-                showProgress(false);
-            } finally {
-                isLoading = false;
-                btn.disabled = false;
-            }
-        }
-        
-        // 데모 데이터 생성 (개발용)
-        async function generateDemoData(startDate, endDate) {
-            const counselorList = [
-                '채주은', '손진우', '윤도우리', '차정환', '서민국',
-                '구본영', '권재현', '조시현', '김상아', '정주연',
-                '김지원', '정다혜', '김시진', '신혜서', '이민주'
-            ];
-            
-            const activeCounselors = Math.floor(Math.random() * 8) + 5;
-            const demoData = [];
-            
-            for (let i = 0; i < activeCounselors; i++) {
-                updateProgress(`상담사 ${i+1}/${activeCounselors} 처리 중...`, 20 + (60 * i / activeCounselors), 100);
-                
-                const counselor = counselorList[i];
-                const helpCount = Math.floor(Math.random() * 50) + 10;
-                const totalChars = Math.floor(Math.random() * 20000) + 5000;
-                
-                demoData.push({
-                    counselor_id: `52${1200 + i}`,
-                    counselor_name: counselor,
-                    period_start: startDate,
-                    period_end: endDate,
-                    help_count: helpCount,
-                    total_chars: totalChars,
-                    avg_chars: Math.round(totalChars / helpCount),
-                    updated_at: new Date().toISOString()
-                });
-                
-                // 실시간 느낌을 위해 약간의 딜레이
-                await new Promise(r => setTimeout(r, 100));
-            }
-            
-            // 데이터베이스에 저장
-            updateProgress('데이터베이스 저장 중...', 85, 100);
-            
-            for (const item of demoData) {
-                await supabase.from('counselor_stats').upsert(item, { 
-                    onConflict: 'counselor_id,period_start,period_end' 
-                });
-            }
-        }
-        
-        // 데이터 로드
-        async function loadData() {
-            const { startDate, endDate } = getTodayRange();
-            
-            const { data, error } = await supabase
-                .from('counselor_stats')
-                .select('*')
-                .eq('period_start', startDate)
-                .eq('period_end', endDate)
-                .order('help_count', { ascending: false });
-            
-            if (error) {
-                console.error('데이터 로드 실패:', error);
-                return;
-            }
-            
-            if (data) {
-                // 변화량 계산
-                if (currentData.length > 0) {
-                    lastData = {
-                        totalHelps: currentData.reduce((sum, item) => sum + item.help_count, 0),
-                        totalChars: currentData.reduce((sum, item) => sum + item.total_chars, 0),
-                        counselors: currentData.length
-                    };
-                }
-                
-                currentData = data;
-                updateUI();
-            }
-        }
-        
-        // UI 업데이트
-        function updateUI() {
-            // 통계 계산
-            const totalHelps = currentData.reduce((sum, item) => sum + item.help_count, 0);
-            const totalChars = currentData.reduce((sum, item) => sum + item.total_chars, 0);
-            const avgChars = totalHelps > 0 ? Math.round(totalChars / totalHelps) : 0;
-            
-            // 카드 애니메이션
-            ['helps', 'chars', 'counselors', 'avg'].forEach(type => {
-                document.getElementById(`card-${type}`).classList.add('updating');
-                setTimeout(() => {
-                    document.getElementById(`card-${type}`).classList.remove('updating');
-                }, 500);
+            settingsBtn.addEventListener('mouseenter', () => {
+                tooltip.classList.add('show');
             });
             
-            // 숫자 업데이트
-            animateNumber('totalHelps', totalHelps);
-            animateNumber('totalChars', totalChars);
-            animateNumber('activeCounselors', currentData.length);
-            animateNumber('avgChars', avgChars);
+            settingsBtn.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('show');
+            });
+        }
+        
+        function checkAuthStatus() {
+            const authTime = localStorage.getItem(AUTH_EXPIRY_KEY);
             
-            // 변화량 표시
-            if (lastData) {
-                const helpsChange = totalHelps - lastData.totalHelps;
-                const charsChange = totalChars - lastData.totalChars;
-                const counselorsChange = currentData.length - lastData.counselors;
+            if (authTime) {
+                const now = new Date().getTime();
+                const expiryTime = parseInt(authTime);
                 
-                updateChange('helpsChange', helpsChange);
-                updateChange('charsChange', charsChange);
-                updateChange('counselorsChange', counselorsChange);
+                if (now < expiryTime) {
+                    // 인증 유효
+                    showAdminButton();
+                    document.getElementById('settingsBtn').classList.add('authenticated');
+                } else {
+                    // 인증 만료
+                    clearAuth();
+                }
             }
-            
-            // 포디움 업데이트
-            updatePodium();
-            
-            // 테이블 업데이트
-            updateTable();
-            
-            // 참여자 수 업데이트
-            document.getElementById('tableCount').textContent = `${currentData.length}명 참여`;
         }
         
-        // 포디움 업데이트
-        function updatePodium() {
-            const podium = document.getElementById('podium');
-            const top3 = currentData.slice(0, 3);
-            
-            if (top3.length === 0) {
-                podium.innerHTML = '';
-                podium.classList.remove('show');
-                return;
-            }
-            
-            const order = top3.length >= 2 ? [1, 0, 2] : [0, 1, 2]; // 2등, 1등, 3등 순서
-            podium.innerHTML = order.map(idx => {
-                if (!top3[idx]) return '';
-                const item = top3[idx];
-                const rank = idx + 1;
-                return `
-                    <div class="podium-item rank-${rank}">
-                        <div class="podium-rank">${rank}</div>
-                        <div class="podium-bar">
-                            <div class="podium-content">
-                                <div class="podium-name">${item.counselor_name}</div>
-                                <div class="podium-helps">${item.help_count}</div>
-                                <div class="podium-chars">${item.total_chars.toLocaleString()} 글자</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            setTimeout(() => podium.classList.add('show'), 100);
+        function showAdminButton() {
+            document.getElementById('adminBtnContainer').classList.add('show');
         }
         
-        // 테이블 업데이트
-        function updateTable() {
-            const tbody = document.getElementById('tableBody');
+        function hideAdminButton() {
+            document.getElementById('adminBtnContainer').classList.remove('show');
+        }
+        
+        function showPasswordModal() {
+            // 이미 인증되었는지 확인
+            const authTime = localStorage.getItem(AUTH_EXPIRY_KEY);
             
-            if (currentData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;color:#666;">오늘 데이터가 없습니다</td></tr>';
-                return;
-            }
-            
-            const oldRows = tbody.querySelectorAll('tr');
-            const oldIds = Array.from(oldRows).map(row => row.dataset.id);
-            
-            tbody.innerHTML = currentData.map((item, index) => {
-                const rank = index + 1;
-                let rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-                const isNew = !oldIds.includes(item.counselor_id);
+            if (authTime) {
+                const now = new Date().getTime();
+                const expiryTime = parseInt(authTime);
                 
-                return `
-                    <tr data-id="${item.counselor_id}" class="${isNew ? 'new-entry' : ''}">
-                        <td><span class="rank-number ${rankClass}">${rank}</span></td>
-                        <td>${item.counselor_name}<br><small style="color:#666">${item.counselor_id}</small></td>
-                        <td>${item.help_count.toLocaleString()}</td>
-                        <td>${item.total_chars.toLocaleString()}</td>
-                        <td>${item.avg_chars.toLocaleString()}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        
-        // 숫자 애니메이션
-        function animateNumber(id, target) {
-            const element = document.getElementById(id);
-            const start = parseInt(element.textContent.replace(/,/g, '')) || 0;
-            const duration = 800;
-            const startTime = Date.now();
-            
-            function update() {
-                const progress = Math.min((Date.now() - startTime) / duration, 1);
-                const easeProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-                const current = Math.floor(start + (target - start) * easeProgress);
-                element.textContent = current.toLocaleString();
-                if (progress < 1) requestAnimationFrame(update);
-            }
-            update();
-        }
-        
-        // 변화량 업데이트
-        function updateChange(id, value) {
-            const element = document.getElementById(id);
-            if (value > 0) {
-                element.textContent = `+${value.toLocaleString()}`;
-                element.className = 'stat-change';
-            } else if (value < 0) {
-                element.textContent = value.toLocaleString();
-                element.className = 'stat-change down';
+                if (now < expiryTime) {
+                    // 인증 유효하면 로그아웃 옵션만 표시
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('logoutBtn').style.display = 'block';
+                } else {
+                    // 인증 만료
+                    clearAuth();
+                    resetModalToLogin();
+                }
             } else {
-                element.textContent = '';
-            }
-        }
-        
-        // 프로그레스 바
-        function showProgress(show) {
-            document.getElementById('progressContainer').classList.toggle('active', show);
-        }
-        
-        function updateProgress(title, current, total) {
-            document.getElementById('progressTitle').textContent = title;
-            document.getElementById('progressCurrent').textContent = current;
-            document.getElementById('progressTotal').textContent = total;
-            const percent = Math.round((current / total) * 100);
-            document.getElementById('progressPercent').textContent = `${percent}%`;
-            document.getElementById('progressFill').style.width = `${percent}%`;
-        }
-        
-        // 상태 표시
-        function setStatus(type, text) {
-            document.getElementById('statusDot').className = 'status-dot ' + type;
-            document.getElementById('statusText').textContent = text;
-        }
-        
-        // 마지막 업데이트 시간
-        function updateLastTime() {
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent = 
-                `마지막 업데이트: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-        }
-        
-        // 알림 표시
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.style.borderColor = type === 'error' ? '#FF0000' : '#1E6FFF';
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-        
-        // 실시간 구독 설정
-        function setupRealtimeSubscription() {
-            // 기존 구독 해제
-            if (realtimeSubscription) {
-                supabase.removeChannel(realtimeSubscription);
+                resetModalToLogin();
             }
             
-            // 새 구독 설정
-            realtimeSubscription = supabase
-                .channel('stats-changes')
-                .on('postgres_changes', { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'counselor_stats' 
-                }, (payload) => {
-                    console.log('실시간 업데이트:', payload);
-                    
-                    // 오늘 데이터인지 확인
-                    const { startDate } = getTodayRange();
-                    if (payload.new && payload.new.period_start === startDate) {
-                        loadData();
-                        showNotification('새로운 데이터가 업데이트되었습니다');
-                    }
-                })
-                .subscribe();
+            // 모달 표시
+            document.getElementById('passwordModal').classList.add('show');
+            if (document.getElementById('loginForm').style.display !== 'none') {
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+            document.getElementById('errorMessage').style.display = 'none';
         }
         
-        // 자동 새로고침
-        function startAutoRefresh() {
-            if (!autoInterval) {
-                autoInterval = setInterval(() => {
-                    if (!isLoading) {
-                        quickSync();
-                    }
-                }, 30000); // 30초마다
+        function resetModalToLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'none';
+        }
+        
+        function closeModal() {
+            document.getElementById('passwordModal').classList.remove('show');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function checkPassword() {
+            const inputPassword = document.getElementById('passwordInput').value;
+            
+            if (inputPassword === CORRECT_PASSWORD) {
+                // 인증 성공
+                const now = new Date().getTime();
+                const expiryTime = now + AUTH_DURATION;
                 
-                document.getElementById('autoBtn').textContent = '자동 새로고침 중지';
-                setStatus('active', '자동 모드 (30초)');
-                document.getElementById('updateInfo').textContent = '자동으로 30초마다 업데이트됩니다';
-            }
-        }
-        
-        function toggleAuto() {
-            const btn = document.getElementById('autoBtn');
-            if (autoInterval) {
-                clearInterval(autoInterval);
-                autoInterval = null;
-                btn.textContent = '자동 새로고침 시작';
-                setStatus('active', '수동 모드');
-                document.getElementById('updateInfo').textContent = '수동 새로고침 모드';
+                // localStorage에 인증 정보 저장
+                localStorage.setItem(AUTH_KEY, 'true');
+                localStorage.setItem(AUTH_EXPIRY_KEY, expiryTime.toString());
+                
+                // UI 업데이트
+                showAdminButton();
+                document.getElementById('settingsBtn').classList.add('authenticated');
+                
+                // 바로 모달 닫기
+                closeModal();
             } else {
-                startAutoRefresh();
+                // 인증 실패
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+                
+                // 입력 필드 흔들기 효과
+                const input = document.getElementById('passwordInput');
+                input.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    input.style.animation = '';
+                }, 500);
             }
         }
         
-        // 자정 리셋
-        setInterval(() => {
-            const now = new Date();
-            if (now.getHours() === 0 && now.getMinutes() === 0) {
-                currentData = [];
-                lastData = null;
-                init();
-            }
-        }, 60000);
+        function logout() {
+            clearAuth();
+            hideAdminButton();
+            document.getElementById('settingsBtn').classList.remove('authenticated');
+            closeModal();
+        }
         
-        // 페이지 가시성 변경 감지
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                // 페이지가 다시 보이면 데이터 새로고침
-                quickSync();
+        function clearAuth() {
+            localStorage.removeItem(AUTH_KEY);
+            localStorage.removeItem(AUTH_EXPIRY_KEY);
+        }
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
             }
         });
         
-        // 데이터 자체 분석
-        async function analyzeData() {
-            const btn = document.getElementById('analyzeBtn');
-            btn.disabled = true;
-            setStatus('loading', '데이터 분석 중...');
-            
-            try {
-                const { startDate, endDate } = getTodayRange();
-                
-                // 데이터 로드
-                const { data, error } = await supabase
-                    .from('counselor_stats')
-                    .select('*')
-                    .eq('period_start', startDate)
-                    .eq('period_end', endDate);
-                
-                if (error) throw error;
-                if (!data || data.length === 0) {
-                    showNotification('분석할 데이터가 없습니다', 'error');
-                    return;
-                }
-                
-                // 분석 수행
-                let anomalies = [];
-                let warnings = [];
-                let unknownCount = 0;
-                let duplicateNames = new Map();
-                
-                data.forEach(item => {
-                    // Unknown 체크
-                    if (item.counselor_name.includes('Unknown') || item.counselor_name.includes('미확인')) {
-                        unknownCount++;
-                        anomalies.push(`Unknown ID: ${item.counselor_id}`);
-                    }
-                    
-                    // 비정상 도움 횟수 체크
-                    if (item.help_count > 200) {
-                        anomalies.push(`${item.counselor_name}: 도움 ${item.help_count}회 (비정상적으로 많음)`);
-                    }
-                    
-                    // 비정상 글자수 체크
-                    if (item.avg_chars > 5000) {
-                        anomalies.push(`${item.counselor_name}: 평균 ${item.avg_chars}자 (비정상적으로 많음)`);
-                    }
-                    
-                    // 중복 이름 체크
-                    if (!duplicateNames.has(item.counselor_name)) {
-                        duplicateNames.set(item.counselor_name, []);
-                    }
-                    duplicateNames.get(item.counselor_name).push(item.counselor_id);
-                });
-                
-                // 중복 ID 경고
-                duplicateNames.forEach((ids, name) => {
-                    if (ids.length > 1) {
-                        warnings.push(`${name}: 여러 ID 사용 (${ids.join(', ')})`);
-                    }
-                });
-                
-                // 통계 계산
-                const totalHelps = data.reduce((sum, item) => sum + item.help_count, 0);
-                const avgHelpsPerCounselor = Math.round(totalHelps / data.length);
-                const maxHelps = Math.max(...data.map(item => item.help_count));
-                const minHelps = Math.min(...data.map(item => item.help_count));
-                
-                // 분석 결과 표시
-                let analysisHTML = '<div style="padding: 20px; background: #111; border: 1px solid #222; margin: 20px 0;">';
-                analysisHTML += '<h3 style="color: #1E6FFF; margin-bottom: 15px;">📊 데이터 품질 분석 결과</h3>';
-                
-                // 통계
-                analysisHTML += '<div style="margin-bottom: 20px;">';
-                analysisHTML += `<p>총 상담사: ${data.length}명</p>`;
-                analysisHTML += `<p>총 도움 횟수: ${totalHelps.toLocaleString()}회</p>`;
-                analysisHTML += `<p>평균 도움 횟수: ${avgHelpsPerCounselor}회</p>`;
-                analysisHTML += `<p>최대/최소: ${maxHelps}회 / ${minHelps}회</p>`;
-                analysisHTML += '</div>';
-                
-                // 이상 징후
-                if (anomalies.length > 0) {
-                    analysisHTML += '<div style="margin-bottom: 20px;">';
-                    analysisHTML += '<h4 style="color: #FF0000;">⚠️ 이상 징후 발견 (' + anomalies.length + '건)</h4>';
-                    analysisHTML += '<ul style="color: #FF6666; font-size: 12px;">';
-                    anomalies.slice(0, 5).forEach(a => {
-                        analysisHTML += `<li>${a}</li>`;
-                    });
-                    if (anomalies.length > 5) {
-                        analysisHTML += `<li>... 외 ${anomalies.length - 5}건</li>`;
-                    }
-                    analysisHTML += '</ul>';
-                    analysisHTML += '</div>';
-                }
-                
-                // 경고
-                if (warnings.length > 0) {
-                    analysisHTML += '<div style="margin-bottom: 20px;">';
-                    analysisHTML += '<h4 style="color: #FFA500;">⚡ 경고 (' + warnings.length + '건)</h4>';
-                    analysisHTML += '<ul style="color: #FFB366; font-size: 12px;">';
-                    warnings.slice(0, 5).forEach(w => {
-                        analysisHTML += `<li>${w}</li>`;
-                    });
-                    analysisHTML += '</ul>';
-                    analysisHTML += '</div>';
-                }
-                
-                // 데이터 품질 점수
-                const qualityScore = Math.max(0, 100 - (anomalies.length * 5) - (warnings.length * 2) - (unknownCount * 10));
-                analysisHTML += '<div>';
-                analysisHTML += '<h4>데이터 품질 점수</h4>';
-                analysisHTML += `<div style="width: 100%; height: 20px; background: #222; position: relative;">`;
-                analysisHTML += `<div style="width: ${qualityScore}%; height: 100%; background: ${qualityScore > 70 ? '#00FF00' : qualityScore > 40 ? '#FFA500' : '#FF0000'};"></div>`;
-                analysisHTML += `</div>`;
-                analysisHTML += `<p style="text-align: center; margin-top: 10px;">${qualityScore}점 / 100점</p>`;
-                analysisHTML += '</div>';
-                
-                analysisHTML += '</div>';
-                
-                // 결과를 새 창에 표시
-                const modal = document.createElement('div');
-                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center;';
-                modal.innerHTML = `
-                    <div style="max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; background: #000; border: 1px solid #1E6FFF; padding: 20px;">
-                        ${analysisHTML}
-                        <button onclick="this.parentElement.parentElement.remove()" style="width: 100%; padding: 10px; background: #1E6FFF; color: #000; border: none; cursor: pointer; margin-top: 20px;">닫기</button>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-                
-                setStatus('active', '분석 완료');
-                
-            } catch (error) {
-                console.error('분석 실패:', error);
-                showNotification('데이터 분석 중 오류가 발생했습니다', 'error');
-                setStatus('error', '분석 실패');
-            } finally {
-                btn.disabled = false;
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('passwordModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
             }
-        }
-        
-        // 시작
-        init();
+        });
     </script>
 </body>
 </html>
