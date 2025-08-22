@@ -147,6 +147,9 @@
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .sort-tab::after {
@@ -170,6 +173,10 @@
         
         .sort-tab.active::after {
             width: 100%;
+        }
+        
+        .tab-icon {
+            font-size: 16px;
         }
         
         /* 랭킹 리스트 */
@@ -275,6 +282,13 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .stat-icon {
+            font-size: 12px;
         }
         
         .stat-value {
@@ -445,15 +459,42 @@
             </div>
             
             <div class="sort-tabs">
-                <button class="sort-tab active" onclick="setSortBy(this, 'usim')">유심</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'internet')">인터넷</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'premium')">프리미엄</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'essence')">에센스</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'iot')">IOT</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'one_g')">1G</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'magic')">매직</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'appliance')">가전</button>
-                <button class="sort-tab" onclick="setSortBy(this, 'total')">전체</button>
+                <button class="sort-tab active" onclick="setSortBy(this, 'usim')">
+                    <span class="tab-icon">📱</span>
+                    <span>유심</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'internet')">
+                    <span class="tab-icon">🌐</span>
+                    <span>인터넷</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'premium')">
+                    <span class="tab-icon">⭐</span>
+                    <span>프리미엄</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'essence')">
+                    <span class="tab-icon">💎</span>
+                    <span>에센스</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'iot')">
+                    <span class="tab-icon">📡</span>
+                    <span>IOT</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'one_g')">
+                    <span class="tab-icon">📶</span>
+                    <span>1G</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'magic')">
+                    <span class="tab-icon">✨</span>
+                    <span>매직</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'appliance')">
+                    <span class="tab-icon">🏠</span>
+                    <span>가전</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'total')">
+                    <span class="tab-icon">📊</span>
+                    <span>전체</span>
+                </button>
             </div>
         </div>
         
@@ -571,39 +612,66 @@
                         
                         <div class="stats-bar">
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'usim' ? 'color: #1E6FFF;' : ''}">유심</div>
+                                <div class="stat-label" style="${currentSort === 'usim' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">📱</span>
+                                    <span>유심</span>
+                                </div>
                                 <div class="stat-value ${counselor.usim_count > 0 ? 'highlight' : ''}" style="${currentSort === 'usim' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.usim_count}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'internet' ? 'color: #1E6FFF;' : ''}">인터넷</div>
+                                <div class="stat-label" style="${currentSort === 'internet' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">🌐</span>
+                                    <span>인터넷</span>
+                                </div>
                                 <div class="stat-value ${counselor.sk_internet > 0 ? 'highlight' : ''}" style="${currentSort === 'internet' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.sk_internet}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'premium' ? 'color: #1E6FFF;' : ''}">프리미엄</div>
+                                <div class="stat-label" style="${currentSort === 'premium' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">⭐</span>
+                                    <span>프리미엄</span>
+                                </div>
                                 <div class="stat-value ${counselor.premium > 0 ? 'highlight' : ''}" style="${currentSort === 'premium' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.premium}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'essence' ? 'color: #1E6FFF;' : ''}">에센스</div>
+                                <div class="stat-label" style="${currentSort === 'essence' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">💎</span>
+                                    <span>에센스</span>
+                                </div>
                                 <div class="stat-value ${counselor.essence > 0 ? 'highlight' : ''}" style="${currentSort === 'essence' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.essence}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'iot' ? 'color: #1E6FFF;' : ''}">IOT</div>
+                                <div class="stat-label" style="${currentSort === 'iot' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">📡</span>
+                                    <span>IOT</span>
+                                </div>
                                 <div class="stat-value ${counselor.iot > 0 ? 'highlight' : ''}" style="${currentSort === 'iot' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.iot}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'one_g' ? 'color: #1E6FFF;' : ''}">1G</div>
+                                <div class="stat-label" style="${currentSort === 'one_g' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">📶</span>
+                                    <span>1G</span>
+                                </div>
                                 <div class="stat-value ${counselor.one_g > 0 ? 'highlight' : ''}" style="${currentSort === 'one_g' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.one_g}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'magic' ? 'color: #1E6FFF;' : ''}">매직</div>
+                                <div class="stat-label" style="${currentSort === 'magic' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">✨</span>
+                                    <span>매직</span>
+                                </div>
                                 <div class="stat-value ${counselor.sk_magic > 0 ? 'highlight' : ''}" style="${currentSort === 'magic' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.sk_magic}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label" style="${currentSort === 'appliance' ? 'color: #1E6FFF;' : ''}">가전</div>
+                                <div class="stat-label" style="${currentSort === 'appliance' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">🏠</span>
+                                    <span>가전</span>
+                                </div>
                                 <div class="stat-value ${counselor.appliance > 0 ? 'highlight' : ''}" style="${currentSort === 'appliance' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.appliance}</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">카드</div>
+                                <div class="stat-label">
+                                    <span class="stat-icon">💳</span>
+                                    <span>카드</span>
+                                </div>
                                 <div class="stat-value" style="color: #333;">${counselor.card}</div>
                             </div>
                         </div>
