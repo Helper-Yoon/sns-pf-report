@@ -406,6 +406,7 @@
             border: 1px solid #1a1a1a;
             padding: 30px;
             transition: all 0.3s;
+            position: relative;
         }
         
         .category-card:hover {
@@ -443,10 +444,47 @@
             gap: 15px;
         }
         
+        .mini-ranks.expanded {
+            gap: 12px;
+        }
+        
         .mini-rank {
             display: flex;
             align-items: center;
             gap: 20px;
+            padding: 8px 0;
+            transition: all 0.3s;
+        }
+        
+        .mini-rank:hover {
+            transform: translateX(5px);
+        }
+        
+        .mini-rank.extra {
+            display: none;
+            opacity: 0;
+            animation: slideIn 0.4s ease forwards;
+        }
+        
+        .mini-ranks.expanded .mini-rank.extra {
+            display: flex;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
         }
         
         .mini-rank-num {
@@ -489,6 +527,33 @@
             font-size: 28px;
             font-weight: 200;
             color: #1E6FFF;
+        }
+        
+        .card-show-more {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(30, 111, 255, 0.05);
+            border: 1px solid #1E6FFF;
+            color: #1E6FFF;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .card-show-more:hover {
+            background: rgba(30, 111, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .card-show-more.active {
+            background: #1E6FFF;
+            color: #000;
         }
         
         /* 로딩 */
@@ -592,6 +657,15 @@
             
             .all-categories {
                 grid-template-columns: 1fr;
+            }
+            
+            .category-card {
+                padding: 20px;
+            }
+            
+            .card-show-more {
+                padding: 8px 16px;
+                font-size: 12px;
             }
             
             .extra-ranks {
@@ -705,8 +779,9 @@
         let dailyData = [];
         let processedData = {};
         let showMoreStates = {}; // 각 카테고리별 더보기 상태 저장
+        let cardShowMoreStates = {}; // 전체 보기에서 각 카드별 더보기 상태
         
-        // 12시 기준 날짜 계산
+        // 12시 기준 날짜 계산 (화면 표시용)
         function getEffectiveDate() {
             const now = new Date();
             const hours = now.getHours();
@@ -845,6 +920,12 @@
             document.getElementById('rankingSection').innerHTML = html;
         }
         
+        // 카드 더보기 토글
+        function toggleCardShowMore(categoryKey) {
+            cardShowMoreStates[categoryKey] = !cardShowMoreStates[categoryKey];
+            displayAllCategories();
+        }
+        
         // 전체 카테고리 표시
         function displayAllCategories() {
             let html = '<div class="all-categories">';
@@ -852,6 +933,7 @@
             Object.keys(categories).forEach(categoryKey => {
                 const category = categories[categoryKey];
                 const rankings = processedData[categoryKey] || [];
+                const isExpanded = cardShowMoreStates[categoryKey] || false;
                 
                 html += `
                     <div class="category-card">
@@ -861,7 +943,7 @@
                                 <span>${category.name}</span>
                             </div>
                         </div>
-                        <div class="mini-ranks">
+                        <div class="mini-ranks ${isExpanded ? 'expanded' : ''}">
                 `;
                 
                 if (rankings.length === 0) {
@@ -882,18 +964,36 @@
                         `;
                     });
                     
-                    // 4명 이상일 때 안내
+                    // 4-5위 추가 (펼쳐진 상태일 때)
                     if (rankings.length > 3) {
-                        html += `<div style="text-align: center; margin-top: 10px; font-size: 12px; color: #999;">
-                            +${rankings.length - 3}명 더
-                        </div>`;
+                        rankings.slice(3, 5).forEach((item, index) => {
+                            html += `
+                                <div class="mini-rank extra ${isExpanded ? '' : ''}">
+                                    <div class="mini-rank-num">${(index + 4).toString().padStart(2, '0')}</div>
+                                    <div class="mini-rank-info">
+                                        <div class="mini-rank-name">${item.name}</div>
+                                        <div class="mini-rank-team">${item.team}</div>
+                                    </div>
+                                    <div class="mini-rank-score">${item.value}</div>
+                                </div>
+                            `;
+                        });
                     }
                 }
                 
-                html += `
-                        </div>
-                    </div>
-                `;
+                html += '</div>';
+                
+                // 더보기 버튼 (4명 이상일 때만)
+                if (rankings.length > 3) {
+                    const extraCount = Math.min(2, rankings.length - 3);
+                    html += `
+                        <button class="card-show-more ${isExpanded ? 'active' : ''}" onclick="toggleCardShowMore('${categoryKey}')">
+                            ${isExpanded ? '▲ 접기' : `▼ 더보기 (${extraCount}명)`}
+                        </button>
+                    `;
+                }
+                
+                html += '</div>';
             });
             
             html += '</div>';
@@ -904,6 +1004,7 @@
         function processData(data) {
             processedData = {};
             showMoreStates = {}; // 더보기 상태 초기화
+            cardShowMoreStates = {}; // 카드 더보기 상태 초기화
             
             // 각 카테고리별 처리
             Object.keys(categories).forEach(categoryKey => {
@@ -928,19 +1029,27 @@
                     .slice(0, 10); // 최대 10명까지만 저장
                     
                 showMoreStates[categoryKey] = false; // 초기값은 접힌 상태
+                cardShowMoreStates[categoryKey] = false; // 카드도 초기값은 접힌 상태
             });
             
             console.log('처리된 데이터:', processedData); // 디버깅용
         }
         
-        // 데이터 로드
+        // 데이터 로드 (KST 기준으로 수정)
         async function loadRankings() {
             const section = document.getElementById('rankingSection');
             section.innerHTML = '<div class="loading">Loading</div>';
             
             try {
+                // KST 기준 오늘 날짜 계산
                 const today = new Date();
-                const dateStr = today.toISOString().split('T')[0];
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+                
+                console.log('조회할 날짜 (KST):', dateStr); // 디버깅용
+                
                 const url = `${supabaseUrl}/rest/v1/performance?date=eq.${dateStr}`;
                 
                 const response = await fetch(url, {
