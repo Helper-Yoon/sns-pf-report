@@ -20,7 +20,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;  /* 1200px → 1400px로 증가 */
             margin: 0 auto;
             padding: 40px 20px;
         }
@@ -263,7 +263,7 @@
         /* 실적 바 */
         .stats-bar {
             display: flex;
-            gap: 15px;
+            gap: 18px;  /* 15px → 18px로 증가 */
             align-items: center;
             padding: 0 20px;
         }
@@ -273,7 +273,7 @@
             flex-direction: column;
             align-items: center;
             flex: 1;
-            min-width: 0;
+            min-width: 65px;  /* 최소 너비 추가하여 프리미엄 텍스트가 잘리지 않도록 */
         }
         
         .stat-label {
@@ -285,6 +285,7 @@
             display: flex;
             align-items: center;
             gap: 3px;
+            white-space: nowrap;  /* 텍스트 줄바꿈 방지 */
         }
         
         .stat-icon {
@@ -680,7 +681,7 @@
                                     <span class="stat-icon">💳</span>
                                     <span>카드</span>
                                 </div>
-                                <div class="stat-value" style="color: #333;">${counselor.card}</div>
+                                <div class="stat-value" style="color: #555;">${counselor.card}</div>  <!-- #333 → #555로 채도 증가 -->
                             </div>
                         </div>
                         
