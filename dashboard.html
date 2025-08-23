@@ -1200,7 +1200,7 @@
         }
 
         // 전역 변수
-        let currentDate = new Date().toISOString().split('T')[0];
+        let currentDate = getKSTDateString(); // KST 기준으로 변경
         let editMode = false;
         let editedData = {};
         let performanceData = {};
@@ -1213,6 +1213,25 @@
         // 새로운 전역 변수들 (주간/주말용)
         let weeklyPerformanceData = {};
         let weekendPerformanceData = {};
+
+        // KST 기준 날짜 문자열 반환 함수
+        function getKSTDateString(date = null) {
+            const targetDate = date ? new Date(date) : new Date();
+            // UTC 시간에 9시간 추가 (KST = UTC+9)
+            const kstDate = new Date(targetDate.getTime() + (9 * 60 * 60 * 1000));
+            return kstDate.toISOString().split('T')[0];
+        }
+
+        // KST 기준 Date 객체 반환 함수
+        function getKSTDate(dateString = null) {
+            if (dateString) {
+                const date = new Date(dateString + 'T00:00:00+09:00');
+                return date;
+            } else {
+                const now = new Date();
+                return new Date(now.getTime() + (9 * 60 * 60 * 1000));
+            }
+        }
 
         // 기본 데이터
         const defaultTeams = {
@@ -1267,9 +1286,10 @@
         };
         const rentalMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', '가전제품'];
 
-        // 날짜 유틸리티 함수들
+        // 날짜 유틸리티 함수들 (KST 기준)
         function getWeekDates(date) {
-            const d = new Date(date);
+            // KST 기준으로 Date 객체 생성
+            const d = new Date(date + 'T00:00:00+09:00');
             const dayOfWeek = d.getDay();
             const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
             
@@ -1277,14 +1297,19 @@
             for (let i = 0; i < 5; i++) {  // 월~금
                 const weekDay = new Date(d);
                 weekDay.setDate(d.getDate() + mondayOffset + i);
-                dates.push(weekDay.toISOString().split('T')[0]);
+                // KST 기준으로 날짜 문자열 생성
+                const year = weekDay.getFullYear();
+                const month = String(weekDay.getMonth() + 1).padStart(2, '0');
+                const day = String(weekDay.getDate()).padStart(2, '0');
+                dates.push(`${year}-${month}-${day}`);
             }
             
             return dates;
         }
 
         function getWeekendDates(date) {
-            const d = new Date(date);
+            // KST 기준으로 Date 객체 생성
+            const d = new Date(date + 'T00:00:00+09:00');
             const dayOfWeek = d.getDay();
             const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
             
@@ -1292,12 +1317,18 @@
             // 토요일
             const saturday = new Date(d);
             saturday.setDate(d.getDate() + mondayOffset + 5);
-            dates.push(saturday.toISOString().split('T')[0]);
+            let year = saturday.getFullYear();
+            let month = String(saturday.getMonth() + 1).padStart(2, '0');
+            let day = String(saturday.getDate()).padStart(2, '0');
+            dates.push(`${year}-${month}-${day}`);
             
             // 일요일
             const sunday = new Date(d);
             sunday.setDate(d.getDate() + mondayOffset + 6);
-            dates.push(sunday.toISOString().split('T')[0]);
+            year = sunday.getFullYear();
+            month = String(sunday.getMonth() + 1).padStart(2, '0');
+            day = String(sunday.getDate()).padStart(2, '0');
+            dates.push(`${year}-${month}-${day}`);
             
             return dates;
         }
@@ -1305,8 +1336,8 @@
         function formatDateRange(dates) {
             if (dates.length === 0) return '';
             
-            const start = new Date(dates[0]);
-            const end = new Date(dates[dates.length - 1]);
+            const start = new Date(dates[0] + 'T00:00:00+09:00');
+            const end = new Date(dates[dates.length - 1] + 'T00:00:00+09:00');
             
             const startStr = `${start.getMonth() + 1}/${start.getDate()}`;
             const endStr = `${end.getMonth() + 1}/${end.getDate()}`;
@@ -3618,15 +3649,16 @@
             loadData();
         }
 
-        // 시간 업데이트
+        // 시간 업데이트 (KST 기준)
         function updateTime() {
-            const now = new Date();
+            const now = getKSTDate(); // KST 기준 현재 시간
             document.getElementById('lastUpdate').textContent = 
                 `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
         }
 
-        // 초기화
+        // 초기화 (KST 기준)
         window.onload = function() {
+            currentDate = getKSTDateString(); // KST 기준으로 다시 설정
             document.getElementById('dateSelector').value = currentDate;
             document.getElementById('currentDate').textContent = currentDate;
             loadData();
