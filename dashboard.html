@@ -1237,12 +1237,149 @@
     </div>
 
     <script>
-        // Supabase 초기화
+        console.log('=== 스크립트 시작 ===');
+        
+        // 전역 변수 선언
         const SUPABASE_URL = 'https://bhtqjipygkawoyieidgp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
         
         let supabase = null;
         let isConnected = false;
+        let currentDate = new Date().toISOString().split('T')[0];
+        let editMode = false;
+        let editedData = {};
+        let performanceData = {};
+        let teams = {};
+        let metrics = [];
+        let visibleMetrics = [];
+        let metricToDb = {};
+        let dailyTargets = {};
+        let weeklyStartDate = null;
+        let weeklyData = {};
+        let weekendStartDate = null;
+        let weekendData = {};
+        
+        console.log('전역 변수 선언 완료');
+        
+        // 기본 데이터
+        const defaultTeams = {
+            '1파트': {
+                members: [
+                    { name: '이종민', tenure: '1년이상' },
+                    { name: '김민수', tenure: '6개월이상' },
+                    { name: '박지영', tenure: '3개월이상' }
+                ]
+            },
+            '2파트': {
+                members: [
+                    { name: '윤도우리', tenure: '1년이상' },
+                    { name: '최서연', tenure: '9개월이상' },
+                    { name: '정태호', tenure: '3개월미만' }
+                ]
+            },
+            '3파트': {
+                members: [
+                    { name: '김진후', tenure: '1년이상' },
+                    { name: '이수진', tenure: '6개월이상' },
+                    { name: '강민정', tenure: '3개월이상' }
+                ]
+            },
+            '4파트': {
+                members: [
+                    { name: '이민주', tenure: '1년이상' },
+                    { name: '박준혁', tenure: '6개월이상' },
+                    { name: '송지은', tenure: '3개월미만' }
+                ]
+            },
+            '5파트': {
+                members: [
+                    { name: '차정환', tenure: '1년이상' },
+                    { name: '한예슬', tenure: '9개월이상' },
+                    { name: '노현우', tenure: '3개월이상' }
+                ]
+            }
+        };
+
+        const defaultMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', 'SK매직', '가전제품', '제휴카드'];
+        const defaultMetricToDb = {
+            '유심갯수': 'sim_count',
+            'SK 인터넷': 'sk_internet',
+            '프리미엄': 'premium',
+            '에센스': 'essence',
+            'IOT': 'iot',
+            '1G': 'one_g',
+            'SK매직': 'sk_magic',
+            '가전제품': 'appliance',
+            '제휴카드': 'affiliate_card'
+        };
+        const rentalMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', '가전제품'];
+        
+        console.log('기본 데이터 정의 완료');
+        
+        // 중요 함수들을 즉시 window에 정의
+        window.loadData = function() {
+            console.log('loadData 함수 호출됨');
+            alert('loadData 함수가 호출되었습니다!');
+        };
+        
+        window.toggleEditMode = function() {
+            console.log('toggleEditMode 함수 호출됨');
+            alert('toggleEditMode 함수가 호출되었습니다!');
+        };
+        
+        window.openAttendanceModal = function() {
+            console.log('openAttendanceModal 함수 호출됨');
+            alert('openAttendanceModal 함수가 호출되었습니다!');
+        };
+        
+        window.openMetricsModal = function() {
+            console.log('openMetricsModal 함수 호출됨');
+            alert('openMetricsModal 함수가 호출되었습니다!');
+        };
+        
+        window.openTargetModal = function() {
+            console.log('openTargetModal 함수 호출됨');
+            alert('openTargetModal 함수가 호출되었습니다!');
+        };
+        
+        window.openTeamModal = function() {
+            console.log('openTeamModal 함수 호출됨');
+            alert('openTeamModal 함수가 호출되었습니다!');
+        };
+        
+        window.openSkillModal = function() {
+            console.log('openSkillModal 함수 호출됨');
+            alert('openSkillModal 함수가 호출되었습니다!');
+        };
+        
+        window.openWeeklyModal = function() {
+            console.log('openWeeklyModal 함수 호출됨');
+            alert('openWeeklyModal 함수가 호출되었습니다!');
+        };
+        
+        window.openWeekendModal = function() {
+            console.log('openWeekendModal 함수 호출됨');
+            alert('openWeekendModal 함수가 호출되었습니다!');
+        };
+        
+        window.exportToExcel = function() {
+            console.log('exportToExcel 함수 호출됨');
+            alert('exportToExcel 함수가 호출되었습니다!');
+        };
+        
+        window.exportToJPG = function() {
+            console.log('exportToJPG 함수 호출됨');
+            alert('exportToJPG 함수가 호출되었습니다!');
+        };
+        
+        window.changeDate = function() {
+            console.log('changeDate 함수 호출됨');
+            alert('changeDate 함수가 호출되었습니다!');
+        };
+        
+        console.log('=== 테스트 함수 정의 완료 ===');
+        console.log('버튼을 클릭해서 함수가 호출되는지 확인하세요.');
+    </script>
         
         // Supabase 초기화를 window.onload 후로 지연
         function initSupabase() {
@@ -1371,22 +1508,22 @@
             return `${date.getMonth() + 1}/${date.getDate()}(${days[date.getDay()]})`;
         }
 
-        // 휴무 상태 관리
-        const AttendanceManager = {
-            getDateAttendance: (date) => {
+        // 휴무 상태 관리 - window 객체에 직접 할당
+        window.AttendanceManager = {
+            getDateAttendance: function(date) {
                 const stored = localStorage.getItem('attendance_status');
                 if (!stored) return {};
                 const allData = JSON.parse(stored);
                 return allData[date] || {};
             },
 
-            getPersonAttendance: (date, teamName, memberName) => {
-                const dateData = AttendanceManager.getDateAttendance(date);
+            getPersonAttendance: function(date, teamName, memberName) {
+                const dateData = this.getDateAttendance(date);
                 const key = `${teamName}_${memberName}`;
                 return dateData[key] || 'normal';
             },
 
-            setAttendance: (date, teamName, memberName, status) => {
+            setAttendance: function(date, teamName, memberName, status) {
                 const stored = localStorage.getItem('attendance_status');
                 const allData = stored ? JSON.parse(stored) : {};
                 
@@ -1409,7 +1546,7 @@
                 localStorage.setItem('attendance_status', JSON.stringify(allData));
             },
 
-            getStatusText: (status) => {
+            getStatusText: function(status) {
                 const texts = {
                     'off': '휴무',
                     'annual': '연차',
@@ -4267,6 +4404,52 @@
             document.getElementById('lastUpdate').textContent = 
                 `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
         }
+
+        // 모든 함수를 window 객체에 할당하여 전역 접근 가능하게 만들기
+        window.loadData = loadData;
+        window.toggleEditMode = toggleEditMode;
+        window.openAttendanceModal = openAttendanceModal;
+        window.openMetricsModal = openMetricsModal;
+        window.openTargetModal = openTargetModal;
+        window.openTeamModal = openTeamModal;
+        window.openSkillModal = openSkillModal;
+        window.openWeeklyModal = openWeeklyModal;
+        window.openWeekendModal = openWeekendModal;
+        window.exportToExcel = exportToExcel;
+        window.exportToJPG = exportToJPG;
+        window.changeDate = changeDate;
+        window.retryConnection = retryConnection;
+        window.closeAttendanceModal = closeAttendanceModal;
+        window.changeAttendance = changeAttendance;
+        window.closeMetricsModal = closeMetricsModal;
+        window.switchMetricsTab = switchMetricsTab;
+        window.toggleMetricVisibility = toggleMetricVisibility;
+        window.addMetric = addMetric;
+        window.deleteMetric = deleteMetric;
+        window.saveMetrics = saveMetrics;
+        window.closeTargetModal = closeTargetModal;
+        window.updateTargetCard = updateTargetCard;
+        window.saveTargets = saveTargets;
+        window.closeTeamModal = closeTeamModal;
+        window.selectTeam = selectTeam;
+        window.addMember = addMember;
+        window.deleteMember = deleteMember;
+        window.saveTeams = saveTeams;
+        window.closeSkillModal = closeSkillModal;
+        window.changeSkill = changeSkill;
+        window.updateValue = updateValue;
+        window.closeWeeklyModal = closeWeeklyModal;
+        window.previousWeek = previousWeek;
+        window.currentWeek = currentWeek;
+        window.nextWeek = nextWeek;
+        window.exportWeeklyExcel = exportWeeklyExcel;
+        window.exportWeeklyJPG = exportWeeklyJPG;
+        window.closeWeekendModal = closeWeekendModal;
+        window.previousWeekend = previousWeekend;
+        window.currentWeekend = currentWeekend;
+        window.nextWeekend = nextWeekend;
+        window.exportWeekendExcel = exportWeekendExcel;
+        window.exportWeekendJPG = exportWeekendJPG;
 
         // 초기화
         window.onload = function() {
