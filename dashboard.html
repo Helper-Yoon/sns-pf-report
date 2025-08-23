@@ -1452,19 +1452,25 @@
         // 설정 로드
         async function loadConfig() {
             if (!supabase) {
-                console.log('Supabase 연결 없음. 기본 설정 사용');
-                teams = defaultTeams;
-                metrics = defaultMetrics;
-                visibleMetrics = defaultMetrics;
-                metricToDb = defaultMetricToDb;
-                dailyTargets = {};
-                defaultMetrics.forEach(m => dailyTargets[m] = 100);
-                document.getElementById('connectionStatus').innerHTML = '로컬 모드';
-                return;
+                console.error('Supabase 연결 실패');
+                showConnectionError();
+                return false;
             }
 
             try {
                 console.log('Supabase에서 설정 로드 시작...');
+                
+                // 연결 테스트
+                const { data: testData, error: testError } = await supabase
+                    .from('config')
+                    .select('type')
+                    .limit(1);
+                
+                if (testError) {
+                    console.error('데이터베이스 연결 실패:', testError.message);
+                    showConnectionError();
+                    return false;
+                }
                 
                 // 팀 정보 로드
                 const { data: teamsData, error: teamsError } = await supabase
@@ -1473,16 +1479,23 @@
                     .eq('type', 'teams')
                     .single();
 
-                if (teamsError) {
-                    console.log('팀 정보 로드 오류:', teamsError.message);
+                if (teamsError && teamsError.code !== 'PGRST116') {
+                    console.error('팀 정보 로드 오류:', teamsError.message);
+                    showConnectionError();
+                    return false;
                 }
 
-                if (teamsData && !teamsError) {
+                if (teamsData) {
                     teams = teamsData.data;
                     console.log('팀 정보 로드 성공');
                 } else {
+                    // 기본 팀 정보 저장
                     teams = defaultTeams;
-                    console.log('기본 팀 정보 사용');
+                    await supabase.from('config').insert({
+                        type: 'teams',
+                        data: defaultTeams
+                    });
+                    console.log('기본 팀 정보 생성');
                 }
 
                 // 메트릭 정보 로드
@@ -1492,11 +1505,13 @@
                     .eq('type', 'metrics')
                     .single();
 
-                if (metricsError) {
-                    console.log('메트릭 정보 로드 오류:', metricsError.message);
+                if (metricsError && metricsError.code !== 'PGRST116') {
+                    console.error('메트릭 정보 로드 오류:', metricsError.message);
+                    showConnectionError();
+                    return false;
                 }
 
-                if (metricsData && !metricsError) {
+                if (metricsData) {
                     const mapping = {};
                     const metricsList = [];
                     metricsData.data.items.forEach(item => {
@@ -1507,9 +1522,19 @@
                     metrics = metricsList;
                     console.log('메트릭 정보 로드 성공');
                 } else {
+                    // 기본 메트릭 정보 저장
                     metrics = defaultMetrics;
                     metricToDb = defaultMetricToDb;
-                    console.log('기본 메트릭 정보 사용');
+                    const metricsItems = metrics.map(metric => ({
+                        name: metric,
+                        db_column: metricToDb[metric],
+                        is_default: true
+                    }));
+                    await supabase.from('config').insert({
+                        type: 'metrics',
+                        data: { items: metricsItems }
+                    });
+                    console.log('기본 메트릭 정보 생성');
                 }
 
                 // 설정 로드
@@ -1519,42 +1544,118 @@
                     .eq('type', 'settings')
                     .single();
 
-                if (settingsError) {
-                    console.log('설정 정보 로드 오류:', settingsError.message);
+                if (settingsError && settingsError.code !== 'PGRST116') {
+                    console.error('설정 정보 로드 오류:', settingsError.message);
+                    showConnectionError();
+                    return false;
                 }
 
-                if (settingsData && settingsData.data && !settingsError) {
+                if (settingsData && settingsData.data) {
                     visibleMetrics = settingsData.data.visible_metrics || metrics;
                     dailyTargets = settingsData.data.daily_targets || {};
                     console.log('설정 정보 로드 성공');
                 } else {
+                    // 기본 설정 저장
                     visibleMetrics = metrics;
                     dailyTargets = {};
                     metrics.forEach(m => dailyTargets[m] = 100);
-                    console.log('기본 설정 정보 사용');
+                    await supabase.from('config').insert({
+                        type: 'settings',
+                        data: {
+                            visible_metrics: visibleMetrics,
+                            daily_targets: dailyTargets
+                        }
+                    });
+                    console.log('기본 설정 생성');
                 }
 
                 isConnected = true;
                 document.getElementById('connectionStatus').innerHTML = '서버 연결됨';
                 console.log('모든 설정 로드 완료');
+                return true;
             } catch (error) {
                 console.error('설정 로드 오류:', error);
-                teams = defaultTeams;
-                metrics = defaultMetrics;
-                visibleMetrics = defaultMetrics;
-                metricToDb = defaultMetricToDb;
-                dailyTargets = {};
-                metrics.forEach(m => dailyTargets[m] = 100);
-                document.getElementById('connectionStatus').innerHTML = '로컬 모드';
+                showConnectionError();
+                return false;
             }
+        }
+
+        // 연결 오류 표시
+        function showConnectionError() {
+            isConnected = false;
+            document.getElementById('connectionStatus').innerHTML = '연결 실패';
+            
+            const content = document.getElementById('dashboardContent');
+            content.innerHTML = `
+                <div style="text-align: center; padding: 100px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 30px;">⚠️</div>
+                    <h2 style="font-size: 28px; margin-bottom: 20px; color: #FF6B6B;">데이터베이스 연결 실패</h2>
+                    <p style="font-size: 16px; color: #B0B0B0; margin-bottom: 30px;">
+                        Supabase 데이터베이스에 연결할 수 없습니다.<br>
+                        인터넷 연결과 데이터베이스 설정을 확인해주세요.
+                    </p>
+                    <div style="background: #111; border: 1px solid #333; padding: 20px; max-width: 600px; margin: 0 auto; text-align: left;">
+                        <h3 style="color: #4A9EFF; margin-bottom: 15px;">해결 방법:</h3>
+                        <ol style="color: #E0E0E0; line-height: 1.8;">
+                            <li>인터넷 연결 상태를 확인하세요</li>
+                            <li>Supabase 프로젝트가 활성화되어 있는지 확인하세요</li>
+                            <li>config와 performance 테이블이 생성되어 있는지 확인하세요</li>
+                            <li>RLS(Row Level Security) 정책이 올바르게 설정되어 있는지 확인하세요</li>
+                        </ol>
+                    </div>
+                    <button class="btn btn-primary" onclick="retryConnection()" style="margin-top: 30px;">
+                        다시 시도
+                    </button>
+                </div>
+            `;
+            
+            // 모든 버튼 비활성화
+            disableAllButtons();
+        }
+
+        // 버튼 비활성화
+        function disableAllButtons() {
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => {
+                if (!btn.textContent.includes('다시 시도')) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                }
+            });
+        }
+
+        // 버튼 활성화
+        function enableAllButtons() {
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            });
+        }
+
+        // 연결 재시도
+        async function retryConnection() {
+            const content = document.getElementById('dashboardContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>연결 재시도 중...</p></div>';
+            
+            // Supabase 재초기화
+            const supabaseInitialized = initSupabase();
+            if (!supabaseInitialized) {
+                showConnectionError();
+                return;
+            }
+            
+            // 데이터 다시 로드
+            await loadData();
         }
 
         // 실적 데이터 로드
         async function loadPerformanceData() {
             if (!supabase) {
-                console.log('Supabase 연결 없음. 빈 데이터 사용');
-                performanceData = {};
-                return;
+                console.error('Supabase 연결 없음');
+                return false;
             }
 
             try {
@@ -1566,24 +1667,25 @@
 
                 if (error) {
                     console.error('실적 데이터 로드 오류:', error.message);
-                    performanceData = {};
-                    return;
+                    return false;
                 }
 
-                if (data && !error) {
+                if (data) {
                     performanceData = {};
                     data.forEach(record => {
                         const key = `${record.team}_${record.name}`;
                         performanceData[key] = record;
                     });
                     console.log(`실적 데이터 ${data.length}개 로드 완료`);
+                    return true;
                 } else {
                     performanceData = {};
                     console.log('실적 데이터 없음');
+                    return true;
                 }
             } catch (error) {
                 console.error('실적 데이터 로드 오류:', error);
-                performanceData = {};
+                return false;
             }
         }
 
@@ -1593,10 +1695,9 @@
             weeklyData = {};
             
             if (!supabase) {
-                dates.forEach(date => {
-                    weeklyData[date] = {};
-                });
-                return;
+                console.error('Supabase 연결 없음');
+                alert('데이터베이스 연결이 필요합니다.');
+                return false;
             }
 
             try {
@@ -1605,7 +1706,13 @@
                     .select('*')
                     .in('date', dates);
 
-                if (data && !error) {
+                if (error) {
+                    console.error('주간 데이터 로드 오류:', error);
+                    alert('주간 데이터를 불러올 수 없습니다.');
+                    return false;
+                }
+
+                if (data) {
                     dates.forEach(date => {
                         weeklyData[date] = {};
                     });
@@ -1617,12 +1724,12 @@
                         const key = `${record.team}_${record.name}`;
                         weeklyData[record.date][key] = record;
                     });
+                    return true;
                 }
             } catch (error) {
                 console.error('주간 데이터 로드 오류:', error);
-                dates.forEach(date => {
-                    weeklyData[date] = {};
-                });
+                alert('주간 데이터를 불러올 수 없습니다.');
+                return false;
             }
         }
 
@@ -1632,6 +1739,8 @@
             weekendData = {};
             
             if (!supabase) {
+                console.error('Supabase 연결 없음');
+                alert('데이터베이스 연결이 필요합니다.');
                 return weekendData;
             }
 
@@ -1641,7 +1750,13 @@
                     .select('*')
                     .in('date', dates);
 
-                if (data && !error) {
+                if (error) {
+                    console.error('주말 데이터 로드 오류:', error);
+                    alert('주말 데이터를 불러올 수 없습니다.');
+                    return weekendData;
+                }
+
+                if (data) {
                     data.forEach(record => {
                         const key = `${record.team}_${record.name}`;
                         if (!weekendData[key]) {
@@ -1663,6 +1778,7 @@
                 }
             } catch (error) {
                 console.error('주말 데이터 로드 오류:', error);
+                alert('주말 데이터를 불러올 수 없습니다.');
             }
             
             return weekendData;
@@ -1673,8 +1789,27 @@
             const content = document.getElementById('dashboardContent');
             content.innerHTML = '<div class="loading"><div class="spinner"></div><p>데이터를 불러오는 중...</p></div>';
             
-            await loadConfig();
-            await loadPerformanceData();
+            // Supabase 연결 확인
+            if (!supabase) {
+                showConnectionError();
+                return;
+            }
+            
+            // 설정 로드
+            const configLoaded = await loadConfig();
+            if (!configLoaded) {
+                return; // 설정 로드 실패 시 중단
+            }
+            
+            // 실적 데이터 로드
+            const performanceLoaded = await loadPerformanceData();
+            if (!performanceLoaded) {
+                showConnectionError();
+                return; // 실적 데이터 로드 실패 시 중단
+            }
+            
+            // 모든 데이터 로드 성공 시 대시보드 렌더링
+            enableAllButtons();
             renderDashboard();
             updateTime();
         }
@@ -1821,6 +1956,10 @@
 
         // 주간 실적 모달
         function openWeeklyModal() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             weeklyStartDate = getWeekDates(currentDate)[0];
             renderWeeklyModal();
             document.getElementById('weeklyModal').classList.add('active');
@@ -1839,7 +1978,11 @@
             const content = document.getElementById('weeklyModalContent');
             content.innerHTML = '<div class="loading"><div class="spinner"></div><p>주간 데이터를 불러오는 중...</p></div>';
             
-            await loadWeeklyData(weeklyStartDate);
+            const success = await loadWeeklyData(weeklyStartDate);
+            if (!success) {
+                content.innerHTML = '<div style="text-align: center; padding: 50px; color: #FF6B6B;">데이터를 불러올 수 없습니다.</div>';
+                return;
+            }
             
             // 주간 합산 데이터 계산
             const weeklyTotalData = {};
@@ -2006,6 +2149,10 @@
         }
 
         function previousWeek() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             const d = new Date(weeklyStartDate);
             d.setDate(d.getDate() - 7);
             weeklyStartDate = d.toISOString().split('T')[0];
@@ -2013,11 +2160,19 @@
         }
 
         function currentWeek() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             weeklyStartDate = getWeekDates(new Date())[0];
             renderWeeklyModal();
         }
 
         function nextWeek() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             const d = new Date(weeklyStartDate);
             d.setDate(d.getDate() + 7);
             weeklyStartDate = d.toISOString().split('T')[0];
@@ -2026,6 +2181,11 @@
 
         // 주간 엑셀 내보내기
         function exportWeeklyExcel() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
+            
             if (typeof XLSX === 'undefined') {
                 alert('엑셀 라이브러리를 로드할 수 없습니다.');
                 return;
@@ -2143,6 +2303,11 @@
 
         // 주간 JPG 내보내기
         async function exportWeeklyJPG() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
+            
             const dates = getWeekDates(weeklyStartDate);
             const endDate = dates[dates.length - 1];
             
@@ -2574,6 +2739,10 @@
         }
 
         function previousWeekend() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             const d = new Date(weekendStartDate);
             d.setDate(d.getDate() - 7);
             weekendStartDate = getWeekendDates(d.toISOString().split('T')[0])[0];
@@ -2581,11 +2750,19 @@
         }
 
         function currentWeekend() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             weekendStartDate = getWeekendDates(new Date().toISOString().split('T')[0])[0];
             renderWeekendModal();
         }
 
         function nextWeekend() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             const d = new Date(weekendStartDate);
             d.setDate(d.getDate() + 7);
             weekendStartDate = getWeekendDates(d.toISOString().split('T')[0])[0];
@@ -2594,6 +2771,11 @@
 
         // 주말 엑셀 내보내기
         async function exportWeekendExcel() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
+            
             if (typeof XLSX === 'undefined') {
                 alert('엑셀 라이브러리를 로드할 수 없습니다.');
                 return;
@@ -2699,6 +2881,11 @@
 
         // 주말 실적 JPG 내보내기
         async function exportWeekendJPG() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
+            
             const weekendDates = getWeekendDates(weekendStartDate);
             
             if (Object.keys(weekendData).length === 0) {
@@ -3055,6 +3242,11 @@
 
         // 수정 모드 토글
         function toggleEditMode() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
+            
             if (editMode) {
                 if (Object.keys(editedData).length > 0) {
                     if (confirm('수정한 데이터를 저장하시겠습니까?')) {
@@ -3093,7 +3285,12 @@
         // 데이터 저장
         async function saveData() {
             if (!supabase) {
-                alert('데이터베이스 연결이 없어 저장할 수 없습니다.');
+                alert('데이터베이스 연결이 없어 저장할 수 없습니다.\n페이지를 새로고침하여 다시 시도해주세요.');
+                return;
+            }
+
+            if (!isConnected) {
+                alert('서버 연결이 끊어졌습니다.\n페이지를 새로고침하여 다시 시도해주세요.');
                 return;
             }
 
@@ -3138,12 +3335,16 @@
                 renderDashboard();
             } catch (error) {
                 console.error('저장 오류:', error);
-                alert('데이터 저장 중 오류가 발생했습니다.');
+                alert('데이터 저장 중 오류가 발생했습니다.\n' + error.message);
             }
         }
 
         // 휴무 관리 모달
         function openAttendanceModal() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             const modal = document.getElementById('attendanceModal');
             document.getElementById('attendanceModalDate').textContent = currentDate;
             
@@ -3196,6 +3397,10 @@
         let tempVisibleMetrics = [];
 
         function openMetricsModal() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             tempVisibleMetrics = [...visibleMetrics];
             renderMetricsModal();
             document.getElementById('metricsModal').classList.add('active');
@@ -3293,35 +3498,41 @@
         }
 
         async function saveMetrics() {
+            if (!supabase || !isConnected) {
+                alert('데이터베이스 연결이 없어 저장할 수 없습니다.');
+                return;
+            }
+            
             visibleMetrics = [...tempVisibleMetrics];
             
-            if (supabase) {
-                try {
-                    // 메트릭 정보 저장
-                    const metricsData = {
-                        type: 'metrics',
-                        data: {
-                            items: metrics.map(metric => ({
-                                name: metric,
-                                db_column: metricToDb[metric],
-                                is_default: defaultMetrics.includes(metric)
-                            }))
-                        }
-                    };
-                    await supabase.from('config').upsert(metricsData, { onConflict: 'type' });
+            try {
+                // 메트릭 정보 저장
+                const metricsData = {
+                    type: 'metrics',
+                    data: {
+                        items: metrics.map(metric => ({
+                            name: metric,
+                            db_column: metricToDb[metric],
+                            is_default: defaultMetrics.includes(metric)
+                        }))
+                    }
+                };
+                await supabase.from('config').upsert(metricsData, { onConflict: 'type' });
 
-                    // 설정 저장
-                    const settingsData = {
-                        type: 'settings',
-                        data: {
-                            visible_metrics: visibleMetrics,
-                            daily_targets: dailyTargets
-                        }
-                    };
-                    await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
-                } catch (error) {
-                    console.error('저장 오류:', error);
-                }
+                // 설정 저장
+                const settingsData = {
+                    type: 'settings',
+                    data: {
+                        visible_metrics: visibleMetrics,
+                        daily_targets: dailyTargets
+                    }
+                };
+                await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
+                
+                alert('항목 설정이 저장되었습니다.');
+            } catch (error) {
+                console.error('저장 오류:', error);
+                alert('저장 중 오류가 발생했습니다.');
             }
             
             closeMetricsModal();
@@ -3330,6 +3541,10 @@
 
         // 목표 설정 모달
         function openTargetModal() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             const grandTotals = calculateGrandTotals();
             let html = '<div class="target-cards-grid">';
             
@@ -3488,6 +3703,11 @@
         }
 
         async function saveTargets() {
+            if (!supabase || !isConnected) {
+                alert('데이터베이스 연결이 없어 저장할 수 없습니다.');
+                return;
+            }
+            
             visibleMetrics.forEach(metric => {
                 const input = document.getElementById(`target_${metric}`);
                 if (input) {
@@ -3496,23 +3716,19 @@
                 }
             });
             
-            if (supabase) {
-                try {
-                    const settingsData = {
-                        type: 'settings',
-                        data: {
-                            visible_metrics: visibleMetrics,
-                            daily_targets: dailyTargets
-                        }
-                    };
-                    await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
-                    alert('목표가 저장되었습니다.');
-                } catch (error) {
-                    console.error('저장 오류:', error);
-                    alert('저장 중 오류가 발생했습니다.');
-                }
-            } else {
-                alert('목표가 로컬에 저장되었습니다.');
+            try {
+                const settingsData = {
+                    type: 'settings',
+                    data: {
+                        visible_metrics: visibleMetrics,
+                        daily_targets: dailyTargets
+                    }
+                };
+                await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
+                alert('목표가 저장되었습니다.');
+            } catch (error) {
+                console.error('저장 오류:', error);
+                alert('저장 중 오류가 발생했습니다.');
             }
             
             closeTargetModal();
@@ -3524,6 +3740,10 @@
         let tempTeams = {};
 
         function openTeamModal() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             tempTeams = JSON.parse(JSON.stringify(teams));
             selectedTeam = Object.keys(teams)[0] || '';
             
@@ -3584,17 +3804,22 @@
         }
 
         async function saveTeams() {
+            if (!supabase || !isConnected) {
+                alert('데이터베이스 연결이 없어 저장할 수 없습니다.');
+                return;
+            }
+            
             teams = tempTeams;
             
-            if (supabase) {
-                try {
-                    await supabase.from('config').upsert({
-                        type: 'teams',
-                        data: teams
-                    }, { onConflict: 'type' });
-                } catch (error) {
-                    console.error('저장 오류:', error);
-                }
+            try {
+                await supabase.from('config').upsert({
+                    type: 'teams',
+                    data: teams
+                }, { onConflict: 'type' });
+                alert('팀 정보가 저장되었습니다.');
+            } catch (error) {
+                console.error('저장 오류:', error);
+                alert('저장 중 오류가 발생했습니다.');
             }
             
             closeTeamModal();
@@ -3604,6 +3829,10 @@
 
         // 스킬 모달
         function openSkillModal() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
             const modal = document.getElementById('skillModal');
             const modalDate = document.getElementById('modalDate');
             const content = document.getElementById('skillModalContent');
@@ -3662,6 +3891,11 @@
 
         // 엑셀 내보내기
         function exportToExcel() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
+            
             if (typeof XLSX === 'undefined') {
                 alert('엑셀 라이브러리를 로드할 수 없습니다.');
                 return;
@@ -3730,6 +3964,11 @@
 
         // JPG 내보내기
         async function exportToJPG() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                return;
+            }
+            
             const teamColors = {
                 '1파트': '#E2F0D9',
                 '2파트': '#DDEBF7',
@@ -4010,6 +4249,12 @@
 
         // 날짜 변경
         function changeDate() {
+            if (!isConnected) {
+                alert('데이터베이스 연결이 필요합니다.');
+                document.getElementById('dateSelector').value = currentDate;
+                return;
+            }
+            
             const selector = document.getElementById('dateSelector');
             currentDate = selector.value;
             document.getElementById('currentDate').textContent = currentDate;
@@ -4025,16 +4270,17 @@
 
         // 초기화
         window.onload = function() {
-            // Supabase 초기화
-            const supabaseInitialized = initSupabase();
-            if (!supabaseInitialized) {
-                console.warn('Supabase 연결 실패. 로컬 모드로 실행합니다.');
-                document.getElementById('connectionStatus').innerHTML = '로컬 모드';
-            }
-            
             // 날짜 설정
             document.getElementById('dateSelector').value = currentDate;
             document.getElementById('currentDate').textContent = currentDate;
+            
+            // Supabase 초기화
+            const supabaseInitialized = initSupabase();
+            if (!supabaseInitialized) {
+                console.error('Supabase 초기화 실패');
+                showConnectionError();
+                return;
+            }
             
             // 데이터 로드
             loadData();
