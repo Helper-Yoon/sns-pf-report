@@ -160,6 +160,26 @@
             color: #000;
         }
 
+        .btn-weekly {
+            color: #9B59B6;
+            border-color: #9B59B6;
+        }
+
+        .btn-weekly:hover {
+            background: #9B59B6;
+            color: #000;
+        }
+
+        .btn-weekend {
+            color: #E74C3C;
+            border-color: #E74C3C;
+        }
+
+        .btn-weekend:hover {
+            background: #E74C3C;
+            color: #000;
+        }
+
         .date-selector {
             display: flex;
             align-items: center;
@@ -300,6 +320,61 @@
             font-size: 16px;
         }
 
+        /* Weekly Report Styles */
+        .weekly-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .weekly-table th {
+            background: #111;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 12px;
+            color: #B0B0B0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #333;
+            font-weight: 500;
+        }
+
+        .weekly-table td {
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid #222;
+            background: #000;
+            color: #E0E0E0;
+        }
+
+        .weekly-table .day-header {
+            background: #1A1A1A;
+            color: #4A9EFF;
+            font-weight: 600;
+        }
+
+        .weekly-table .team-header-cell {
+            background: #0A0A0A;
+            color: #FFB347;
+            font-weight: 600;
+        }
+
+        .weekly-table .total-row td {
+            background: #1A1A1A;
+            color: #4ADE80;
+            font-weight: 600;
+            border-top: 2px solid #333;
+        }
+
+        .weekly-table .grand-total td {
+            background: #2A2A2A;
+            color: #FFB347;
+            font-weight: 700;
+            font-size: 14px;
+            border-top: 3px solid #444;
+        }
+
         /* Attendance styles */
         .attendance-off td,
         .attendance-annual td,
@@ -387,6 +462,11 @@
             max-height: 80vh;
             overflow-y: auto;
             width: 90%;
+        }
+
+        .modal-content.wide {
+            max-width: 95%;
+            width: 95%;
         }
 
         .modal-header {
@@ -943,6 +1023,8 @@
             <button class="btn btn-warning" onclick="openTargetModal()">목표설정</button>
             <button class="btn" onclick="openTeamModal()" style="color: #BA68C8; border-color: #BA68C8;">상담사</button>
             <button class="btn" onclick="openSkillModal()" style="color: #FF8A65; border-color: #FF8A65;">스킬관리</button>
+            <button class="btn btn-weekly" onclick="openWeeklyModal()">주간실적</button>
+            <button class="btn btn-weekend" onclick="openWeekendModal()">주말실적</button>
             <button class="btn btn-info" onclick="exportToExcel()">엑셀</button>
             <button class="btn btn-success" onclick="exportToJPG()">JPG</button>
             
@@ -960,6 +1042,60 @@
             <div class="loading">
                 <div class="spinner"></div>
                 <p>데이터를 불러오는 중...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 주간 실적 모달 -->
+    <div id="weeklyModal" class="modal">
+        <div class="modal-content wide">
+            <span class="modal-close" onclick="closeWeeklyModal()">×</span>
+            <div class="modal-header">주간 실적 보고서 - <span id="weeklyModalDate"></span></div>
+            
+            <div style="margin-bottom: 20px; text-align: center;">
+                <button class="btn btn-primary" onclick="previousWeek()">◀ 이전 주</button>
+                <button class="btn btn-primary" onclick="currentWeek()" style="margin: 0 10px;">이번 주</button>
+                <button class="btn btn-primary" onclick="nextWeek()">다음 주 ▶</button>
+            </div>
+            
+            <div id="weeklyModalContent" style="overflow-x: auto;">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>주간 데이터를 불러오는 중...</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-success" onclick="exportWeeklyExcel()">주간 엑셀</button>
+                <button class="btn btn-warning" onclick="exportWeeklyJPG()">주간 JPG</button>
+                <button class="btn" onclick="closeWeeklyModal()" style="border-color: #666; color: #666; margin-left: 10px;">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 주말 실적 모달 -->
+    <div id="weekendModal" class="modal">
+        <div class="modal-content wide">
+            <span class="modal-close" onclick="closeWeekendModal()">×</span>
+            <div class="modal-header">주말 실적 보고서 - <span id="weekendModalDate"></span></div>
+            
+            <div style="margin-bottom: 20px; text-align: center;">
+                <button class="btn btn-primary" onclick="previousWeekend()">◀ 이전 주말</button>
+                <button class="btn btn-primary" onclick="currentWeekend()" style="margin: 0 10px;">이번 주말</button>
+                <button class="btn btn-primary" onclick="nextWeekend()">다음 주말 ▶</button>
+            </div>
+            
+            <div id="weekendModalContent" style="overflow-x: auto;">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>주말 데이터를 불러오는 중...</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-success" onclick="exportWeekendExcel()">주말 엑셀</button>
+                <button class="btn btn-warning" onclick="exportWeekendJPG()">주말 JPG</button>
+                <button class="btn" onclick="closeWeekendModal()" style="border-color: #666; color: #666; margin-left: 10px;">닫기</button>
             </div>
         </div>
     </div>
@@ -1127,6 +1263,10 @@
         let visibleMetrics = [];
         let metricToDb = {};
         let dailyTargets = {};
+        let weeklyStartDate = null;
+        let weeklyData = {};
+        let weekendStartDate = null;
+        let weekendData = {};
 
         // 기본 데이터
         const defaultTeams = {
@@ -1180,6 +1320,47 @@
             '제휴카드': 'affiliate_card'
         };
         const rentalMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', '가전제품'];
+
+        // 날짜 관련 유틸리티 함수
+        function getWeekDates(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일 시작
+            const monday = new Date(d.setDate(diff));
+            
+            const dates = [];
+            for (let i = 0; i < 5; i++) { // 월-금까지
+                const current = new Date(monday);
+                current.setDate(monday.getDate() + i);
+                dates.push(current.toISOString().split('T')[0]);
+            }
+            return dates;
+        }
+
+        function getWeekendDates(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            
+            // 토요일 찾기
+            const satDiff = (6 - day + 7) % 7;
+            const saturday = new Date(d);
+            saturday.setDate(d.getDate() + satDiff);
+            
+            // 일요일
+            const sunday = new Date(saturday);
+            sunday.setDate(saturday.getDate() + 1);
+            
+            return [
+                saturday.toISOString().split('T')[0],
+                sunday.toISOString().split('T')[0]
+            ];
+        }
+
+        function formatDateKorean(dateStr) {
+            const date = new Date(dateStr);
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            return `${date.getMonth() + 1}/${date.getDate()}(${days[date.getDay()]})`;
+        }
 
         // 휴무 상태 관리
         const AttendanceManager = {
@@ -1365,6 +1546,87 @@
             }
         }
 
+        // 주간 데이터 로드
+        async function loadWeeklyData(startDate) {
+            const dates = getWeekDates(startDate);
+            weeklyData = {};
+            
+            if (!supabase) {
+                dates.forEach(date => {
+                    weeklyData[date] = {};
+                });
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('performance')
+                    .select('*')
+                    .in('date', dates);
+
+                if (data && !error) {
+                    dates.forEach(date => {
+                        weeklyData[date] = {};
+                    });
+                    
+                    data.forEach(record => {
+                        if (!weeklyData[record.date]) {
+                            weeklyData[record.date] = {};
+                        }
+                        const key = `${record.team}_${record.name}`;
+                        weeklyData[record.date][key] = record;
+                    });
+                }
+            } catch (error) {
+                console.error('주간 데이터 로드 오류:', error);
+                dates.forEach(date => {
+                    weeklyData[date] = {};
+                });
+            }
+        }
+
+        // 주말 데이터 로드
+        async function loadWeekendData(date) {
+            const dates = getWeekendDates(date);
+            weekendData = {};
+            
+            if (!supabase) {
+                return weekendData;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('performance')
+                    .select('*')
+                    .in('date', dates);
+
+                if (data && !error) {
+                    data.forEach(record => {
+                        const key = `${record.team}_${record.name}`;
+                        if (!weekendData[key]) {
+                            weekendData[key] = {};
+                        }
+                        
+                        // 토/일 데이터 합산
+                        Object.keys(metricToDb).forEach(metric => {
+                            const dbCol = metricToDb[metric];
+                            if (!weekendData[key][dbCol]) {
+                                weekendData[key][dbCol] = 0;
+                            }
+                            weekendData[key][dbCol] += record[dbCol] || 0;
+                        });
+                        
+                        weekendData[key].team = record.team;
+                        weekendData[key].name = record.name;
+                    });
+                }
+            } catch (error) {
+                console.error('주말 데이터 로드 오류:', error);
+            }
+            
+            return weekendData;
+        }
+
         // 데이터 로드
         async function loadData() {
             const content = document.getElementById('dashboardContent');
@@ -1514,6 +1776,1191 @@
             html += '</div>';
 
             content.innerHTML = html;
+        }
+
+        // 주간 실적 모달
+        function openWeeklyModal() {
+            weeklyStartDate = getWeekDates(currentDate)[0];
+            renderWeeklyModal();
+            document.getElementById('weeklyModal').classList.add('active');
+        }
+
+        function closeWeeklyModal() {
+            document.getElementById('weeklyModal').classList.remove('active');
+        }
+
+        async function renderWeeklyModal() {
+            const dates = getWeekDates(weeklyStartDate);
+            const endDate = dates[dates.length - 1];
+            document.getElementById('weeklyModalDate').textContent = 
+                `${weeklyStartDate} ~ ${endDate} (월~금 합산)`;
+            
+            const content = document.getElementById('weeklyModalContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>주간 데이터를 불러오는 중...</p></div>';
+            
+            await loadWeeklyData(weeklyStartDate);
+            
+            // 주간 합산 데이터 계산
+            const weeklyTotalData = {};
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                teamInfo.members.forEach(member => {
+                    const key = `${teamName}_${member.name}`;
+                    weeklyTotalData[key] = {
+                        team: teamName,
+                        name: member.name
+                    };
+                    
+                    // 각 메트릭별로 5일간 합산
+                    Object.keys(metricToDb).forEach(metric => {
+                        const dbCol = metricToDb[metric];
+                        let total = 0;
+                        let isRentalSkill = false;
+                        
+                        dates.forEach(date => {
+                            const dayData = weeklyData[date][key] || {};
+                            const skillStatus = getSkillStatus(date, teamName, member.name);
+                            const isRental = skillStatus === 'rental';
+                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                            
+                            if (isRentalMetric) {
+                                isRentalSkill = true;
+                            } else {
+                                total += dayData[dbCol] || 0;
+                            }
+                        });
+                        
+                        weeklyTotalData[key][dbCol] = isRentalSkill ? 'skill_none' : total;
+                    });
+                });
+            });
+            
+            // 일반 대시보드와 동일한 포맷으로 렌더링
+            let html = '';
+            
+            // 전체 요약
+            const grandTotals = {};
+            visibleMetrics.forEach(metric => {
+                grandTotals[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = weeklyTotalData[key];
+                        const dbColumn = metricToDb[metric];
+                        if (data[dbColumn] !== 'skill_none') {
+                            grandTotals[metric] += data[dbColumn] || 0;
+                        }
+                    });
+                });
+            });
+            
+            html += '<div class="summary-section">';
+            html += '<div class="summary-title">주간(월~금) 전체 실적 요약</div>';
+            html += '<div class="metrics-row">';
+            visibleMetrics.forEach(metric => {
+                html += `
+                    <div class="metric-item">
+                        <div class="metric-name">${metric}</div>
+                        <div class="metric-value">${grandTotals[metric] || 0}</div>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+            
+            // 각 팀별 섹션
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                const teamTotals = {};
+                visibleMetrics.forEach(metric => {
+                    teamTotals[metric] = 0;
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = weeklyTotalData[key];
+                        const dbColumn = metricToDb[metric];
+                        if (data[dbColumn] !== 'skill_none') {
+                            teamTotals[metric] += data[dbColumn] || 0;
+                        }
+                    });
+                });
+                
+                // 팀 테이블
+                html += '<div class="team-section">';
+                html += `<div class="team-header">SNS센터 ${teamName} - 주간실적</div>`;
+                html += '<table class="team-table">';
+                html += '<thead><tr>';
+                html += '<th>이름</th><th>근속기간</th>';
+                visibleMetrics.forEach(metric => {
+                    html += `<th>${metric}</th>`;
+                });
+                html += '</tr></thead>';
+                html += '<tbody>';
+                
+                // 팀원별 데이터
+                teamInfo.members.forEach(member => {
+                    const key = `${teamName}_${member.name}`;
+                    const data = weeklyTotalData[key];
+                    
+                    html += '<tr>';
+                    html += `<td>${member.name}</td>`;
+                    html += `<td>${member.tenure}</td>`;
+                    
+                    visibleMetrics.forEach(metric => {
+                        const dbColumn = metricToDb[metric];
+                        const value = data[dbColumn];
+                        
+                        if (value === 'skill_none') {
+                            html += `<td class="skill-rental">스킬없음</td>`;
+                        } else {
+                            html += `<td>${value || 0}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                });
+                
+                // 팀 총합
+                html += '<tr class="team-total">';
+                html += `<td colspan="2">${teamName} 총합</td>`;
+                visibleMetrics.forEach(metric => {
+                    html += `<td>${teamTotals[metric] || 0}</td>`;
+                });
+                html += '</tr>';
+                
+                html += '</tbody></table></div>';
+            });
+            
+            // 하단 요약
+            html += '<div class="bottom-summary">';
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">주간 센터 총합</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                html += `<span class="summary-item">${metric}: ${grandTotals[metric]}</span>`;
+            });
+            html += '</div></div>';
+            
+            // 주간 목표 (일 목표 x 5)
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">주간 목표</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                html += `<span class="summary-item">${metric}: ${weeklyTarget}</span>`;
+            });
+            html += '</div></div>';
+            
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">달성현황</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                const actual = grandTotals[metric];
+                const diff = weeklyTarget - actual;
+                
+                html += `<span class="achievement-status ${diff <= 0 ? 'achievement-success' : 'achievement-fail'}">
+                    ${metric}: ${diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`}
+                </span>`;
+            });
+            html += '</div></div>';
+            html += '</div>';
+            
+            content.innerHTML = html;
+        }
+
+        function previousWeek() {
+            const d = new Date(weeklyStartDate);
+            d.setDate(d.getDate() - 7);
+            weeklyStartDate = d.toISOString().split('T')[0];
+            renderWeeklyModal();
+        }
+
+        function currentWeek() {
+            weeklyStartDate = getWeekDates(new Date())[0];
+            renderWeeklyModal();
+        }
+
+        function nextWeek() {
+            const d = new Date(weeklyStartDate);
+            d.setDate(d.getDate() + 7);
+            weeklyStartDate = d.toISOString().split('T')[0];
+            renderWeeklyModal();
+        }
+
+        // 주간 엑셀 내보내기
+        function exportWeeklyExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('엑셀 라이브러리를 로드할 수 없습니다.');
+                return;
+            }
+
+            const dates = getWeekDates(weeklyStartDate);
+            const endDate = dates[dates.length - 1];
+            
+            // 주간 합산 데이터 계산
+            const weeklyTotalData = {};
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                teamInfo.members.forEach(member => {
+                    const key = `${teamName}_${member.name}`;
+                    weeklyTotalData[key] = { team: teamName, name: member.name };
+                    
+                    Object.keys(metricToDb).forEach(metric => {
+                        const dbCol = metricToDb[metric];
+                        let total = 0;
+                        let isRentalSkill = false;
+                        
+                        dates.forEach(date => {
+                            const dayData = weeklyData[date][key] || {};
+                            const skillStatus = getSkillStatus(date, teamName, member.name);
+                            const isRental = skillStatus === 'rental';
+                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                            
+                            if (isRentalMetric) {
+                                isRentalSkill = true;
+                            } else {
+                                total += dayData[dbCol] || 0;
+                            }
+                        });
+                        
+                        weeklyTotalData[key][dbCol] = isRentalSkill ? 'skill_none' : total;
+                    });
+                });
+            });
+
+            const wb = XLSX.utils.book_new();
+            const data = [
+                [`SNS센터 주간실적보고 - ${weeklyStartDate} ~ ${endDate}`],
+                [],
+                ['소속', '이름', '근속기간', ...visibleMetrics]
+            ];
+
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                teamInfo.members.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const perfData = weeklyTotalData[key];
+                    
+                    const row = [
+                        idx === 0 ? `SNS센터 ${teamName}` : '',
+                        member.name,
+                        member.tenure
+                    ];
+                    
+                    visibleMetrics.forEach(metric => {
+                        const dbColumn = metricToDb[metric];
+                        const value = perfData[dbColumn];
+                        row.push(value === 'skill_none' ? '스킬없음' : value);
+                    });
+                    
+                    data.push(row);
+                });
+                
+                // 팀 총합
+                const teamTotals = {};
+                visibleMetrics.forEach(metric => {
+                    teamTotals[metric] = 0;
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = weeklyTotalData[key];
+                        const dbColumn = metricToDb[metric];
+                        if (data[dbColumn] !== 'skill_none') {
+                            teamTotals[metric] += data[dbColumn] || 0;
+                        }
+                    });
+                });
+                
+                const totalRow = [`${teamName} 총합`, '', '', ...visibleMetrics.map(m => teamTotals[m] || 0)];
+                data.push(totalRow);
+                data.push([]);
+            });
+
+            // 전체 총합
+            const grandTotals = {};
+            visibleMetrics.forEach(metric => {
+                grandTotals[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = weeklyTotalData[key];
+                        const dbColumn = metricToDb[metric];
+                        if (data[dbColumn] !== 'skill_none') {
+                            grandTotals[metric] += data[dbColumn] || 0;
+                        }
+                    });
+                });
+            });
+            
+            data.push(['센터 총합', '', '', ...visibleMetrics.map(m => grandTotals[m] || 0)]);
+            data.push(['주간 목표', '', '', ...visibleMetrics.map(m => (dailyTargets[m] || 100) * 5)]);
+            
+            const achievementRow = ['달성', '', ''];
+            visibleMetrics.forEach(metric => {
+                const diff = ((dailyTargets[metric] || 100) * 5) - grandTotals[metric];
+                achievementRow.push(diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`);
+            });
+            data.push(achievementRow);
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, '주간실적');
+            XLSX.writeFile(wb, `SNS센터_주간실적_${weeklyStartDate.replace(/-/g, '')}_${endDate.replace(/-/g, '')}.xlsx`);
+        }
+
+        // 주간 JPG 내보내기
+        async function exportWeeklyJPG() {
+            const dates = getWeekDates(weeklyStartDate);
+            const endDate = dates[dates.length - 1];
+            
+            // 주간 합산 데이터 계산
+            const weeklyTotalData = {};
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                teamInfo.members.forEach(member => {
+                    const key = `${teamName}_${member.name}`;
+                    weeklyTotalData[key] = { team: teamName, name: member.name };
+                    
+                    Object.keys(metricToDb).forEach(metric => {
+                        const dbCol = metricToDb[metric];
+                        let total = 0;
+                        let isRentalSkill = false;
+                        
+                        dates.forEach(date => {
+                            const dayData = weeklyData[date][key] || {};
+                            const skillStatus = getSkillStatus(date, teamName, member.name);
+                            const isRental = skillStatus === 'rental';
+                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                            
+                            if (isRentalMetric) {
+                                isRentalSkill = true;
+                            } else {
+                                total += dayData[dbCol] || 0;
+                            }
+                        });
+                        
+                        weeklyTotalData[key][dbCol] = isRentalSkill ? 'skill_none' : total;
+                    });
+                });
+            });
+            
+            const teamColors = {
+                '1파트': '#E2F0D9',
+                '2파트': '#DDEBF7',
+                '3파트': '#FCE4D6',
+                '4파트': '#FFF2CC',
+                '5파트': '#D9E2F3'
+            };
+            
+            const teamLeaders = {
+                '1파트': '이종민',
+                '2파트': '윤도우리',
+                '3파트': '김진후',
+                '4파트': '이민주',
+                '5파트': '차정환'
+            };
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
+            const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
+            const rowHeight = 35;
+            let totalRows = 4;
+            Object.values(teams).forEach(team => {
+                totalRows += team.members.length + 1;
+            });
+            totalRows += 6;
+            
+            canvas.width = totalWidth;
+            canvas.height = totalRows * rowHeight + 140;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.font = '13px Malgun Gothic, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            let y = 30;
+            const xStart = 40;
+            
+            // 타이틀
+            ctx.font = 'bold 20px Malgun Gothic, sans-serif';
+            ctx.fillStyle = 'black';
+            ctx.fillText(`SNS센터 주간실적 - ${weeklyStartDate} ~ ${endDate}`, totalWidth / 2, y);
+            y += 50;
+            
+            // 헤더
+            ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+            const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
+            let x = xStart;
+            headers.forEach((header, i) => {
+                ctx.fillStyle = '#D9D9D9';
+                ctx.fillRect(x, y, colWidths[i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+                ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
+                x += colWidths[i];
+            });
+            y += rowHeight;
+            
+            const grandTotals = {};
+            visibleMetrics.forEach(m => grandTotals[m] = 0);
+            
+            // 각 팀별 데이터
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                const teamColor = teamColors[teamName] || '#E2F0D9';
+                const leader = teamLeaders[teamName] || '';
+                const startY = y;
+                const teamTotals = {};
+                visibleMetrics.forEach(m => teamTotals[m] = 0);
+                
+                teamInfo.members.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const data = weeklyTotalData[key];
+                    
+                    x = xStart;
+                    
+                    // 소속
+                    if (idx === 0) {
+                        const mergeHeight = teamInfo.members.length * rowHeight;
+                        ctx.fillStyle = teamColor;
+                        ctx.fillRect(x, y, colWidths[0], mergeHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[0], mergeHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+                        const teamText = teamName === '5파트' ? `의정부SNS센터` : `SNS센터`;
+                        ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
+                        ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
+                        ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
+                        ctx.font = '13px Malgun Gothic, sans-serif';
+                    }
+                    x += colWidths[0];
+                    
+                    // 이름
+                    ctx.fillStyle = teamColor;
+                    ctx.fillRect(x, y, colWidths[1], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[1], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
+                    x += colWidths[1];
+                    
+                    // 근속기간
+                    ctx.fillStyle = teamColor;
+                    ctx.fillRect(x, y, colWidths[2], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[2], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = '12px Malgun Gothic, sans-serif';
+                    ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
+                    x += colWidths[2];
+                    
+                    // 실적 데이터
+                    visibleMetrics.forEach((metric, i) => {
+                        const dbColumn = metricToDb[metric];
+                        const value = data[dbColumn];
+                        
+                        if (value === 'skill_none') {
+                            ctx.fillStyle = '#FFE4B5';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = '#FF8C00';
+                            ctx.font = 'bold 12px Malgun Gothic, sans-serif';
+                            ctx.fillText('스킬없음', x + colWidths[3 + i]/2, y + rowHeight/2);
+                        } else {
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = 'black';
+                            ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                            ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                            teamTotals[metric] += value;
+                        }
+                        
+                        x += colWidths[3 + i];
+                    });
+                    ctx.font = '13px Malgun Gothic, sans-serif';
+                    
+                    y += rowHeight;
+                });
+                
+                // 팀 총합
+                x = xStart;
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+                ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                visibleMetrics.forEach((metric, i) => {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 17px Malgun Gothic, sans-serif';
+                    ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                    grandTotals[metric] += teamTotals[metric];
+                    x += colWidths[3 + i];
+                });
+                ctx.font = '13px Malgun Gothic, sans-serif';
+                
+                y += rowHeight + 10;
+            });
+            
+            // 센터 총합
+            y += 10;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('주간 센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 18px Malgun Gothic, sans-serif';
+                ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 주간 목표
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('주간 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(((dailyTargets[metric] || 100) * 5).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 달성 현황
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('달성 현황', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                const target = (dailyTargets[metric] || 100) * 5;
+                const actual = grandTotals[metric];
+                const diff = target - actual;
+                const isAchieved = diff <= 0;
+                
+                ctx.fillStyle = isAchieved ? '#C8E6C9' : '#FFCDD2';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = isAchieved ? 'darkgreen' : 'darkred';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`, x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            const link = document.createElement('a');
+            link.download = `SNS센터_주간실적_${weeklyStartDate.replace(/-/g, '')}_${endDate.replace(/-/g, '')}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }
+
+        // 주말 실적 모달
+        function openWeekendModal() {
+            const dates = getWeekendDates(currentDate);
+            weekendStartDate = dates[0];
+            renderWeekendModal();
+            document.getElementById('weekendModal').classList.add('active');
+        }
+
+        function closeWeekendModal() {
+            document.getElementById('weekendModal').classList.remove('active');
+        }
+
+        async function renderWeekendModal() {
+            const dates = getWeekendDates(weekendStartDate);
+            document.getElementById('weekendModalDate').textContent = 
+                `${dates[0]} ~ ${dates[1]} (토~일 합산)`;
+            
+            const content = document.getElementById('weekendModalContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>주말 데이터를 불러오는 중...</p></div>';
+            
+            const weekendTotalData = await loadWeekendData(weekendStartDate);
+            
+            // 일반 대시보드와 동일한 포맷으로 렌더링
+            let html = '';
+            
+            // 전체 요약
+            const grandTotals = {};
+            visibleMetrics.forEach(metric => {
+                grandTotals[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = weekendTotalData[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        grandTotals[metric] += data[dbColumn] || 0;
+                    });
+                });
+            });
+            
+            html += '<div class="summary-section">';
+            html += '<div class="summary-title">주말(토~일) 전체 실적 요약</div>';
+            html += '<div class="metrics-row">';
+            visibleMetrics.forEach(metric => {
+                html += `
+                    <div class="metric-item">
+                        <div class="metric-name">${metric}</div>
+                        <div class="metric-value">${grandTotals[metric] || 0}</div>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+            
+            // 각 팀별 섹션
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                const teamTotals = {};
+                visibleMetrics.forEach(metric => {
+                    teamTotals[metric] = 0;
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = weekendTotalData[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        teamTotals[metric] += data[dbColumn] || 0;
+                    });
+                });
+                
+                // 팀 테이블
+                html += '<div class="team-section">';
+                html += `<div class="team-header">SNS센터 ${teamName} - 주말실적</div>`;
+                html += '<table class="team-table">';
+                html += '<thead><tr>';
+                html += '<th>이름</th><th>근속기간</th>';
+                visibleMetrics.forEach(metric => {
+                    html += `<th>${metric}</th>`;
+                });
+                html += '</tr></thead>';
+                html += '<tbody>';
+                
+                // 팀원별 데이터
+                teamInfo.members.forEach(member => {
+                    const key = `${teamName}_${member.name}`;
+                    const data = weekendTotalData[key] || {};
+                    
+                    html += '<tr>';
+                    html += `<td>${member.name}</td>`;
+                    html += `<td>${member.tenure}</td>`;
+                    
+                    visibleMetrics.forEach(metric => {
+                        const dbColumn = metricToDb[metric];
+                        const value = data[dbColumn] || 0;
+                        html += `<td>${value}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                
+                // 팀 총합
+                html += '<tr class="team-total">';
+                html += `<td colspan="2">${teamName} 총합</td>`;
+                visibleMetrics.forEach(metric => {
+                    html += `<td>${teamTotals[metric] || 0}</td>`;
+                });
+                html += '</tr>';
+                
+                html += '</tbody></table></div>';
+            });
+            
+            // 하단 요약
+            html += '<div class="bottom-summary">';
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">주말 센터 총합</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                html += `<span class="summary-item">${metric}: ${grandTotals[metric]}</span>`;
+            });
+            html += '</div></div>';
+            
+            // 주말 목표 (일 목표 x 2)
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">주말 목표</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                const weekendTarget = (dailyTargets[metric] || 100) * 2;
+                html += `<span class="summary-item">${metric}: ${weekendTarget}</span>`;
+            });
+            html += '</div></div>';
+            
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">달성현황</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                const weekendTarget = (dailyTargets[metric] || 100) * 2;
+                const actual = grandTotals[metric];
+                const diff = weekendTarget - actual;
+                
+                html += `<span class="achievement-status ${diff <= 0 ? 'achievement-success' : 'achievement-fail'}">
+                    ${metric}: ${diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`}
+                </span>`;
+            });
+            html += '</div></div>';
+            html += '</div>';
+            
+            content.innerHTML = html;
+        }
+
+        function previousWeekend() {
+            const d = new Date(weekendStartDate);
+            d.setDate(d.getDate() - 7);
+            weekendStartDate = getWeekendDates(d.toISOString().split('T')[0])[0];
+            renderWeekendModal();
+        }
+
+        function currentWeekend() {
+            weekendStartDate = getWeekendDates(new Date().toISOString().split('T')[0])[0];
+            renderWeekendModal();
+        }
+
+        function nextWeekend() {
+            const d = new Date(weekendStartDate);
+            d.setDate(d.getDate() + 7);
+            weekendStartDate = getWeekendDates(d.toISOString().split('T')[0])[0];
+            renderWeekendModal();
+        }
+
+        // 주말 엑셀 내보내기
+        async function exportWeekendExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('엑셀 라이브러리를 로드할 수 없습니다.');
+                return;
+            }
+
+            const dates = getWeekendDates(weekendStartDate);
+            
+            // 주간 실적 계산을 위해 주간 데이터 로드
+            const weekDates = getWeekDates(weekendStartDate);
+            await loadWeeklyData(weekDates[0]);
+            
+            // 주간 실적 계산
+            const weeklyActual = {};
+            visibleMetrics.forEach(metric => {
+                weeklyActual[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const dbColumn = metricToDb[metric];
+                        
+                        weekDates.forEach(date => {
+                            const dayData = weeklyData[date][key] || {};
+                            const skillStatus = getSkillStatus(date, teamName, member.name);
+                            const isRental = skillStatus === 'rental';
+                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                            
+                            if (!isRentalMetric) {
+                                weeklyActual[metric] += dayData[dbColumn] || 0;
+                            }
+                        });
+                    });
+                });
+            });
+            
+            const wb = XLSX.utils.book_new();
+            const data = [
+                [`SNS센터 주말실적보고 - ${dates[0]} ~ ${dates[1]}`],
+                [],
+                ['소속', '이름', '근속기간', ...visibleMetrics]
+            ];
+
+            const grandTotals = {};
+            visibleMetrics.forEach(m => grandTotals[m] = 0);
+
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                teamInfo.members.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const perfData = weekendData[key] || {};
+                    
+                    const row = [
+                        idx === 0 ? `SNS센터 ${teamName}` : '',
+                        member.name,
+                        member.tenure
+                    ];
+                    
+                    visibleMetrics.forEach(metric => {
+                        const dbColumn = metricToDb[metric];
+                        const value = perfData[dbColumn] || 0;
+                        row.push(value);
+                        grandTotals[metric] += value;
+                    });
+                    
+                    data.push(row);
+                });
+                
+                // 팀 총합
+                const teamTotals = {};
+                visibleMetrics.forEach(metric => {
+                    teamTotals[metric] = 0;
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = weekendData[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        teamTotals[metric] += data[dbColumn] || 0;
+                    });
+                });
+                
+                const totalRow = [`${teamName} 총합`, '', '', ...visibleMetrics.map(m => teamTotals[m] || 0)];
+                data.push(totalRow);
+                data.push([]);
+            });
+
+            data.push(['센터 총합', '', '', ...visibleMetrics.map(m => grandTotals[m] || 0)]);
+            data.push(['주간(월~금) 실적', '', '', ...visibleMetrics.map(m => weeklyActual[m] || 0)]);
+            data.push(['주말 목표', '', '', ...visibleMetrics.map(m => {
+                const weeklyTarget = (dailyTargets[m] || 100) * 5;
+                return Math.max(0, weeklyTarget - weeklyActual[m]);
+            })]);
+            
+            const achievementRow = ['달성', '', ''];
+            visibleMetrics.forEach(metric => {
+                const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                const weekendTarget = Math.max(0, weeklyTarget - weeklyActual[metric]);
+                const diff = weekendTarget - grandTotals[metric];
+                achievementRow.push(diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`);
+            });
+            data.push(achievementRow);
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, '주말실적');
+            XLSX.writeFile(wb, `SNS센터_주말실적_${dates[0].replace(/-/g, '')}_${dates[1].replace(/-/g, '')}.xlsx`);
+        }
+
+        // 주말 실적 JPG 내보내기
+        async function exportWeekendJPG() {
+            const weekendDates = getWeekendDates(weekendStartDate);
+            
+            if (Object.keys(weekendData).length === 0) {
+                alert('주말 데이터가 없습니다.');
+                return;
+            }
+            
+            // 주간 실적 계산을 위해 주간 데이터 로드
+            const weekDates = getWeekDates(weekendStartDate);
+            await loadWeeklyData(weekDates[0]);
+            
+            // 주간 실적 계산
+            const weeklyActual = {};
+            visibleMetrics.forEach(metric => {
+                weeklyActual[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const dbColumn = metricToDb[metric];
+                        
+                        weekDates.forEach(date => {
+                            const dayData = weeklyData[date][key] || {};
+                            const skillStatus = getSkillStatus(date, teamName, member.name);
+                            const isRental = skillStatus === 'rental';
+                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                            
+                            if (!isRentalMetric) {
+                                weeklyActual[metric] += dayData[dbColumn] || 0;
+                            }
+                        });
+                    });
+                });
+            });
+            
+            const teamColors = {
+                '1파트': '#E2F0D9',
+                '2파트': '#DDEBF7',
+                '3파트': '#FCE4D6',
+                '4파트': '#FFF2CC',
+                '5파트': '#D9E2F3'
+            };
+            
+            const teamLeaders = {
+                '1파트': '이종민',
+                '2파트': '윤도우리',
+                '3파트': '김진후',
+                '4파트': '이민주',
+                '5파트': '차정환'
+            };
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
+            const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
+            const rowHeight = 35;
+            let totalRows = 4;
+            Object.values(teams).forEach(team => {
+                totalRows += team.members.length + 1;
+            });
+            totalRows += 5; // 센터총합, 주간실적, 주말목표, 달성 + 여백
+            
+            canvas.width = totalWidth;
+            canvas.height = totalRows * rowHeight + 140;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.font = '13px Malgun Gothic, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            let y = 30;
+            const xStart = 40;
+            
+            // 타이틀
+            ctx.font = 'bold 20px Malgun Gothic, sans-serif';
+            ctx.fillStyle = 'black';
+            ctx.fillText(`SNS센터 주말실적 - ${weekendDates[0]} ~ ${weekendDates[1]}`, totalWidth / 2, y);
+            y += 50;
+            
+            // 헤더
+            ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+            const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
+            let x = xStart;
+            headers.forEach((header, i) => {
+                ctx.fillStyle = '#D9D9D9';
+                ctx.fillRect(x, y, colWidths[i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+                ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
+                x += colWidths[i];
+            });
+            y += rowHeight;
+            
+            const grandTotals = {};
+            visibleMetrics.forEach(m => grandTotals[m] = 0);
+            
+            // 각 팀별 데이터
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                const teamColor = teamColors[teamName] || '#E2F0D9';
+                const leader = teamLeaders[teamName] || '';
+                const startY = y;
+                const teamTotals = {};
+                visibleMetrics.forEach(m => teamTotals[m] = 0);
+                
+                teamInfo.members.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const data = weekendData[key] || {};
+                    
+                    x = xStart;
+                    
+                    // 소속
+                    if (idx === 0) {
+                        const mergeHeight = teamInfo.members.length * rowHeight;
+                        ctx.fillStyle = teamColor;
+                        ctx.fillRect(x, y, colWidths[0], mergeHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[0], mergeHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+                        const teamText = teamName === '5파트' ? `의정부SNS센터` : `SNS센터`;
+                        ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
+                        ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
+                        ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
+                        ctx.font = '13px Malgun Gothic, sans-serif';
+                    }
+                    x += colWidths[0];
+                    
+                    // 이름
+                    ctx.fillStyle = teamColor;
+                    ctx.fillRect(x, y, colWidths[1], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[1], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.fillText(member.name, x + colWidths[1]/2, y + rowHeight/2);
+                    x += colWidths[1];
+                    
+                    // 근속기간
+                    ctx.fillStyle = teamColor;
+                    ctx.fillRect(x, y, colWidths[2], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[2], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = '12px Malgun Gothic, sans-serif';
+                    ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
+                    x += colWidths[2];
+                    
+                    // 실적 데이터
+                    visibleMetrics.forEach((metric, i) => {
+                        const dbColumn = metricToDb[metric];
+                        const value = data[dbColumn] || 0;
+                        
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                        ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                        
+                        teamTotals[metric] += value;
+                        x += colWidths[3 + i];
+                    });
+                    ctx.font = '13px Malgun Gothic, sans-serif';
+                    
+                    y += rowHeight;
+                });
+                
+                // 팀 총합
+                x = xStart;
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+                ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                visibleMetrics.forEach((metric, i) => {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 17px Malgun Gothic, sans-serif';
+                    ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                    grandTotals[metric] += teamTotals[metric];
+                    x += colWidths[3 + i];
+                });
+                ctx.font = '13px Malgun Gothic, sans-serif';
+                
+                y += rowHeight + 10;
+            });
+            
+            // 센터 총합
+            y += 10;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('주말 센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 18px Malgun Gothic, sans-serif';
+                ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 주간 실적
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#E0E0E0';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+            ctx.fillText('주간(월~금) 실적', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#E0E0E0';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = '14px Malgun Gothic, sans-serif';
+                ctx.fillText(weeklyActual[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 주말 목표 (주간목표 - 주간실적)
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('주말 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                const weekendTarget = Math.max(0, weeklyTarget - weeklyActual[metric]);
+                
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(weekendTarget.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 달성 현황
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('달성 현황', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                const weekendTarget = Math.max(0, weeklyTarget - weeklyActual[metric]);
+                const actual = grandTotals[metric];
+                const diff = weekendTarget - actual;
+                const isAchieved = diff <= 0;
+                
+                ctx.fillStyle = isAchieved ? '#C8E6C9' : '#FFCDD2';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = isAchieved ? 'darkgreen' : 'darkred';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`, x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            const link = document.createElement('a');
+            link.download = `SNS센터_주말실적_${weekendDates[0].replace(/-/g, '')}_${weekendDates[1].replace(/-/g, '')}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
         }
 
         // 전체 합계 계산
@@ -2541,6 +3988,3 @@
             document.getElementById('currentDate').textContent = currentDate;
             loadData();
         };
-    </script>
-</body>
-</html>
