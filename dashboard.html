@@ -803,47 +803,6 @@
             color: #000;
         }
 
-        /* Weekly Report Table */
-        .weekly-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        .weekly-table th {
-            background: #111;
-            padding: 15px 10px;
-            text-align: center;
-            font-size: 12px;
-            color: #B0B0B0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: 1px solid #333;
-            font-weight: 500;
-        }
-
-        .weekly-table td {
-            padding: 12px 8px;
-            text-align: center;
-            font-size: 14px;
-            border: 1px solid #333;
-            background: #000;
-            color: #E0E0E0;
-        }
-
-        .weekly-table .day-header {
-            background: #1A1A1A;
-            font-weight: 600;
-            color: #4A9EFF;
-        }
-
-        .weekly-table .week-total {
-            background: #FFD700;
-            color: #000;
-            font-weight: bold;
-            font-size: 15px;
-        }
-
         /* Loading */
         .loading {
             text-align: center;
@@ -984,8 +943,6 @@
             <button class="btn btn-warning" onclick="openTargetModal()">목표설정</button>
             <button class="btn" onclick="openTeamModal()" style="color: #BA68C8; border-color: #BA68C8;">상담사</button>
             <button class="btn" onclick="openSkillModal()" style="color: #FF8A65; border-color: #FF8A65;">스킬관리</button>
-            <button class="btn" onclick="openWeeklyModal()" style="color: #7DCEA0; border-color: #7DCEA0;">주간실적</button>
-            <button class="btn" onclick="exportWeekendToJPG()" style="color: #F8C471; border-color: #F8C471;">주말실적</button>
             <button class="btn btn-info" onclick="exportToExcel()">엑셀</button>
             <button class="btn btn-success" onclick="exportToJPG()">JPG</button>
             
@@ -1003,21 +960,6 @@
             <div class="loading">
                 <div class="spinner"></div>
                 <p>데이터를 불러오는 중...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- 주간실적 모달 -->
-    <div id="weeklyModal" class="modal">
-        <div class="modal-content" style="max-width: 1400px;">
-            <span class="modal-close" onclick="closeWeeklyModal()">×</span>
-            <div class="modal-header">주간실적 (월~금) - <span id="weeklyModalDate"></span></div>
-            
-            <div id="weeklyModalContent"></div>
-            
-            <div style="margin-top: 30px; text-align: center;">
-                <button class="btn btn-success" onclick="exportWeeklyToJPG()">JPG 출력</button>
-                <button class="btn btn-primary" onclick="closeWeeklyModal()">닫기</button>
             </div>
         </div>
     </div>
@@ -1085,13 +1027,8 @@
     <div id="targetModal" class="modal">
         <div class="modal-content" style="max-width: 1200px;">
             <span class="modal-close" onclick="closeTargetModal()">×</span>
-            <div class="modal-header">목표 설정</div>
+            <div class="modal-header">일일 목표 설정</div>
             
-            <div style="display: flex; gap: 20px; margin-bottom: 30px; justify-content: center;">
-                <button id="dailyTargetBtn" class="btn btn-primary" onclick="switchTargetTab('daily')">일일 목표</button>
-                <button id="weeklyTargetBtn" class="btn" onclick="switchTargetTab('weekly')">주간 목표</button>
-            </div>
-
             <div id="targetModalContent"></div>
             
             <div style="margin-top: 30px; text-align: center;">
@@ -1190,8 +1127,6 @@
         let visibleMetrics = [];
         let metricToDb = {};
         let dailyTargets = {};
-        let weeklyTargets = {};
-        let currentTargetTab = 'daily';
 
         // 기본 데이터
         const defaultTeams = {
@@ -1324,40 +1259,6 @@
             }
         }
 
-        // 주간 날짜 계산 함수
-        function getWeekDates(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(d.setDate(diff));
-            
-            const weekDates = [];
-            for (let i = 0; i < 5; i++) {
-                const currentDate = new Date(monday);
-                currentDate.setDate(monday.getDate() + i);
-                weekDates.push(currentDate.toISOString().split('T')[0]);
-            }
-            return weekDates;
-        }
-
-        // 주말 날짜 계산 함수
-        function getWeekendDates(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(d.setDate(diff));
-            
-            const saturday = new Date(monday);
-            saturday.setDate(monday.getDate() + 5);
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-            
-            return [
-                saturday.toISOString().split('T')[0],
-                sunday.toISOString().split('T')[0]
-            ];
-        }
-
         // 설정 로드
         async function loadConfig() {
             if (!supabase) {
@@ -1367,11 +1268,7 @@
                 visibleMetrics = defaultMetrics;
                 metricToDb = defaultMetricToDb;
                 dailyTargets = {};
-                weeklyTargets = {};
-                defaultMetrics.forEach(m => {
-                    dailyTargets[m] = 100;
-                    weeklyTargets[m] = 500;
-                });
+                defaultMetrics.forEach(m => dailyTargets[m] = 100);
                 return;
             }
 
@@ -1420,15 +1317,10 @@
                 if (settingsData && settingsData.data && !settingsError) {
                     visibleMetrics = settingsData.data.visible_metrics || metrics;
                     dailyTargets = settingsData.data.daily_targets || {};
-                    weeklyTargets = settingsData.data.weekly_targets || {};
                 } else {
                     visibleMetrics = metrics;
                     dailyTargets = {};
-                    weeklyTargets = {};
-                    metrics.forEach(m => {
-                        dailyTargets[m] = 100;
-                        weeklyTargets[m] = 500;
-                    });
+                    metrics.forEach(m => dailyTargets[m] = 100);
                 }
 
                 isConnected = true;
@@ -1440,11 +1332,7 @@
                 visibleMetrics = defaultMetrics;
                 metricToDb = defaultMetricToDb;
                 dailyTargets = {};
-                weeklyTargets = {};
-                metrics.forEach(m => {
-                    dailyTargets[m] = 100;
-                    weeklyTargets[m] = 500;
-                });
+                metrics.forEach(m => dailyTargets[m] = 100);
                 document.getElementById('connectionStatus').innerHTML = '로컬 모드';
             }
         }
@@ -1474,36 +1362,6 @@
             } catch (error) {
                 console.error('실적 데이터 로드 오류:', error);
                 performanceData = {};
-            }
-        }
-
-        // 주간 실적 데이터 로드
-        async function loadWeeklyPerformanceData(dates) {
-            if (!supabase) {
-                return {};
-            }
-
-            try {
-                const { data, error } = await supabase
-                    .from('performance')
-                    .select('*')
-                    .in('date', dates);
-
-                if (data && !error) {
-                    const weeklyData = {};
-                    data.forEach(record => {
-                        if (!weeklyData[record.date]) {
-                            weeklyData[record.date] = {};
-                        }
-                        const key = `${record.team}_${record.name}`;
-                        weeklyData[record.date][key] = record;
-                    });
-                    return weeklyData;
-                }
-                return {};
-            } catch (error) {
-                console.error('주간 데이터 로드 오류:', error);
-                return {};
             }
         }
 
@@ -1682,7 +1540,7 @@
         }
 
         // 팀별 합계 계산
-        function calculateTeamTotals(teamName, data = performanceData, date = currentDate) {
+        function calculateTeamTotals(teamName) {
             const totals = {};
             const teamInfo = teams[teamName];
             
@@ -1691,509 +1549,20 @@
                 if (teamInfo) {
                     teamInfo.members.forEach(member => {
                         const key = `${teamName}_${member.name}`;
-                        const memberData = data[key] || {};
+                        const data = performanceData[key] || {};
                         const dbColumn = metricToDb[metric];
-                        const skillStatus = getSkillStatus(date, teamName, member.name);
+                        const skillStatus = getSkillStatus(currentDate, teamName, member.name);
                         const isRental = skillStatus === 'rental';
                         const isRentalMetric = isRental && rentalMetrics.includes(metric);
                         
                         if (!isRentalMetric) {
-                            totals[metric] += memberData[dbColumn] || 0;
+                            totals[metric] += data[dbColumn] || 0;
                         }
                     });
                 }
             });
             
             return totals;
-        }
-
-        // 주간실적 모달
-        async function openWeeklyModal() {
-            const modal = document.getElementById('weeklyModal');
-            const weekDates = getWeekDates(currentDate);
-            const weekData = await loadWeeklyPerformanceData(weekDates);
-            
-            const startDate = weekDates[0];
-            const endDate = weekDates[4];
-            document.getElementById('weeklyModalDate').textContent = `${startDate} ~ ${endDate}`;
-            
-            let html = '';
-            
-            // 각 팀별 주간 실적 테이블
-            Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                html += `<div style="margin-bottom: 40px;">`;
-                html += `<h3 style="color: #4A9EFF; margin-bottom: 20px;">${teamName}</h3>`;
-                html += '<table class="weekly-table">';
-                
-                // 헤더
-                html += '<thead><tr>';
-                html += '<th rowspan="2">이름</th>';
-                visibleMetrics.forEach(metric => {
-                    html += `<th colspan="6">${metric}</th>`;
-                });
-                html += '</tr><tr>';
-                visibleMetrics.forEach(() => {
-                    html += '<th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th class="week-total">주간</th>';
-                });
-                html += '</tr></thead>';
-                
-                html += '<tbody>';
-                
-                // 팀원별 데이터
-                teamInfo.members.forEach(member => {
-                    html += '<tr>';
-                    html += `<td>${member.name}</td>`;
-                    
-                    visibleMetrics.forEach(metric => {
-                        const dbColumn = metricToDb[metric];
-                        let weekTotal = 0;
-                        
-                        // 월~금 데이터
-                        weekDates.forEach(date => {
-                            const key = `${teamName}_${member.name}`;
-                            const dayData = weekData[date] && weekData[date][key] ? weekData[date][key] : {};
-                            const value = dayData[dbColumn] || 0;
-                            const skillStatus = getSkillStatus(date, teamName, member.name);
-                            const isRental = skillStatus === 'rental';
-                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
-                            
-                            if (isRentalMetric) {
-                                html += '<td style="color: #FFA500;">-</td>';
-                            } else {
-                                html += `<td>${value}</td>`;
-                                weekTotal += value;
-                            }
-                        });
-                        
-                        // 주간 합계
-                        html += `<td class="week-total">${weekTotal}</td>`;
-                    });
-                    
-                    html += '</tr>';
-                });
-                
-                // 팀 총합
-                html += '<tr style="background: #1A1A1A; font-weight: bold;">';
-                html += `<td>${teamName} 총합</td>`;
-                
-                visibleMetrics.forEach(metric => {
-                    const dbColumn = metricToDb[metric];
-                    let grandWeekTotal = 0;
-                    
-                    weekDates.forEach(date => {
-                        let dayTotal = 0;
-                        teamInfo.members.forEach(member => {
-                            const key = `${teamName}_${member.name}`;
-                            const dayData = weekData[date] && weekData[date][key] ? weekData[date][key] : {};
-                            const skillStatus = getSkillStatus(date, teamName, member.name);
-                            const isRental = skillStatus === 'rental';
-                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
-                            
-                            if (!isRentalMetric) {
-                                dayTotal += dayData[dbColumn] || 0;
-                            }
-                        });
-                        html += `<td>${dayTotal}</td>`;
-                        grandWeekTotal += dayTotal;
-                    });
-                    
-                    html += `<td class="week-total">${grandWeekTotal}</td>`;
-                });
-                
-                html += '</tr>';
-                html += '</tbody></table>';
-                html += '</div>';
-            });
-            
-            // 전체 센터 주간 총합
-            html += '<div style="margin-top: 40px; padding: 20px; background: #111; border: 1px solid #333;">';
-            html += '<h3 style="color: #FFD700; margin-bottom: 20px;">센터 전체 주간 총합</h3>';
-            html += '<div style="display: flex; flex-wrap: wrap; gap: 20px;">';
-            
-            visibleMetrics.forEach(metric => {
-                const dbColumn = metricToDb[metric];
-                let centerTotal = 0;
-                
-                weekDates.forEach(date => {
-                    Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                        teamInfo.members.forEach(member => {
-                            const key = `${teamName}_${member.name}`;
-                            const dayData = weekData[date] && weekData[date][key] ? weekData[date][key] : {};
-                            const skillStatus = getSkillStatus(date, teamName, member.name);
-                            const isRental = skillStatus === 'rental';
-                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
-                            
-                            if (!isRentalMetric) {
-                                centerTotal += dayData[dbColumn] || 0;
-                            }
-                        });
-                    });
-                });
-                
-                const weeklyTarget = weeklyTargets[metric] || 500;
-                const achievement = centerTotal >= weeklyTarget ? '달성' : '미달성';
-                const achievementClass = centerTotal >= weeklyTarget ? 'achievement-success' : 'achievement-fail';
-                
-                html += `
-                    <div style="flex: 1; min-width: 200px; padding: 15px; background: #000; border: 1px solid #333;">
-                        <div style="font-size: 12px; color: #999; margin-bottom: 5px;">${metric}</div>
-                        <div style="font-size: 24px; color: #4A9EFF; margin-bottom: 5px;">${centerTotal}</div>
-                        <div style="font-size: 12px; color: #999;">목표: ${weeklyTarget}</div>
-                        <div class="${achievementClass}" style="margin-top: 5px;">${achievement}</div>
-                    </div>
-                `;
-            });
-            
-            html += '</div></div>';
-            
-            document.getElementById('weeklyModalContent').innerHTML = html;
-            modal.classList.add('active');
-        }
-
-        function closeWeeklyModal() {
-            document.getElementById('weeklyModal').classList.remove('active');
-        }
-
-        // 주간 실적 JPG 출력
-        async function exportWeeklyToJPG() {
-            const weekDates = getWeekDates(currentDate);
-            const weekData = await loadWeeklyPerformanceData(weekDates);
-            
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // 캔버스 크기 계산
-            const metricCount = visibleMetrics.length;
-            const colWidths = [160, ...Array(metricCount * 6).fill(60)];
-            const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
-            const rowHeight = 30;
-            
-            let totalRows = 10;
-            Object.values(teams).forEach(team => {
-                totalRows += team.members.length + 2;
-            });
-            
-            canvas.width = totalWidth;
-            canvas.height = totalRows * rowHeight + 200;
-            
-            // 배경
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // 제목
-            let y = 40;
-            ctx.font = 'bold 24px Malgun Gothic';
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.fillText(`SNS센터 주간실적 (${weekDates[0]} ~ ${weekDates[4]})`, totalWidth / 2, y);
-            
-            y += 60;
-            ctx.font = '12px Malgun Gothic';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // 팀별 테이블 그리기
-            Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                const xStart = 40;
-                let x = xStart;
-                
-                // 팀명
-                ctx.fillStyle = '#E2F0FF';
-                ctx.fillRect(x, y, totalWidth - 80, rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, totalWidth - 80, rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 14px Malgun Gothic';
-                ctx.fillText(teamName, totalWidth / 2, y + rowHeight / 2);
-                y += rowHeight;
-                
-                // 헤더 그리기
-                x = xStart;
-                ctx.font = 'bold 11px Malgun Gothic';
-                ctx.fillStyle = '#D9D9D9';
-                ctx.fillRect(x, y, colWidths[0], rowHeight * 2);
-                ctx.strokeRect(x, y, colWidths[0], rowHeight * 2);
-                ctx.fillStyle = 'black';
-                ctx.fillText('이름', x + colWidths[0] / 2, y + rowHeight);
-                x += colWidths[0];
-                
-                visibleMetrics.forEach(metric => {
-                    ctx.fillStyle = '#D9D9D9';
-                    ctx.fillRect(x, y, 360, rowHeight);
-                    ctx.strokeRect(x, y, 360, rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.fillText(metric, x + 180, y + rowHeight / 2);
-                    
-                    ['월', '화', '수', '목', '금', '주간'].forEach((day, idx) => {
-                        ctx.fillStyle = '#D9D9D9';
-                        ctx.fillRect(x + idx * 60, y + rowHeight, 60, rowHeight);
-                        ctx.strokeRect(x + idx * 60, y + rowHeight, 60, rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = day === '주간' ? 'bold 11px Malgun Gothic' : '11px Malgun Gothic';
-                        ctx.fillText(day, x + idx * 60 + 30, y + rowHeight + rowHeight / 2);
-                    });
-                    x += 360;
-                });
-                y += rowHeight * 2;
-                
-                // 데이터 그리기
-                teamInfo.members.forEach(member => {
-                    x = xStart;
-                    ctx.font = '11px Malgun Gothic';
-                    
-                    // 이름
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(x, y, colWidths[0], rowHeight);
-                    ctx.strokeRect(x, y, colWidths[0], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.fillText(member.name, x + colWidths[0] / 2, y + rowHeight / 2);
-                    x += colWidths[0];
-                    
-                    // 실적 데이터
-                    visibleMetrics.forEach(metric => {
-                        const dbColumn = metricToDb[metric];
-                        let weekTotal = 0;
-                        
-                        weekDates.forEach(date => {
-                            const key = `${teamName}_${member.name}`;
-                            const dayData = weekData[date] && weekData[date][key] ? weekData[date][key] : {};
-                            const value = dayData[dbColumn] || 0;
-                            
-                            ctx.fillStyle = 'white';
-                            ctx.fillRect(x, y, 60, rowHeight);
-                            ctx.strokeRect(x, y, 60, rowHeight);
-                            ctx.fillStyle = 'black';
-                            ctx.fillText(value.toString(), x + 30, y + rowHeight / 2);
-                            x += 60;
-                            weekTotal += value;
-                        });
-                        
-                        // 주간 합계
-                        ctx.fillStyle = '#FFD700';
-                        ctx.fillRect(x, y, 60, rowHeight);
-                        ctx.strokeRect(x, y, 60, rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = 'bold 12px Malgun Gothic';
-                        ctx.fillText(weekTotal.toString(), x + 30, y + rowHeight / 2);
-                        ctx.font = '11px Malgun Gothic';
-                        x += 60;
-                    });
-                    y += rowHeight;
-                });
-                
-                y += 20;
-            });
-            
-            // 다운로드
-            const link = document.createElement('a');
-            link.download = `SNS센터_주간실적_${weekDates[0].replace(/-/g, '')}_${weekDates[4].replace(/-/g, '')}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 0.95);
-            link.click();
-        }
-
-        // 주말 실적 JPG 출력
-        async function exportWeekendToJPG() {
-            const weekendDates = getWeekendDates(currentDate);
-            const weekendData = await loadWeeklyPerformanceData(weekendDates);
-            
-            // 주간 실적 계산 (주말 목표 설정용)
-            const weekDates = getWeekDates(currentDate);
-            const weekData = await loadWeeklyPerformanceData(weekDates);
-            
-            // 주간 실적 합계 계산
-            const weeklyActuals = {};
-            visibleMetrics.forEach(metric => {
-                weeklyActuals[metric] = 0;
-                const dbColumn = metricToDb[metric];
-                
-                weekDates.forEach(date => {
-                    Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                        teamInfo.members.forEach(member => {
-                            const key = `${teamName}_${member.name}`;
-                            const dayData = weekData[date] && weekData[date][key] ? weekData[date][key] : {};
-                            const skillStatus = getSkillStatus(date, teamName, member.name);
-                            const isRental = skillStatus === 'rental';
-                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
-                            
-                            if (!isRentalMetric) {
-                                weeklyActuals[metric] += dayData[dbColumn] || 0;
-                            }
-                        });
-                    });
-                });
-            });
-            
-            // 주말 목표 계산
-            const weekendTargets = {};
-            visibleMetrics.forEach(metric => {
-                const weeklyTarget = weeklyTargets[metric] || 500;
-                const weeklyActual = weeklyActuals[metric] || 0;
-                weekendTargets[metric] = Math.max(0, weeklyTarget - weeklyActual);
-            });
-            
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // 캔버스 크기 계산
-            const metricCount = visibleMetrics.length;
-            const colWidths = [160, ...Array(metricCount * 3).fill(80)];
-            const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
-            const rowHeight = 30;
-            
-            let totalRows = 10;
-            Object.values(teams).forEach(team => {
-                totalRows += team.members.length + 2;
-            });
-            totalRows += 5; // 목표 섹션
-            
-            canvas.width = totalWidth;
-            canvas.height = totalRows * rowHeight + 200;
-            
-            // 배경
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // 제목
-            let y = 40;
-            ctx.font = 'bold 24px Malgun Gothic';
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.fillText(`SNS센터 주말실적 (${weekendDates[0]} ~ ${weekendDates[1]})`, totalWidth / 2, y);
-            
-            y += 60;
-            ctx.font = '12px Malgun Gothic';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // 팀별 테이블 그리기
-            Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                const xStart = 40;
-                let x = xStart;
-                
-                // 팀명
-                ctx.fillStyle = '#E2F0FF';
-                ctx.fillRect(x, y, totalWidth - 80, rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, totalWidth - 80, rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 14px Malgun Gothic';
-                ctx.fillText(teamName, totalWidth / 2, y + rowHeight / 2);
-                y += rowHeight;
-                
-                // 헤더 그리기
-                x = xStart;
-                ctx.font = 'bold 11px Malgun Gothic';
-                ctx.fillStyle = '#D9D9D9';
-                ctx.fillRect(x, y, colWidths[0], rowHeight * 2);
-                ctx.strokeRect(x, y, colWidths[0], rowHeight * 2);
-                ctx.fillStyle = 'black';
-                ctx.fillText('이름', x + colWidths[0] / 2, y + rowHeight);
-                x += colWidths[0];
-                
-                visibleMetrics.forEach(metric => {
-                    ctx.fillStyle = '#D9D9D9';
-                    ctx.fillRect(x, y, 240, rowHeight);
-                    ctx.strokeRect(x, y, 240, rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.fillText(metric, x + 120, y + rowHeight / 2);
-                    
-                    ['토', '일', '주말합계'].forEach((day, idx) => {
-                        ctx.fillStyle = '#D9D9D9';
-                        ctx.fillRect(x + idx * 80, y + rowHeight, 80, rowHeight);
-                        ctx.strokeRect(x + idx * 80, y + rowHeight, 80, rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = day === '주말합계' ? 'bold 11px Malgun Gothic' : '11px Malgun Gothic';
-                        ctx.fillText(day, x + idx * 80 + 40, y + rowHeight + rowHeight / 2);
-                    });
-                    x += 240;
-                });
-                y += rowHeight * 2;
-                
-                // 데이터 그리기
-                teamInfo.members.forEach(member => {
-                    x = xStart;
-                    ctx.font = '11px Malgun Gothic';
-                    
-                    // 이름
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(x, y, colWidths[0], rowHeight);
-                    ctx.strokeRect(x, y, colWidths[0], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.fillText(member.name, x + colWidths[0] / 2, y + rowHeight / 2);
-                    x += colWidths[0];
-                    
-                    // 실적 데이터
-                    visibleMetrics.forEach(metric => {
-                        const dbColumn = metricToDb[metric];
-                        let weekendTotal = 0;
-                        
-                        weekendDates.forEach(date => {
-                            const key = `${teamName}_${member.name}`;
-                            const dayData = weekendData[date] && weekendData[date][key] ? weekendData[date][key] : {};
-                            const value = dayData[dbColumn] || 0;
-                            
-                            ctx.fillStyle = 'white';
-                            ctx.fillRect(x, y, 80, rowHeight);
-                            ctx.strokeRect(x, y, 80, rowHeight);
-                            ctx.fillStyle = 'black';
-                            ctx.fillText(value.toString(), x + 40, y + rowHeight / 2);
-                            x += 80;
-                            weekendTotal += value;
-                        });
-                        
-                        // 주말 합계
-                        ctx.fillStyle = '#FFD700';
-                        ctx.fillRect(x, y, 80, rowHeight);
-                        ctx.strokeRect(x, y, 80, rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = 'bold 12px Malgun Gothic';
-                        ctx.fillText(weekendTotal.toString(), x + 40, y + rowHeight / 2);
-                        ctx.font = '11px Malgun Gothic';
-                        x += 80;
-                    });
-                    y += rowHeight;
-                });
-                
-                y += 20;
-            });
-            
-            // 주말 목표 및 달성 현황
-            y += 20;
-            const xStart = 40;
-            let x = xStart;
-            
-            // 주말 목표 헤더
-            ctx.fillStyle = '#FFCCCC';
-            ctx.fillRect(x, y, totalWidth - 80, rowHeight);
-            ctx.strokeRect(x, y, totalWidth - 80, rowHeight);
-            ctx.fillStyle = 'black';
-            ctx.font = 'bold 14px Malgun Gothic';
-            ctx.fillText('주말 목표 (주간목표 - 주간달성)', totalWidth / 2, y + rowHeight / 2);
-            y += rowHeight;
-            
-            // 목표 데이터
-            x = xStart;
-            ctx.font = '12px Malgun Gothic';
-            visibleMetrics.forEach(metric => {
-                const target = weekendTargets[metric];
-                const width = (totalWidth - 80) / visibleMetrics.length;
-                
-                ctx.fillStyle = '#FFF9E6';
-                ctx.fillRect(x, y, width, rowHeight);
-                ctx.strokeRect(x, y, width, rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 11px Malgun Gothic';
-                ctx.fillText(metric, x + width / 2, y + rowHeight / 2 - 8);
-                ctx.font = 'bold 14px Malgun Gothic';
-                ctx.fillText(target.toString(), x + width / 2, y + rowHeight / 2 + 8);
-                x += width;
-            });
-            
-            // 다운로드
-            const link = document.createElement('a');
-            link.download = `SNS센터_주말실적_${weekendDates[0].replace(/-/g, '')}_${weekendDates[1].replace(/-/g, '')}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 0.95);
-            link.click();
         }
 
         // 수정 모드 토글
@@ -2458,8 +1827,7 @@
                         type: 'settings',
                         data: {
                             visible_metrics: visibleMetrics,
-                            daily_targets: dailyTargets,
-                            weekly_targets: weeklyTargets
+                            daily_targets: dailyTargets
                         }
                     };
                     await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
@@ -2474,26 +1842,6 @@
 
         // 목표 설정 모달
         function openTargetModal() {
-            currentTargetTab = 'daily';
-            switchTargetTab('daily');
-            document.getElementById('targetModal').classList.add('active');
-        }
-
-        function switchTargetTab(tab) {
-            currentTargetTab = tab;
-            
-            if (tab === 'daily') {
-                document.getElementById('dailyTargetBtn').classList.add('btn-primary');
-                document.getElementById('weeklyTargetBtn').classList.remove('btn-primary');
-                renderDailyTargets();
-            } else {
-                document.getElementById('dailyTargetBtn').classList.remove('btn-primary');
-                document.getElementById('weeklyTargetBtn').classList.add('btn-primary');
-                renderWeeklyTargets();
-            }
-        }
-
-        function renderDailyTargets() {
             const grandTotals = calculateGrandTotals();
             let html = '<div class="target-cards-grid">';
             
@@ -2527,15 +1875,14 @@
                             </div>
                             <div class="stat-divider"></div>
                             <div class="stat-item">
-                                <span class="stat-label">일일 목표</span>
+                                <span class="stat-label">목표</span>
                                 <input type="number" 
                                        class="target-input" 
-                                       id="daily_target_${metric}" 
+                                       id="target_${metric}" 
                                        value="${target}"
                                        min="0"
                                        data-current="${current}"
                                        data-metric="${metric}"
-                                       data-type="daily"
                                        oninput="updateTargetCard(this)">
                             </div>
                         </div>
@@ -2552,7 +1899,7 @@
             
             html += `
                 <div class="target-summary" id="targetSummary">
-                    <div class="summary-title">일일 전체 달성률</div>
+                    <div class="summary-title">전체 달성률</div>
                     <div class="summary-percentage">${totalPercentage}%</div>
                     <div class="summary-detail">
                         <span>${totalCurrent} / ${totalTarget}</span>
@@ -2561,45 +1908,11 @@
             `;
             
             document.getElementById('targetModalContent').innerHTML = html;
-        }
-
-        function renderWeeklyTargets() {
-            let html = '<div class="target-cards-grid">';
-            
-            visibleMetrics.forEach(metric => {
-                const target = weeklyTargets[metric] || 500;
-                
-                html += `
-                    <div class="target-card">
-                        <div class="target-card-header">
-                            <div class="target-metric-name">${metric}</div>
-                        </div>
-                        
-                        <div class="target-stats">
-                            <div class="stat-item" style="width: 100%;">
-                                <span class="stat-label">주간 목표 (월~금)</span>
-                                <input type="number" 
-                                       class="target-input" 
-                                       id="weekly_target_${metric}" 
-                                       value="${target}"
-                                       min="0"
-                                       data-metric="${metric}"
-                                       data-type="weekly">
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            
-            document.getElementById('targetModalContent').innerHTML = html;
+            document.getElementById('targetModal').classList.add('active');
         }
 
         // 목표 카드 실시간 업데이트
         function updateTargetCard(input) {
-            if (input.dataset.type !== 'daily') return;
-            
             const metric = input.dataset.metric;
             const current = parseInt(input.dataset.current);
             const target = parseInt(input.value) || 0;
@@ -2647,15 +1960,13 @@
 
         // 전체 요약 업데이트
         function updateTargetSummary() {
-            if (currentTargetTab !== 'daily') return;
-            
             const grandTotals = calculateGrandTotals();
             let totalCurrent = 0;
             let totalTarget = 0;
             
             visibleMetrics.forEach(metric => {
                 totalCurrent += grandTotals[metric] || 0;
-                const targetInput = document.getElementById(`daily_target_${metric}`);
+                const targetInput = document.getElementById(`target_${metric}`);
                 if (targetInput) {
                     totalTarget += parseInt(targetInput.value) || 0;
                 }
@@ -2689,23 +2000,13 @@
         }
 
         async function saveTargets() {
-            if (currentTargetTab === 'daily') {
-                visibleMetrics.forEach(metric => {
-                    const input = document.getElementById(`daily_target_${metric}`);
-                    if (input) {
-                        const value = parseInt(input.value) || 0;
-                        dailyTargets[metric] = value;
-                    }
-                });
-            } else {
-                visibleMetrics.forEach(metric => {
-                    const input = document.getElementById(`weekly_target_${metric}`);
-                    if (input) {
-                        const value = parseInt(input.value) || 0;
-                        weeklyTargets[metric] = value;
-                    }
-                });
-            }
+            visibleMetrics.forEach(metric => {
+                const input = document.getElementById(`target_${metric}`);
+                if (input) {
+                    const value = parseInt(input.value) || 0;
+                    dailyTargets[metric] = value;
+                }
+            });
             
             if (supabase) {
                 try {
@@ -2713,8 +2014,7 @@
                         type: 'settings',
                         data: {
                             visible_metrics: visibleMetrics,
-                            daily_targets: dailyTargets,
-                            weekly_targets: weeklyTargets
+                            daily_targets: dailyTargets
                         }
                     };
                     await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
@@ -3241,3 +2541,6 @@
             document.getElementById('currentDate').textContent = currentDate;
             loadData();
         };
+    </script>
+</body>
+</html>
