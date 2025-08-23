@@ -32,7 +32,7 @@
         }
         
         .header h1 {
-            font-size: 49px;
+            font-size: 52px;
             font-weight: 200;
             letter-spacing: -2px;
             margin-bottom: 10px;
@@ -45,8 +45,8 @@
         }
         
         .date-display {
-            font-size: 15px;
-            color: #666;
+            font-size: 16px;
+            color: #aaa;
             letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 30px;
@@ -63,14 +63,14 @@
         .nav-link {
             padding: 12px 30px;
             background: transparent;
-            color: #666;
+            color: #999;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
             letter-spacing: 1px;
             text-transform: uppercase;
             transition: all 0.3s;
-            border: 1px solid #111;
+            border: 1px solid #222;
         }
         
         .nav-link:first-child {
@@ -94,15 +94,15 @@
             gap: 30px;
             margin-bottom: 40px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #111;
+            border-bottom: 1px solid #222;
             flex-wrap: wrap;
         }
         
         .category-tab {
             background: transparent;
             border: none;
-            color: #666;
-            font-size: 14px;
+            color: #999;
+            font-size: 15px;
             font-weight: 500;
             cursor: pointer;
             padding: 5px 0;
@@ -127,7 +127,7 @@
         }
         
         .category-tab:hover {
-            color: #999;
+            color: #ccc;
         }
         
         .category-tab.active {
@@ -139,7 +139,7 @@
         }
         
         .tab-icon {
-            font-size: 17px;
+            font-size: 18px;
         }
         
         /* 랭킹 섹션 */
@@ -153,7 +153,7 @@
         }
         
         .category-name {
-            font-size: 33px;
+            font-size: 36px;
             font-weight: 200;
             color: #fff;
             margin-bottom: 5px;
@@ -164,8 +164,8 @@
         }
         
         .category-subtitle {
-            font-size: 13px;
-            color: #666;
+            font-size: 14px;
+            color: #aaa;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
@@ -175,9 +175,9 @@
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            gap: 40px;
+            gap: 45px;
             margin-bottom: 40px;
-            height: 400px;
+            min-height: 400px;
         }
         
         .podium-item {
@@ -191,7 +191,7 @@
         }
         
         .podium-rank {
-            font-size: 73px;
+            font-size: 75px;
             font-weight: 100;
             margin-bottom: 20px;
             opacity: 0.7;
@@ -228,7 +228,7 @@
         .podium-bar {
             width: 100%;
             background: #0a0a0a;
-            border: 1px solid #111;
+            border: 1px solid #222;
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
@@ -267,22 +267,22 @@
         }
         
         .podium-name {
-            font-size: 17px;
+            font-size: 19px;
             font-weight: 500;
             color: #fff;
             margin-bottom: 5px;
         }
         
         .podium-team {
-            font-size: 12px;
-            color: #999;
+            font-size: 14px;
+            color: #bbb;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 15px;
         }
         
         .podium-score {
-            font-size: 37px;
+            font-size: 40px;
             font-weight: 200;
             color: #1E6FFF;
         }
@@ -293,18 +293,34 @@
             flex-direction: column;
             gap: 15px;
             max-width: 600px;
-            margin: 0 auto 30px;
+            margin: 20px auto 20px;
+            padding: 20px;
+            background: rgba(30, 111, 255, 0.02);
+            border-radius: 15px;
+            border: 1px solid rgba(30, 111, 255, 0.1);
         }
         
         .extra-ranks.show {
             display: flex;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .extra-rank-item {
             display: flex;
             align-items: center;
             background: #0a0a0a;
-            border: 1px solid #111;
+            border: 1px solid #222;
             border-radius: 10px;
             padding: 20px;
             transition: all 0.3s;
@@ -317,9 +333,9 @@
         }
         
         .extra-rank-num {
-            font-size: 32px;
+            font-size: 34px;
             font-weight: 200;
-            color: #666;
+            color: #999;
             width: 60px;
             text-align: center;
         }
@@ -330,21 +346,21 @@
         }
         
         .extra-rank-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 500;
             color: #fff;
             margin-bottom: 3px;
         }
         
         .extra-rank-team {
-            font-size: 12px;
-            color: #999;
+            font-size: 14px;
+            color: #bbb;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         
         .extra-rank-score {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 200;
             color: #1E6FFF;
         }
@@ -352,13 +368,13 @@
         /* 더보기 버튼 */
         .show-more-btn {
             display: block;
-            margin: 0 auto 40px;
-            padding: 12px 30px;
-            background: transparent;
-            border: 1px solid #1E6FFF;
+            margin: 20px auto 40px;
+            padding: 15px 40px;
+            background: rgba(30, 111, 255, 0.1);
+            border: 2px solid #1E6FFF;
             color: #1E6FFF;
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 15px;
+            font-weight: 600;
             letter-spacing: 1px;
             text-transform: uppercase;
             cursor: pointer;
@@ -369,6 +385,8 @@
         .show-more-btn:hover {
             background: #1E6FFF;
             color: #000;
+            box-shadow: 0 5px 20px rgba(30, 111, 255, 0.4);
+            transform: translateY(-2px);
         }
         
         .show-more-btn.active {
@@ -385,7 +403,7 @@
         
         .category-card {
             background: #000;
-            border: 1px solid #0a0a0a;
+            border: 1px solid #1a1a1a;
             padding: 30px;
             transition: all 0.3s;
         }
@@ -401,13 +419,13 @@
             align-items: center;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #111;
+            border-bottom: 1px solid #222;
         }
         
         .category-card-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 500;
-            color: #888;
+            color: #bbb;
             text-transform: uppercase;
             letter-spacing: 1px;
             display: flex;
@@ -416,7 +434,7 @@
         }
         
         .category-card-icon {
-            font-size: 19px;
+            font-size: 20px;
         }
         
         .mini-ranks {
@@ -432,9 +450,9 @@
         }
         
         .mini-rank-num {
-            font-size: 21px;
+            font-size: 23px;
             font-weight: 200;
-            color: #555;
+            color: #888;
             width: 30px;
         }
         
@@ -455,20 +473,20 @@
         }
         
         .mini-rank-name {
-            font-size: 15px;
+            font-size: 16px;
             color: #fff;
             margin-bottom: 2px;
         }
         
         .mini-rank-team {
-            font-size: 11px;
-            color: #999;
+            font-size: 13px;
+            color: #bbb;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .mini-rank-score {
-            font-size: 25px;
+            font-size: 28px;
             font-weight: 200;
             color: #1E6FFF;
         }
@@ -479,8 +497,8 @@
             justify-content: center;
             align-items: center;
             height: 400px;
-            color: #666;
-            font-size: 15px;
+            color: #999;
+            font-size: 16px;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
@@ -505,8 +523,8 @@
         .no-data {
             text-align: center;
             padding: 60px 20px;
-            color: #666;
-            font-size: 15px;
+            color: #999;
+            font-size: 16px;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
@@ -516,9 +534,9 @@
             text-align: center;
             margin-top: 60px;
             padding-top: 30px;
-            border-top: 1px solid #111;
-            font-size: 12px;
-            color: #666;
+            border-top: 1px solid #222;
+            font-size: 13px;
+            color: #999;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
@@ -535,7 +553,7 @@
             color: #1E6FFF;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 21px;
+            font-size: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -550,7 +568,7 @@
         /* 반응형 */
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 33px;
+                font-size: 36px;
             }
             
             .category-tabs {
@@ -577,7 +595,25 @@
             }
             
             .extra-ranks {
-                padding: 0 10px;
+                padding: 15px;
+                margin: 15px 10px;
+            }
+            
+            .extra-rank-item {
+                padding: 15px;
+            }
+            
+            .extra-rank-num {
+                font-size: 24px;
+                width: 40px;
+            }
+            
+            .extra-rank-info {
+                padding: 0 15px;
+            }
+            
+            .extra-rank-score {
+                font-size: 24px;
             }
         }
     </style>
@@ -733,6 +769,8 @@
             const rankings = processedData[categoryKey] || [];
             const isExpanded = showMoreStates[categoryKey] || false;
             
+            console.log(`${category.name} 랭킹 데이터:`, rankings.length, '명'); // 디버깅용
+            
             if (rankings.length === 0) {
                 document.getElementById('rankingSection').innerHTML = '<div class="no-data">No Data Available</div>';
                 return;
@@ -746,12 +784,14 @@
                 <div class="podium">
             `;
             
-            // TOP 3 포디움
-            rankings.slice(0, 3).forEach((item, index) => {
-                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : 'rank-3';
+            // TOP 3 포디움 (실제 있는 데이터만큼만 표시)
+            const podiumCount = Math.min(3, rankings.length);
+            for (let i = 0; i < podiumCount; i++) {
+                const item = rankings[i];
+                const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : 'rank-3';
                 html += `
                     <div class="podium-item ${rankClass}">
-                        <div class="podium-rank">${index + 1}</div>
+                        <div class="podium-rank">${i + 1}</div>
                         <div class="podium-bar">
                             <div class="podium-content">
                                 <div class="podium-name">${item.name}</div>
@@ -761,35 +801,45 @@
                         </div>
                     </div>
                 `;
-            });
+            }
             
             html += '</div>';
             
-            // 4-5위 추가 표시
+            // 4-5위 추가 표시 (3명 이상일 때만)
             if (rankings.length > 3) {
-                html += `<div class="extra-ranks ${isExpanded ? 'show' : ''}" id="extraRanks">`;
+                const extraRankings = rankings.slice(3, 5);
                 
-                rankings.slice(3, 5).forEach((item, index) => {
-                    html += `
-                        <div class="extra-rank-item">
-                            <div class="extra-rank-num">${index + 4}</div>
-                            <div class="extra-rank-info">
-                                <div class="extra-rank-name">${item.name}</div>
-                                <div class="extra-rank-team">${item.team}</div>
+                if (extraRankings.length > 0) {
+                    html += `<div class="extra-ranks ${isExpanded ? 'show' : ''}" id="extraRanks">`;
+                    
+                    extraRankings.forEach((item, index) => {
+                        html += `
+                            <div class="extra-rank-item">
+                                <div class="extra-rank-num">${index + 4}</div>
+                                <div class="extra-rank-info">
+                                    <div class="extra-rank-name">${item.name}</div>
+                                    <div class="extra-rank-team">${item.team}</div>
+                                </div>
+                                <div class="extra-rank-score">${item.value}</div>
                             </div>
-                            <div class="extra-rank-score">${item.value}</div>
-                        </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    
+                    // 더보기 버튼
+                    const buttonText = isExpanded ? '▲ 접기' : `▼ 더보기 (${extraRankings.length === 1 ? '4위' : '4-5위'})`;
+                    html += `
+                        <button class="show-more-btn ${isExpanded ? 'active' : ''}" onclick="toggleShowMore('${categoryKey}')">
+                            ${buttonText}
+                        </button>
                     `;
-                });
-                
-                html += '</div>';
-                
-                // 더보기 버튼
-                html += `
-                    <button class="show-more-btn ${isExpanded ? 'active' : ''}" onclick="toggleShowMore('${categoryKey}')">
-                        ${isExpanded ? '접기' : '더보기 (4-5위)'}
-                    </button>
-                `;
+                }
+            } else if (rankings.length > 0) {
+                // 3명 이하일 때 안내 메시지
+                html += `<div style="text-align: center; color: #999; font-size: 14px; margin-top: 30px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                    현재 ${rankings.length}명의 실적만 있습니다
+                </div>`;
             }
             
             document.getElementById('rankingSection').innerHTML = html;
@@ -817,6 +867,7 @@
                 if (rankings.length === 0) {
                     html += '<div class="no-data">No Data</div>';
                 } else {
+                    // TOP 3 표시
                     rankings.slice(0, 3).forEach((item, index) => {
                         const topClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : 'top-3';
                         html += `
@@ -830,6 +881,13 @@
                             </div>
                         `;
                     });
+                    
+                    // 4명 이상일 때 안내
+                    if (rankings.length > 3) {
+                        html += `<div style="text-align: center; margin-top: 10px; font-size: 12px; color: #999;">
+                            +${rankings.length - 3}명 더
+                        </div>`;
+                    }
                 }
                 
                 html += `
@@ -847,6 +905,7 @@
             processedData = {};
             showMoreStates = {}; // 더보기 상태 초기화
             
+            // 각 카테고리별 처리
             Object.keys(categories).forEach(categoryKey => {
                 const category = categories[categoryKey];
                 const counselorTotals = {};
@@ -865,10 +924,13 @@
                 
                 processedData[categoryKey] = Object.values(counselorTotals)
                     .filter(item => item.value > 0)
-                    .sort((a, b) => b.value - a.value);
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 10); // 최대 10명까지만 저장
                     
                 showMoreStates[categoryKey] = false; // 초기값은 접힌 상태
             });
+            
+            console.log('처리된 데이터:', processedData); // 디버깅용
         }
         
         // 데이터 로드
@@ -895,6 +957,7 @@
                 }
                 
                 dailyData = await response.json();
+                console.log('로드된 원본 데이터:', dailyData.length, '개'); // 디버깅용
                 processData(dailyData);
                 displayRankings();
                 
