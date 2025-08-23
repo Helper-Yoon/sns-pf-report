@@ -533,6 +533,14 @@
             return { monday, sunday };
         }
         
+        // KST 기준 날짜 포맷팅 함수
+        function formatDateKST(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
         // 주간 정보 표시
         function displayWeekInfo() {
             const { monday, sunday } = getWeekDates(currentWeekOffset);
@@ -687,15 +695,19 @@
             list.innerHTML = html;
         }
         
-        // 데이터 로드
+        // 데이터 로드 (KST 기준으로 수정)
         async function loadWeeklyData() {
             const list = document.getElementById('rankingList');
             list.innerHTML = '<div class="loading">Loading</div>';
             
             try {
                 const { monday, sunday } = getWeekDates(currentWeekOffset);
-                const startDate = monday.toISOString().split('T')[0];
-                const endDate = sunday.toISOString().split('T')[0];
+                
+                // KST 기준으로 날짜 포맷팅
+                const startDate = formatDateKST(monday);
+                const endDate = formatDateKST(sunday);
+                
+                console.log('주간 조회 범위 (KST):', startDate, '~', endDate); // 디버깅용
                 
                 const url = `${supabaseUrl}/rest/v1/performance?date=gte.${startDate}&date=lte.${endDate}`;
                 
@@ -713,6 +725,7 @@
                 }
                 
                 const data = await response.json();
+                console.log('로드된 주간 데이터:', data.length, '개'); // 디버깅용
                 
                 // 상담사별 집계
                 const counselorTotals = {};
