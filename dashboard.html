@@ -1893,6 +1893,9 @@
             
             try {
                 await loadConfig();
+                // 주말 데이터와 주간 데이터(월~금) 모두 로드
+                const weekDates = getWeekDates(currentDate);
+                await loadWeeklyPerformanceData(weekDates);
                 await loadWeekendPerformanceData(weekendDates);
                 renderWeekendContent();
             } catch (error) {
@@ -2027,18 +2030,14 @@
             const content = document.getElementById('weekendContent');
             let html = '';
 
-            // 주말 목표 계산 (주간 목표 - 주간 달성 실적)
+            // 주말 목표 계산 (월~금 목표 - 월~금 달성 실적)
             const weekendTargets = {};
+            const weeklyActuals = calculatePeriodGrandTotals(weeklyPerformanceData); // 월~금 실제 달성
             
-            // 먼저 현재 주의 월~금 실적을 계산해야 함
-            const weekDates = getWeekDates(currentDate);
-            
-            // 주간 실적 계산은 비동기로 처리해야 하므로, 임시로 기본 계산 사용
             visibleMetrics.forEach(metric => {
-                const weeklyTarget = (dailyTargets[metric] || 100) * 5; // 주간 목표
-                // 실제로는 주간 실적을 로드해서 계산해야 하지만, 여기서는 간단히 처리
-                const weeklyActual = 0; // TODO: 실제 주간 달성 실적 계산
-                weekendTargets[metric] = Math.max(weeklyTarget - weeklyActual, 0);
+                const weeklyTarget = (dailyTargets[metric] || 100) * 5; // 월~금 목표 (일목표 * 5)
+                const weeklyActual = weeklyActuals[metric] || 0; // 월~금 실제 달성
+                weekendTargets[metric] = Math.max(weeklyTarget - weeklyActual, 0); // 주말 목표 = 주간목표 - 주간달성 (음수면 0)
             });
 
             // 전체 요약
@@ -2124,11 +2123,6 @@
                 html += `<span class="summary-item">${metric}: ${grandTotals[metric]}</span>`;
             });
             html += '</div></div>';
-
-            // 주말 목표는 주간목표 - 주간달성으로 계산 (임시로 주간목표의 20%로 설정)
-            visibleMetrics.forEach(metric => {
-                weekendTargets[metric] = Math.round((dailyTargets[metric] || 100) * 2 * 0.5); // 2일치 * 50%
-            });
 
             html += '<div class="summary-row">';
             html += '<div class="summary-label">주말 목표</div>';
@@ -2427,6 +2421,16 @@
                 '5파트': '차정환'
             };
             
+            // 주말 목표 계산 (월~금 목표 - 월~금 달성 실적)
+            const weekendTargets = {};
+            const weeklyActuals = calculatePeriodGrandTotals(weeklyPerformanceData); // 월~금 실제 달성
+            
+            visibleMetrics.forEach(metric => {
+                const weeklyTarget = (dailyTargets[metric] || 100) * 5; // 월~금 목표 (일목표 * 5)
+                const weeklyActual = weeklyActuals[metric] || 0; // 월~금 실제 달성
+                weekendTargets[metric] = Math.max(weeklyTarget - weeklyActual, 0); // 주말 목표 = 주간목표 - 주간달성 (음수면 0)
+            });
+            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
@@ -2594,7 +2598,7 @@
                 x += colWidths[3 + i];
             });
             
-            // 주말 목표 (임시로 일일목표 * 2 * 50%로 계산)
+            // 주말 목표
             y += rowHeight;
             x = xStart;
             ctx.fillStyle = '#FFCCCC';
@@ -2607,14 +2611,13 @@
             x += colWidths[0] + colWidths[1] + colWidths[2];
             
             visibleMetrics.forEach((metric, i) => {
-                const weekendTarget = Math.round((dailyTargets[metric] || 100) * 2 * 0.5);
                 ctx.fillStyle = '#FFCCCC';
                 ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                 ctx.fillStyle = 'black';
                 ctx.font = 'bold 16px Malgun Gothic, sans-serif';
-                ctx.fillText(weekendTarget.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                ctx.fillText(weekendTargets[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                 x += colWidths[3 + i];
             });
             
@@ -2631,7 +2634,7 @@
             x += colWidths[0] + colWidths[1] + colWidths[2];
             
             visibleMetrics.forEach((metric, i) => {
-                const target = Math.round((dailyTargets[metric] || 100) * 2 * 0.5);
+                const target = weekendTargets[metric];
                 const actual = grandTotals[metric];
                 const diff = target - actual;
                 const isAchieved = diff <= 0;
