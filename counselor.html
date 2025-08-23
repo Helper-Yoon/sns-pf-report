@@ -32,27 +32,28 @@
 
         .header h1 {
             font-size: 56px;
-            font-weight: 200;
+            font-weight: 300; /* 200 → 300 */
             margin-bottom: 10px;
         }
 
         .header h1 span {
             color: #1E6FFF;
-            font-weight: 400;
+            font-weight: 500; /* 400 → 500 */
         }
 
         .status {
-            font-size: 14px;
-            color: #bbb;
+            font-size: 15px; /* 14px → 15px */
+            color: #ddd; /* #bbb → #ddd */
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-top: 10px;
+            font-weight: 400; /* 추가 */
         }
 
         .user-section {
             background: #000;
             padding: 25px 30px;
-            border: 1px solid #222;
+            border: 1px solid #333; /* #222 → #333 */
             margin-bottom: 40px;
             display: flex;
             justify-content: space-between;
@@ -68,46 +69,49 @@
         }
 
         .select-group label {
-            font-size: 14px;
-            color: #ccc;
+            font-size: 15px; /* 14px → 15px */
+            color: #ddd; /* #ccc → #ddd */
             text-transform: uppercase;
             letter-spacing: 2px;
+            font-weight: 500; /* 추가 */
         }
 
         select {
             padding: 12px 22px;
             background: #000;
             color: #fff;
-            border: 1px solid #444;
+            border: 1px solid #555; /* #444 → #555 */
             font-size: 16px;
             cursor: pointer;
             min-width: 150px;
             transition: all 0.3s;
-            font-weight: 300;
+            font-weight: 400; /* 300 → 400 */
         }
 
         select:hover {
             border-color: #1E6FFF;
+            background: #0a0a0a; /* 호버시 배경 추가 */
         }
 
         select:focus {
             outline: none;
             border-color: #1E6FFF;
+            background: #0a0a0a;
         }
 
         .date-display {
             color: #4A9EFF;
-            font-weight: 400;
-            font-size: 16px;
+            font-weight: 500; /* 400 → 500 */
+            font-size: 17px; /* 16px → 17px */
             letter-spacing: 1px;
         }
 
         .selection-status {
             padding: 10px 18px;
-            font-size: 13px;
+            font-size: 14px; /* 13px → 14px */
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-weight: 500;
+            font-weight: 600; /* 500 → 600 */
         }
 
         .status-warning {
@@ -121,10 +125,10 @@
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2px;
+            gap: 3px; /* 2px → 3px */
             margin-bottom: 50px;
             background: #111;
-            padding: 2px;
+            padding: 3px; /* 2px → 3px */
         }
 
         .metric-card {
@@ -132,26 +136,28 @@
             overflow: hidden;
             transition: all 0.3s;
             position: relative;
+            border: 1px solid #1a1a1a; /* 미세한 테두리 추가 */
         }
 
         .metric-card:hover:not(.disabled) {
-            background: #050505;
+            background: #0a0a0a; /* #050505 → #0a0a0a */
+            border-color: #333;
         }
 
         .metric-card.disabled {
-            opacity: 0.3;
+            opacity: 0.35; /* 0.3 → 0.35 */
             pointer-events: none;
         }
 
         .metric-header {
             padding: 22px;
-            font-size: 15px;
+            font-size: 16px; /* 15px → 16px */
             text-transform: uppercase;
             letter-spacing: 2px;
-            color: #ddd;
+            color: #fff; /* #ddd → #fff */
             text-align: center;
-            border-bottom: 1px solid #222;
-            font-weight: 400;
+            border-bottom: 1px solid #333; /* #222 → #333 */
+            font-weight: 500; /* 400 → 500 */
         }
 
         .metric-counter {
@@ -165,11 +171,11 @@
         .counter-button {
             width: 55px;
             height: 55px;
-            border: 1px solid #444;
+            border: 1px solid #555; /* #444 → #555 */
             background: #000;
-            color: #bbb;
+            color: #ddd; /* #bbb → #ddd */
             font-size: 28px;
-            font-weight: 200;
+            font-weight: 300; /* 200 → 300 */
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
@@ -180,73 +186,84 @@
         .counter-button:hover:not(:disabled) {
             color: #1E6FFF;
             border-color: #1E6FFF;
+            background: #0a0a0a;
         }
 
         .counter-button.plus:hover:not(:disabled) {
             background: #1E6FFF;
             color: #000;
+            font-weight: 400; /* 호버시 더 굵게 */
         }
 
         .counter-button:disabled {
-            opacity: 0.2;
+            opacity: 0.25; /* 0.2 → 0.25 */
             cursor: not-allowed;
         }
 
         .counter-value {
             font-size: 56px;
-            font-weight: 200;
+            font-weight: 300; /* 200 → 300 */
             color: #4A9EFF;
             min-width: 110px;
             text-align: center;
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.3); /* 발광 효과 추가 */
         }
 
         .memo-section {
             background: #000;
             padding: 30px;
-            border: 1px solid #333;
+            border: 1px solid #444; /* #333 → #444 */
             margin-bottom: 40px;
         }
 
         .memo-header {
-            font-size: 14px;
+            font-size: 15px; /* 14px → 15px */
             text-transform: uppercase;
             letter-spacing: 2px;
-            color: #ccc;
+            color: #ddd; /* #ccc → #ddd */
             margin-bottom: 20px;
-            font-weight: 400;
+            font-weight: 500; /* 400 → 500 */
         }
 
         textarea {
             width: 100%;
             min-height: 200px;
             padding: 20px;
-            background: #000;
+            background: #0a0a0a; /* #000 → #0a0a0a */
             color: #fff;
-            border: 1px solid #333;
+            border: 1px solid #444; /* #333 → #444 */
             font-size: 16px;
-            font-weight: 300;
+            font-weight: 400; /* 300 → 400 */
             resize: vertical;
             transition: all 0.3s;
             font-family: inherit;
+            line-height: 1.5; /* 줄간격 추가 */
+        }
+
+        textarea::placeholder {
+            color: #666; /* placeholder 색상 개선 */
+            font-weight: 300;
         }
 
         textarea:focus {
             outline: none;
             border-color: #1E6FFF;
+            background: #111;
         }
 
         textarea:disabled {
-            opacity: 0.2;
+            opacity: 0.25; /* 0.2 → 0.25 */
             cursor: not-allowed;
         }
 
         .info-message {
             text-align: center;
-            color: #bbb;
-            font-size: 13px;
+            color: #ddd; /* #bbb → #ddd */
+            font-size: 14px; /* 13px → 14px */
             text-transform: uppercase;
             letter-spacing: 2px;
             padding: 20px;
+            font-weight: 400; /* 추가 */
         }
 
         .loading {
@@ -266,10 +283,10 @@
         .btn {
             padding: 12px 28px;
             background: transparent;
-            color: #ccc;
-            border: 1px solid #444;
+            color: #ddd; /* #ccc → #ddd */
+            border: 1px solid #555; /* #444 → #555 */
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600; /* 500 → 600 */
             letter-spacing: 2px;
             text-transform: uppercase;
             cursor: pointer;
@@ -279,10 +296,11 @@
         .btn:hover:not(:disabled) {
             color: #fff;
             border-color: #1E6FFF;
+            background: #0a0a0a;
         }
 
         .btn:disabled {
-            opacity: 0.3;
+            opacity: 0.35; /* 0.3 → 0.35 */
             cursor: not-allowed;
         }
 
@@ -294,11 +312,12 @@
         .btn-primary:hover:not(:disabled) {
             background: #1E6FFF;
             color: #000;
+            font-weight: 700; /* 호버시 더 굵게 */
         }
 
         .btn-back {
-            color: #ccc;
-            border-color: #444;
+            color: #ddd; /* #ccc → #ddd */
+            border-color: #555; /* #444 → #555 */
         }
 
         .btn-back:hover:not(:disabled) {
@@ -323,8 +342,10 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 2px;
+            font-weight: 500; /* 추가 */
             animation: slideIn 0.3s;
             z-index: 1000;
+            box-shadow: 0 0 20px rgba(30, 111, 255, 0.3); /* 그림자 효과 추가 */
         }
 
         @keyframes slideIn {
@@ -354,10 +375,12 @@
 
         .status-dot.active {
             background: #00FF00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* 발광 효과 */
         }
 
         .status-dot.error {
             background: #FF0000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* 발광 효과 */
         }
 
         .container.saving-state .metric-card {
