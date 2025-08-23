@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNS센터 실시간 대시보드</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
@@ -1244,13 +1244,22 @@
         let supabase = null;
         let isConnected = false;
         
-        try {
-            if (window.supabase && window.supabase.createClient) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('Supabase 클라이언트 생성 성공');
+        // Supabase 초기화를 window.onload 후로 지연
+        function initSupabase() {
+            try {
+                if (typeof window.supabase !== 'undefined') {
+                    const { createClient } = window.supabase;
+                    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+                    console.log('Supabase 클라이언트 생성 성공');
+                    return true;
+                } else {
+                    console.error('Supabase 라이브러리가 로드되지 않았습니다.');
+                    return false;
+                }
+            } catch (e) {
+                console.error('Supabase 초기화 실패:', e);
+                return false;
             }
-        } catch (e) {
-            console.error('Supabase 초기화 실패:', e);
         }
 
         // 전역 변수
@@ -1450,10 +1459,13 @@
                 metricToDb = defaultMetricToDb;
                 dailyTargets = {};
                 defaultMetrics.forEach(m => dailyTargets[m] = 100);
+                document.getElementById('connectionStatus').innerHTML = '로컬 모드';
                 return;
             }
 
             try {
+                console.log('Supabase에서 설정 로드 시작...');
+                
                 // 팀 정보 로드
                 const { data: teamsData, error: teamsError } = await supabase
                     .from('config')
@@ -1461,10 +1473,16 @@
                     .eq('type', 'teams')
                     .single();
 
+                if (teamsError) {
+                    console.log('팀 정보 로드 오류:', teamsError.message);
+                }
+
                 if (teamsData && !teamsError) {
                     teams = teamsData.data;
+                    console.log('팀 정보 로드 성공');
                 } else {
                     teams = defaultTeams;
+                    console.log('기본 팀 정보 사용');
                 }
 
                 // 메트릭 정보 로드
@@ -1473,6 +1491,10 @@
                     .select('*')
                     .eq('type', 'metrics')
                     .single();
+
+                if (metricsError) {
+                    console.log('메트릭 정보 로드 오류:', metricsError.message);
+                }
 
                 if (metricsData && !metricsError) {
                     const mapping = {};
@@ -1483,9 +1505,11 @@
                     });
                     metricToDb = mapping;
                     metrics = metricsList;
+                    console.log('메트릭 정보 로드 성공');
                 } else {
                     metrics = defaultMetrics;
                     metricToDb = defaultMetricToDb;
+                    console.log('기본 메트릭 정보 사용');
                 }
 
                 // 설정 로드
@@ -1495,17 +1519,24 @@
                     .eq('type', 'settings')
                     .single();
 
+                if (settingsError) {
+                    console.log('설정 정보 로드 오류:', settingsError.message);
+                }
+
                 if (settingsData && settingsData.data && !settingsError) {
                     visibleMetrics = settingsData.data.visible_metrics || metrics;
                     dailyTargets = settingsData.data.daily_targets || {};
+                    console.log('설정 정보 로드 성공');
                 } else {
                     visibleMetrics = metrics;
                     dailyTargets = {};
                     metrics.forEach(m => dailyTargets[m] = 100);
+                    console.log('기본 설정 정보 사용');
                 }
 
                 isConnected = true;
                 document.getElementById('connectionStatus').innerHTML = '서버 연결됨';
+                console.log('모든 설정 로드 완료');
             } catch (error) {
                 console.error('설정 로드 오류:', error);
                 teams = defaultTeams;
@@ -1521,15 +1552,23 @@
         // 실적 데이터 로드
         async function loadPerformanceData() {
             if (!supabase) {
+                console.log('Supabase 연결 없음. 빈 데이터 사용');
                 performanceData = {};
                 return;
             }
 
             try {
+                console.log(`${currentDate} 날짜의 실적 데이터 로드 중...`);
                 const { data, error } = await supabase
                     .from('performance')
                     .select('*')
                     .eq('date', currentDate);
+
+                if (error) {
+                    console.error('실적 데이터 로드 오류:', error.message);
+                    performanceData = {};
+                    return;
+                }
 
                 if (data && !error) {
                     performanceData = {};
@@ -1537,8 +1576,10 @@
                         const key = `${record.team}_${record.name}`;
                         performanceData[key] = record;
                     });
+                    console.log(`실적 데이터 ${data.length}개 로드 완료`);
                 } else {
                     performanceData = {};
+                    console.log('실적 데이터 없음');
                 }
             } catch (error) {
                 console.error('실적 데이터 로드 오류:', error);
@@ -3984,7 +4025,17 @@
 
         // 초기화
         window.onload = function() {
+            // Supabase 초기화
+            const supabaseInitialized = initSupabase();
+            if (!supabaseInitialized) {
+                console.warn('Supabase 연결 실패. 로컬 모드로 실행합니다.');
+                document.getElementById('connectionStatus').innerHTML = '로컬 모드';
+            }
+            
+            // 날짜 설정
             document.getElementById('dateSelector').value = currentDate;
             document.getElementById('currentDate').textContent = currentDate;
+            
+            // 데이터 로드
             loadData();
         };
