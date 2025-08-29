@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS센터 - 월별 실적 랭킹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* 헤더 */
+        .header {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 52px;
+            font-weight: 200;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        
+        .header h1 span {
+            color: #1E6FFF;
+            font-weight: 400;
+        }
+        
+        .month-display {
+            font-size: 16px;
+            color: #aaa;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+        
+        /* 네비게이션 */
+        .nav-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 50px;
+        }
+        
+        .nav-link {
+            padding: 12px 30px;
+            background: transparent;
+            color: #999;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            border: 1px solid #222;
+        }
+        
+        .nav-link:first-child {
+            border-radius: 30px 0 0 30px;
+        }
+        
+        .nav-link:last-child {
+            border-radius: 0 30px 30px 0;
+        }
+        
+        .nav-link:hover {
+            color: #1E6FFF;
+            background: rgba(30, 111, 255, 0.05);
+            border-color: #1E6FFF;
+        }
+        
+        /* 컨트롤 바 */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .month-control {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .month-btn {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: 1px solid #555;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .month-btn:hover {
+            border-color: #1E6FFF;
+            color: #1E6FFF;
+        }
+        
+        .month-text {
+            font-size: 16px;
+            color: #bbb;
+            min-width: 250px;
+            text-align: center;
+        }
+        
+        /* 정렬 탭 */
+        .sort-tabs {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .sort-tab {
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 5px 0;
+            position: relative;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .sort-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #1E6FFF;
+            transition: width 0.3s;
+        }
+        
+        .sort-tab:hover {
+            color: #ccc;
+        }
+        
+        .sort-tab.active {
+            color: #1E6FFF;
+        }
+        
+        .sort-tab.active::after {
+            width: 100%;
+        }
+        
+        .tab-icon {
+            font-size: 18px;
+        }
+        
+        /* 랭킹 리스트 */
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .rank-row {
+            display: grid;
+            grid-template-columns: 60px 200px 1fr 120px;
+            align-items: center;
+            padding: 20px;
+            background: #000;
+            border: 1px solid #1a1a1a;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .rank-row:hover {
+            background: #050505;
+            border-color: #1E6FFF;
+            transform: translateX(10px);
+        }
+        
+        .rank-row.top-1 {
+            border-left: 3px solid #FFD700;
+        }
+        
+        .rank-row.top-2 {
+            border-left: 3px solid #C0C0C0;
+        }
+        
+        .rank-row.top-3 {
+            border-left: 3px solid #CD7F32;
+        }
+        
+        /* 순위 번호 */
+        .rank-num {
+            font-size: 26px;
+            font-weight: 200;
+            color: #888;
+        }
+        
+        .rank-row:hover .rank-num {
+            color: #1E6FFF;
+        }
+        
+        .rank-row.top-1 .rank-num {
+            color: #FFD700;
+            font-weight: 400;
+        }
+        
+        .rank-row.top-2 .rank-num {
+            color: #C0C0C0;
+            font-weight: 400;
+        }
+        
+        .rank-row.top-3 .rank-num {
+            color: #CD7F32;
+            font-weight: 400;
+        }
+        
+        /* 상담사 정보 */
+        .counselor {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .counselor-name {
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+        }
+        
+        .counselor-team {
+            font-size: 14px;
+            color: #bbb;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* 실적 바 */
+        .stats-bar {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 65px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+        
+        .stat-icon {
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 300;
+            color: #999;
+            transition: all 0.3s;
+        }
+        
+        .stat-value.highlight {
+            color: #fff;
+            font-weight: 400;
+        }
+        
+        .rank-row:hover .stat-value {
+            color: #bbb;
+        }
+        
+        .rank-row:hover .stat-value.highlight {
+            color: #1E6FFF;
+        }
+        
+        /* 전체 점수 */
+        .total-score {
+            text-align: right;
+            padding-right: 10px;
+        }
+        
+        .total-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .total-value {
+            font-size: 32px;
+            font-weight: 200;
+            color: #1E6FFF;
+            margin-top: 2px;
+        }
+        
+        /* 로딩 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            color: #999;
+            font-size: 16px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid #1E6FFF;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 데이터 없음 */
+        .no-data {
+            text-align: center;
+            padding: 100px 20px;
+            color: #999;
+            font-size: 16px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* 업데이트 시간 */
+        .update-info {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #222;
+            font-size: 13px;
+            color: #999;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        /* 새로고침 버튼 */
+        .refresh-btn {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 48px;
+            height: 48px;
+            background: #000;
+            border: 1px solid #1E6FFF;
+            color: #1E6FFF;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .refresh-btn:hover {
+            background: #1E6FFF;
+            color: #000;
+            transform: rotate(180deg);
+        }
+        
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .sort-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .rank-row {
+                grid-template-columns: 40px 1fr 80px;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .stats-bar {
+                display: none;
+            }
+            
+            .month-text {
+                min-width: auto;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>월간 <span>실적</span></h1>
+            <div class="month-display" id="monthDisplay"></div>
+        </div>
+        
+        <div class="nav-bar">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="ranking.html" class="nav-link">Daily</a>
+            <a href="weekly_ranking.html" class="nav-link">Weekly</a>
+            <a href="monthly_ranking.html" class="nav-link" style="color: #1E6FFF; background: rgba(30, 111, 255, 0.05); border-color: #1E6FFF;">Monthly</a>
+        </div>
+        
+        <div class="controls">
+            <div class="month-control">
+                <button class="month-btn" onclick="changeMonth(-1)">←</button>
+                <div class="month-text" id="monthText"></div>
+                <button class="month-btn" onclick="changeMonth(1)">→</button>
+            </div>
+            
+            <div class="sort-tabs">
+                <button class="sort-tab active" onclick="setSortBy(this, 'usim')">
+                    <span class="tab-icon">📱</span>
+                    <span>유심</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'internet')">
+                    <span class="tab-icon">🌐</span>
+                    <span>인터넷</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'premium')">
+                    <span class="tab-icon">⭐</span>
+                    <span>프리미엄</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'essence')">
+                    <span class="tab-icon">💎</span>
+                    <span>에센스</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'iot')">
+                    <span class="tab-icon">📡</span>
+                    <span>IOT</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'one_g')">
+                    <span class="tab-icon">📶</span>
+                    <span>1G</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'magic')">
+                    <span class="tab-icon">✨</span>
+                    <span>매직</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'appliance')">
+                    <span class="tab-icon">🏠</span>
+                    <span>가전</span>
+                </button>
+                <button class="sort-tab" onclick="setSortBy(this, 'total')">
+                    <span class="tab-icon">📊</span>
+                    <span>전체</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="ranking-list" id="rankingList">
+            <div class="loading">Loading</div>
+        </div>
+        
+        <div class="update-info" id="updateInfo"></div>
+    </div>
+    
+    <button class="refresh-btn" onclick="loadMonthlyData()">↻</button>
+    
+    <script>
+        // Supabase 설정
+        const supabaseUrl = 'https://bhtqjipygkawoyieidgp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
+        
+        let currentMonthOffset = 0;
+        let monthlyData = [];
+        let currentSort = 'usim';
+        
+        // 월 날짜 계산
+        function getMonthDates(offset = 0) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + offset;
+            
+            // 해당 월의 첫날
+            const firstDay = new Date(year, month, 1);
+            firstDay.setHours(0, 0, 0, 0);
+            
+            // 해당 월의 마지막날
+            const lastDay = new Date(year, month + 1, 0);
+            lastDay.setHours(23, 59, 59, 999);
+            
+            return { firstDay, lastDay };
+        }
+        
+        // KST 기준 날짜 포맷팅 함수
+        function formatDateKST(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // 월간 정보 표시
+        function displayMonthInfo() {
+            const { firstDay, lastDay } = getMonthDates(currentMonthOffset);
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const displayText = `${monthNames[firstDay.getMonth()]} ${firstDay.getFullYear()}`;
+            
+            document.getElementById('monthDisplay').textContent = displayText;
+            document.getElementById('monthText').textContent = `${firstDay.getFullYear()}년 ${firstDay.getMonth() + 1}월`;
+        }
+        
+        // 월 변경
+        function changeMonth(direction) {
+            currentMonthOffset += direction;
+            displayMonthInfo();
+            loadMonthlyData();
+        }
+        
+        // 정렬 설정
+        function setSortBy(btn, sortType) {
+            currentSort = sortType;
+            
+            document.querySelectorAll('.sort-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
+            sortAndDisplay();
+        }
+        
+        // 정렬 및 표시
+        function sortAndDisplay() {
+            const sorted = [...monthlyData].sort((a, b) => {
+                if (currentSort === 'total') {
+                    return b.total - a.total;
+                } else {
+                    const fieldMap = {
+                        'usim': 'usim_count',
+                        'internet': 'sk_internet',
+                        'premium': 'premium',
+                        'essence': 'essence',
+                        'iot': 'iot',
+                        'one_g': 'one_g',
+                        'magic': 'sk_magic',
+                        'appliance': 'appliance'
+                    };
+                    const field = fieldMap[currentSort];
+                    return b[field] - a[field];
+                }
+            });
+            
+            displayRankings(sorted);
+        }
+        
+        // 랭킹 표시
+        function displayRankings(data) {
+            const list = document.getElementById('rankingList');
+            
+            if (data.length === 0) {
+                list.innerHTML = '<div class="no-data">No Data Available</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            data.forEach((counselor, index) => {
+                const topClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                
+                html += `
+                    <div class="rank-row ${topClass}">
+                        <div class="rank-num">${(index + 1).toString().padStart(2, '0')}</div>
+                        
+                        <div class="counselor">
+                            <div class="counselor-name">${counselor.name}</div>
+                            <div class="counselor-team">${counselor.team}</div>
+                        </div>
+                        
+                        <div class="stats-bar">
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'usim' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">📱</span>
+                                    <span>유심</span>
+                                </div>
+                                <div class="stat-value ${counselor.usim_count > 0 ? 'highlight' : ''}" style="${currentSort === 'usim' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.usim_count}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'internet' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">🌐</span>
+                                    <span>인터넷</span>
+                                </div>
+                                <div class="stat-value ${counselor.sk_internet > 0 ? 'highlight' : ''}" style="${currentSort === 'internet' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.sk_internet}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'premium' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">⭐</span>
+                                    <span>프리미엄</span>
+                                </div>
+                                <div class="stat-value ${counselor.premium > 0 ? 'highlight' : ''}" style="${currentSort === 'premium' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.premium}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'essence' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">💎</span>
+                                    <span>에센스</span>
+                                </div>
+                                <div class="stat-value ${counselor.essence > 0 ? 'highlight' : ''}" style="${currentSort === 'essence' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.essence}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'iot' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">📡</span>
+                                    <span>IOT</span>
+                                </div>
+                                <div class="stat-value ${counselor.iot > 0 ? 'highlight' : ''}" style="${currentSort === 'iot' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.iot}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'one_g' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">📶</span>
+                                    <span>1G</span>
+                                </div>
+                                <div class="stat-value ${counselor.one_g > 0 ? 'highlight' : ''}" style="${currentSort === 'one_g' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.one_g}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'magic' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">✨</span>
+                                    <span>매직</span>
+                                </div>
+                                <div class="stat-value ${counselor.sk_magic > 0 ? 'highlight' : ''}" style="${currentSort === 'magic' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.sk_magic}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label" style="${currentSort === 'appliance' ? 'color: #1E6FFF;' : ''}">
+                                    <span class="stat-icon">🏠</span>
+                                    <span>가전</span>
+                                </div>
+                                <div class="stat-value ${counselor.appliance > 0 ? 'highlight' : ''}" style="${currentSort === 'appliance' ? 'color: #1E6FFF; font-weight: 500;' : ''}">${counselor.appliance}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">
+                                    <span class="stat-icon">💳</span>
+                                    <span>카드</span>
+                                </div>
+                                <div class="stat-value" style="color: #555;">${counselor.card}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="total-score">
+                            <div class="total-label" style="${currentSort === 'total' ? 'color: #1E6FFF;' : ''}">Total</div>
+                            <div class="total-value" style="${currentSort === 'total' ? 'font-weight: 400;' : ''}">${counselor.total}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+        
+        // 데이터 로드 (KST 기준으로 수정)
+        async function loadMonthlyData() {
+            const list = document.getElementById('rankingList');
+            list.innerHTML = '<div class="loading">Loading</div>';
+            
+            try {
+                const { firstDay, lastDay } = getMonthDates(currentMonthOffset);
+                
+                // KST 기준으로 날짜 포맷팅
+                const startDate = formatDateKST(firstDay);
+                const endDate = formatDateKST(lastDay);
+                
+                console.log('월간 조회 범위 (KST):', startDate, '~', endDate); // 디버깅용
+                
+                const url = `${supabaseUrl}/rest/v1/performance?date=gte.${startDate}&date=lte.${endDate}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('로드된 월간 데이터:', data.length, '개'); // 디버깅용
+                
+                // 상담사별 집계
+                const counselorTotals = {};
+                
+                data.forEach(record => {
+                    const key = `${record.name}_${record.team}`;
+                    if (!counselorTotals[key]) {
+                        counselorTotals[key] = {
+                            name: record.name,
+                            team: record.team,
+                            usim_count: 0,
+                            sk_internet: 0,
+                            premium: 0,
+                            essence: 0,
+                            iot: 0,
+                            one_g: 0,
+                            sk_magic: 0,
+                            appliance: 0,
+                            card: 0,
+                            total: 0
+                        };
+                    }
+                    
+                    counselorTotals[key].usim_count += record.usim_count || 0;
+                    counselorTotals[key].sk_internet += record.sk_internet || 0;
+                    counselorTotals[key].premium += record.premium || 0;
+                    counselorTotals[key].essence += record.essence || 0;
+                    counselorTotals[key].iot += record.iot || 0;
+                    counselorTotals[key].one_g += record.one_g || 0;
+                    counselorTotals[key].sk_magic += record.sk_magic || 0;
+                    counselorTotals[key].appliance += record.appliance || 0;
+                    counselorTotals[key].card += record.card || 0;
+                });
+                
+                // 전체 점수 계산 (카드 제외)
+                Object.values(counselorTotals).forEach(counselor => {
+                    counselor.total = counselor.usim_count + counselor.sk_internet + 
+                                     counselor.premium + counselor.essence + counselor.iot + 
+                                     counselor.one_g + counselor.sk_magic + counselor.appliance;
+                });
+                
+                monthlyData = Object.values(counselorTotals);
+                sortAndDisplay();
+                
+                // 업데이트 시간
+                const now = new Date();
+                const timeStr = `Last Updated: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                document.getElementById('updateInfo').textContent = timeStr;
+                
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                list.innerHTML = '<div class="no-data">Error Loading Data</div>';
+            }
+        }
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            displayMonthInfo();
+            loadMonthlyData();
+        });
+    </script>
+</body>
+</html>
