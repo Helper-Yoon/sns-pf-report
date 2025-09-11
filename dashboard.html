@@ -2063,6 +2063,331 @@
             const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
             const rowHeight = 35;
             
+            // 파트장 제외한 실제 멤버 수 계산
+            let actualMemberCount = 0;
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                teamInfo.members.forEach(member => {
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    if (skillStatus !== 'leader') {
+                        actualMemberCount++;
+                    }
+                });
+            });
+            
+            // 총 행 수 계산 (파트장 제외)
+            let totalRows = 4; // 헤더 + 여백
+            totalRows += actualMemberCount; // 실제 멤버 수
+            totalRows += Object.keys(teams).length; // 팀 총합 행 수
+            totalRows += 6; // 센터총합, 일목표, 달성 + 여백
+            
+            canvas.width = totalWidth;
+            canvas.height = totalRows * rowHeight + 140;
+            
+            // 배경 색상
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 폰트 설정
+            ctx.font = '13px Malgun Gothic, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            let y = 30;
+            const xStart = 40;
+            
+            // 제목
+            ctx.font = 'bold 20px Malgun Gothic, sans-serif';
+            ctx.fillStyle = 'black';
+            ctx.fillText(`SNS센터 실적보고 - ${currentDate}`, totalWidth / 2, y);
+            y += 50;
+            
+            // 헤더
+            ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+            const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
+            let x = xStart;
+            headers.forEach((header, i) => {
+                ctx.fillStyle = '#D9D9D9';
+                ctx.fillRect(x, y, colWidths[i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
+                x += colWidths[i];
+            });
+            y += rowHeight;
+            
+            // 팀별 데이터
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                const teamColor = teamColors[teamName] || '#E2F0D9';
+                const leader = teamLeaders[teamName] || '';
+                const startY = y;
+                
+                // 파트장 제외한 멤버만 필터링
+                const actualMembers = teamInfo.members.filter(member => {
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    return skillStatus !== 'leader';
+                });
+                
+                // 실제 멤버가 없으면 이 팀 건너뛰기
+                if (actualMembers.length === 0) {
+                    return;
+                }
+                
+                // 팀 합계 계산 (파트장 제외)
+                const teamTotals = {};
+                visibleMetrics.forEach(metric => {
+                    teamTotals[metric] = 0;
+                    actualMembers.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = performanceData[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        const skillStatus = getSkillStatus(teamName, member.name);
+                        const isRental = skillStatus === 'rental';
+                        const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                        
+                        if (!isRentalMetric) {
+                            teamTotals[metric] += data[dbColumn] || 0;
+                        }
+                    });
+                });
+                
+                actualMembers.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const data = performanceData[key] || {};
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    const attendance = AttendanceManager.getPersonAttendance(currentDate, teamName, member.name);
+                    
+                    x = xStart;
+                    
+                    // 소속 (첫 행만)
+                    if (idx === 0) {
+                        const mergeHeight = actualMembers.length * rowHeight;
+                        ctx.fillStyle = teamColor;
+                        ctx.fillRect(x, y, colWidths[0], mergeHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[0], mergeHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+                        const teamText = teamName === '5파트' ? `의정부SNS센터` : `SNS센터`;
+                        ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
+                        ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
+                        ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
+                    }
+                    x += colWidths[0];
+                    
+                    // 이름
+                    const isOffDay = attendance !== 'normal';
+                    const nameColor = isOffDay ? '#ffcdd2' : teamColor;
+                    ctx.fillStyle = nameColor;
+                    ctx.fillRect(x, y, colWidths[1], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[1], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = '13px Malgun Gothic, sans-serif';
+                    
+                    let nameText = member.name;
+                    if (skillStatus === 'rental') nameText += ' (렌탈)';
+                    if (isOffDay) nameText += ` (${AttendanceManager.getStatusText(attendance)})`;
+                    ctx.fillText(nameText, x + colWidths[1]/2, y + rowHeight/2);
+                    x += colWidths[1];
+                    
+                    // 근속기간
+                    ctx.fillStyle = isOffDay ? '#ffcdd2' : teamColor;
+                    ctx.fillRect(x, y, colWidths[2], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[2], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = '12px Malgun Gothic, sans-serif';
+                    ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
+                    x += colWidths[2];
+                    
+                    // 실적 데이터
+                    visibleMetrics.forEach((metric, i) => {
+                        const dbColumn = metricToDb[metric];
+                        const value = data[dbColumn] || 0;
+                        const isRentalMetric = skillStatus === 'rental' && rentalMetrics.includes(metric);
+                        
+                        if (isRentalMetric) {
+                            ctx.fillStyle = '#FFE4B5';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = '#FF8C00';
+                            ctx.font = 'bold 12px Malgun Gothic, sans-serif';
+                            ctx.fillText('스킬없음', x + colWidths[3 + i]/2, y + rowHeight/2);
+                        } else if (isOffDay && value === 0) {
+                            ctx.fillStyle = '#ffcdd2';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = '#d32f2f';
+                            ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+                            ctx.fillText(AttendanceManager.getStatusText(attendance), x + colWidths[3 + i]/2, y + rowHeight/2);
+                        } else {
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = 'black';
+                            ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                            ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                        }
+                        x += colWidths[3 + i];
+                    });
+                    
+                    y += rowHeight;
+                });
+                
+                // 팀 총합
+                x = xStart;
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+                ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                visibleMetrics.forEach((metric, i) => {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 17px Malgun Gothic, sans-serif';
+                    ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                    x += colWidths[3 + i];
+                });
+                
+                y += rowHeight + 10;
+            });
+            
+            // 전체 총합 계산 (파트장 제외)
+            const grandTotals = {};
+            visibleMetrics.forEach(metric => {
+                grandTotals[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const skillStatus = getSkillStatus(teamName, member.name);
+                        if (skillStatus !== 'leader') {
+                            const key = `${teamName}_${member.name}`;
+                            const data = performanceData[key] || {};
+                            const dbColumn = metricToDb[metric];
+                            const isRental = skillStatus === 'rental';
+                            const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                            
+                            if (!isRentalMetric) {
+                                grandTotals[metric] += data[dbColumn] || 0;
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // 센터 총합
+            y += 10;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 18px Malgun Gothic, sans-serif';
+                ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 일 목표
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('일 목표', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText((dailyTargets[metric] || 100).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 달성 현황
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('달성 현황', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                const target = dailyTargets[metric] || 100;
+                const actual = grandTotals[metric];
+                const diff = target - actual;
+                const isAchieved = diff <= 0;
+                
+                ctx.fillStyle = isAchieved ? '#C8E6C9' : '#FFCDD2';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = isAchieved ? 'darkgreen' : 'darkred';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`, x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 다운로드
+            const link = document.createElement('a');
+            link.download = `SNS센터_실적_${currentDate.replace(/-/g, '')}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }
+                '1파트': '#E2F0D9',
+                '2파트': '#DDEBF7',
+                '3파트': '#FCE4D6',
+                '4파트': '#FFF2CC',
+                '5파트': '#D9E2F3'
+            };
+            
+            const teamLeaders = {
+                '1파트': '이종민',
+                '2파트': '윤도우리',
+                '3파트': '김진후',
+                '4파트': '이민주',
+                '5파트': '차정환'
+            };
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 컬럼 너비 계산
+            const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
+            const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
+            const rowHeight = 35;
+            
             // 총 행 수 계산
             let totalRows = 4; // 헤더 + 여백
             Object.values(teams).forEach(team => {
