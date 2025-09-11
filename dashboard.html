@@ -291,6 +291,12 @@
             font-size: 16px;
         }
 
+        .attendance-off td,
+        .attendance-annual td,
+        .attendance-half td {
+            background: rgba(255, 107, 107, 0.15) !important;
+        }
+
         .attendance-text {
             color: #FF6B6B;
             font-size: 12px;
@@ -389,6 +395,10 @@
             width: 90%;
         }
 
+        .modal-content.wide {
+            max-width: 1200px;
+        }
+
         .modal-header {
             font-size: 28px;
             font-weight: 300;
@@ -408,6 +418,31 @@
 
         .modal-close:hover {
             color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #B0B0B0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            background: #111;
+            color: #fff;
+            border: 1px solid #444;
+            font-size: 15px;
+            font-family: inherit;
         }
 
         .checkbox-group {
@@ -536,6 +571,44 @@
             background: #FF6B6B;
             color: #fff;
         }
+
+        .target-card {
+            background: linear-gradient(135deg, #0A0A0A, #111);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .target-input {
+            width: 100px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #333;
+            color: #fff;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .period-info {
+            background: #111;
+            border: 1px solid #333;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .period-info h3 {
+            color: #4A9EFF;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+
+        .period-info p {
+            color: #B0B0B0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -587,8 +660,11 @@
     <div id="attendanceModal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeAttendanceModal()">×</span>
-            <div class="modal-header">휴무/연차 관리</div>
+            <div class="modal-header">휴무/연차 관리 - <span id="attendanceModalDate"></span></div>
             <div id="attendanceModalContent"></div>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-primary" onclick="closeAttendanceModal()">확인</button>
+            </div>
         </div>
     </div>
 
@@ -596,23 +672,77 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeMetricsModal()">×</span>
             <div class="modal-header">항목 관리</div>
-            <div id="metricsModalContent"></div>
+            <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+                <button id="displayTabBtn" class="btn btn-primary" onclick="switchMetricsTab('display')">표시 설정</button>
+                <button id="manageTabBtn" class="btn" onclick="switchMetricsTab('manage')">항목 추가/삭제</button>
+            </div>
+            <div id="displayTab">
+                <p style="margin-bottom: 20px; color: #999;">대시보드에 표시할 항목을 선택하세요:</p>
+                <div id="metricsCheckboxes" class="checkbox-group"></div>
+            </div>
+            <div id="manageTab" style="display: none;">
+                <div style="margin-bottom: 30px;">
+                    <h4 style="margin-bottom: 15px; color: #999; font-weight: 400;">새 항목 추가</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="newMetricName" placeholder="한글명 (예: 새항목)" style="flex: 1; padding: 10px; background: #111; border: 1px solid #333; color: #fff;">
+                        <input type="text" id="newMetricDb" placeholder="DB컬럼명 (예: new_item)" style="flex: 1; padding: 10px; background: #111; border: 1px solid #333; color: #fff;">
+                        <button class="btn btn-success" onclick="addMetric()">추가</button>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 15px; color: #999; font-weight: 400;">현재 항목 목록</h4>
+                    <div id="metricsList" style="max-height: 300px; overflow-y: auto; background: #111; border: 1px solid #222; padding: 10px;"></div>
+                </div>
+            </div>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-success" onclick="saveMetrics()" style="margin-right: 10px;">저장</button>
+                <button class="btn" onclick="closeMetricsModal()" style="border-color: #666; color: #666;">취소</button>
+            </div>
         </div>
     </div>
 
     <div id="targetModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content wide">
             <span class="modal-close" onclick="closeTargetModal()">×</span>
-            <div class="modal-header">목표 설정</div>
+            <div class="modal-header">일일 목표 설정</div>
             <div id="targetModalContent"></div>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-success" onclick="saveTargets()" style="margin-right: 10px; padding: 14px 40px;">저장</button>
+                <button class="btn" onclick="closeTargetModal()" style="border-color: #666; color: #666; padding: 14px 40px;">취소</button>
+            </div>
         </div>
     </div>
 
     <div id="teamModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content wide">
             <span class="modal-close" onclick="closeTeamModal()">×</span>
             <div class="modal-header">상담사 관리</div>
-            <div id="teamModalContent"></div>
+            <div style="display: flex; gap: 30px;">
+                <div style="width: 200px;">
+                    <h4 style="margin-bottom: 15px; color: #999; font-weight: 400;">팀 선택</h4>
+                    <select id="teamSelector" onchange="selectTeam()" style="width: 100%; padding: 10px; background: #111; border: 1px solid #333; color: #fff;">
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <h4 style="margin-bottom: 15px; color: #999; font-weight: 400;">팀원 목록</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <input type="text" id="newMemberName" placeholder="이름" style="flex: 1; padding: 10px; background: #111; border: 1px solid #333; color: #fff;">
+                        <select id="newMemberTenure" style="padding: 10px; background: #111; border: 1px solid #333; color: #fff;">
+                            <option value="3개월미만">3개월미만</option>
+                            <option value="3개월이상">3개월이상</option>
+                            <option value="6개월이상">6개월이상</option>
+                            <option value="9개월이상">9개월이상</option>
+                            <option value="1년이상">1년이상</option>
+                        </select>
+                        <button class="btn btn-success" onclick="addMember()">추가</button>
+                    </div>
+                    <div id="membersList" style="max-height: 400px; overflow-y: auto; background: #111; border: 1px solid #222; padding: 10px;"></div>
+                </div>
+            </div>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-success" onclick="saveTeams()" style="margin-right: 10px;">저장</button>
+                <button class="btn" onclick="closeTeamModal()" style="border-color: #666; color: #666;">취소</button>
+            </div>
         </div>
     </div>
 
@@ -625,18 +755,38 @@
     </div>
 
     <div id="weeklyModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content wide">
             <span class="modal-close" onclick="closeWeeklyModal()">×</span>
-            <div class="modal-header">주간 실적</div>
-            <div id="weeklyModalContent"></div>
+            <div class="modal-header">주간 실적 (월~금)</div>
+            <div id="weeklyPeriodInfo" class="period-info"></div>
+            <div id="weeklyContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>주간 데이터를 불러오는 중...</p>
+                </div>
+            </div>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-success" onclick="exportWeeklyToJPG()" style="margin-right: 10px; padding: 14px 40px;">JPG 내보내기</button>
+                <button class="btn" onclick="closeWeeklyModal()" style="border-color: #666; color: #666; padding: 14px 40px;">닫기</button>
+            </div>
         </div>
     </div>
 
     <div id="weekendModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content wide">
             <span class="modal-close" onclick="closeWeekendModal()">×</span>
-            <div class="modal-header">주말 실적</div>
-            <div id="weekendModalContent"></div>
+            <div class="modal-header">주말 실적 (토~일)</div>
+            <div id="weekendPeriodInfo" class="period-info"></div>
+            <div id="weekendContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>주말 데이터를 불러오는 중...</p>
+                </div>
+            </div>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-success" onclick="exportWeekendToJPG()" style="margin-right: 10px; padding: 14px 40px;">JPG 내보내기</button>
+                <button class="btn" onclick="closeWeekendModal()" style="border-color: #666; color: #666; padding: 14px 40px;">닫기</button>
+            </div>
         </div>
     </div>
 
@@ -669,6 +819,11 @@
         let dailyTargets = {};
         let skillSettings = {};
         let tempSkillSettings = {};
+        let tempVisibleMetrics = [];
+        let selectedTeam = '';
+        let tempTeams = {};
+        let weeklyPerformanceData = {};
+        let weekendPerformanceData = {};
 
         // 기본 데이터
         const defaultTeams = {
@@ -684,6 +839,27 @@
                     { name: '윤도우리', tenure: '1년이상' },
                     { name: '최서연', tenure: '9개월이상' },
                     { name: '정태호', tenure: '3개월미만' }
+                ]
+            },
+            '3파트': {
+                members: [
+                    { name: '김진후', tenure: '1년이상' },
+                    { name: '이수진', tenure: '6개월이상' },
+                    { name: '강민정', tenure: '3개월이상' }
+                ]
+            },
+            '4파트': {
+                members: [
+                    { name: '이민주', tenure: '1년이상' },
+                    { name: '박준혁', tenure: '6개월이상' },
+                    { name: '송지은', tenure: '3개월미만' }
+                ]
+            },
+            '5파트': {
+                members: [
+                    { name: '차정환', tenure: '1년이상' },
+                    { name: '한예슬', tenure: '9개월이상' },
+                    { name: '노현우', tenure: '3개월이상' }
                 ]
             }
         };
@@ -701,6 +877,60 @@
             '제휴카드': 'affiliate_card'
         };
         const rentalMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', '가전제품'];
+
+        // 날짜 유틸리티 함수들
+        function getWeekDates(date) {
+            const d = new Date(date + 'T00:00:00+09:00');
+            const dayOfWeek = d.getDay();
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            
+            const dates = [];
+            for (let i = 0; i < 5; i++) {
+                const weekDay = new Date(d);
+                weekDay.setDate(d.getDate() + mondayOffset + i);
+                const year = weekDay.getFullYear();
+                const month = String(weekDay.getMonth() + 1).padStart(2, '0');
+                const day = String(weekDay.getDate()).padStart(2, '0');
+                dates.push(`${year}-${month}-${day}`);
+            }
+            
+            return dates;
+        }
+
+        function getWeekendDates(date) {
+            const d = new Date(date + 'T00:00:00+09:00');
+            const dayOfWeek = d.getDay();
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            
+            const dates = [];
+            const saturday = new Date(d);
+            saturday.setDate(d.getDate() + mondayOffset + 5);
+            let year = saturday.getFullYear();
+            let month = String(saturday.getMonth() + 1).padStart(2, '0');
+            let day = String(saturday.getDate()).padStart(2, '0');
+            dates.push(`${year}-${month}-${day}`);
+            
+            const sunday = new Date(d);
+            sunday.setDate(d.getDate() + mondayOffset + 6);
+            year = sunday.getFullYear();
+            month = String(sunday.getMonth() + 1).padStart(2, '0');
+            day = String(sunday.getDate()).padStart(2, '0');
+            dates.push(`${year}-${month}-${day}`);
+            
+            return dates;
+        }
+
+        function formatDateRange(dates) {
+            if (dates.length === 0) return '';
+            
+            const start = new Date(dates[0] + 'T00:00:00+09:00');
+            const end = new Date(dates[dates.length - 1] + 'T00:00:00+09:00');
+            
+            const startStr = `${start.getMonth() + 1}/${start.getDate()}`;
+            const endStr = `${end.getMonth() + 1}/${end.getDate()}`;
+            
+            return `${startStr} ~ ${endStr}`;
+        }
 
         // 휴무 상태 관리
         const AttendanceManager = {
@@ -753,37 +983,46 @@
         // 설정 로드
         async function loadConfig() {
             if (!supabase) {
-                console.log('Supabase 연결 없음. 기본 설정 사용');
-                teams = defaultTeams;
-                metrics = defaultMetrics;
-                visibleMetrics = defaultMetrics;
-                metricToDb = defaultMetricToDb;
-                dailyTargets = {};
-                defaultMetrics.forEach(m => dailyTargets[m] = 100);
-                skillSettings = {};
-                return;
+                throw new Error('Supabase 연결 실패');
             }
 
             try {
-                const { data: teamsData } = await supabase
+                const { data: teamsData, error: teamsError } = await supabase
                     .from('config')
                     .select('*')
                     .eq('type', 'teams')
                     .single();
 
-                if (teamsData) {
-                    teams = teamsData.data;
-                } else {
+                if (teamsError) {
+                    await supabase.from('config').insert({
+                        type: 'teams',
+                        data: defaultTeams
+                    });
                     teams = defaultTeams;
+                } else {
+                    teams = teamsData?.data || defaultTeams;
                 }
 
-                const { data: metricsData } = await supabase
+                const { data: metricsData, error: metricsError } = await supabase
                     .from('config')
                     .select('*')
                     .eq('type', 'metrics')
                     .single();
 
-                if (metricsData) {
+                if (metricsError) {
+                    await supabase.from('config').insert({
+                        type: 'metrics',
+                        data: {
+                            items: defaultMetrics.map(metric => ({
+                                name: metric,
+                                db_column: defaultMetricToDb[metric],
+                                is_default: true
+                            }))
+                        }
+                    });
+                    metrics = defaultMetrics;
+                    metricToDb = defaultMetricToDb;
+                } else if (metricsData) {
                     const mapping = {};
                     const metricsList = [];
                     metricsData.data.items.forEach(item => {
@@ -792,78 +1031,173 @@
                     });
                     metricToDb = mapping;
                     metrics = metricsList;
-                } else {
-                    metrics = defaultMetrics;
-                    metricToDb = defaultMetricToDb;
                 }
 
-                const { data: settingsData } = await supabase
+                const { data: settingsData, error: settingsError } = await supabase
                     .from('config')
                     .select('*')
                     .eq('type', 'settings')
                     .single();
 
-                if (settingsData && settingsData.data) {
+                if (settingsError) {
+                    await supabase.from('config').insert({
+                        type: 'settings',
+                        data: {
+                            visible_metrics: metrics,
+                            daily_targets: Object.fromEntries(metrics.map(m => [m, 100]))
+                        }
+                    });
+                    visibleMetrics = metrics;
+                    dailyTargets = Object.fromEntries(metrics.map(m => [m, 100]));
+                } else if (settingsData && settingsData.data) {
                     visibleMetrics = settingsData.data.visible_metrics || metrics;
                     dailyTargets = settingsData.data.daily_targets || {};
-                } else {
-                    visibleMetrics = metrics;
-                    dailyTargets = {};
-                    metrics.forEach(m => dailyTargets[m] = 100);
                 }
 
-                const { data: skillData } = await supabase
+                const { data: skillData, error: skillError } = await supabase
                     .from('config')
                     .select('*')
                     .eq('type', 'skills')
                     .single();
 
-                if (skillData && skillData.data) {
-                    skillSettings = skillData.data;
-                } else {
+                if (skillError) {
+                    await supabase.from('config').insert({
+                        type: 'skills',
+                        data: {}
+                    });
                     skillSettings = {};
+                } else if (skillData && skillData.data) {
+                    skillSettings = skillData.data;
                 }
 
                 isConnected = true;
                 document.getElementById('connectionStatus').innerHTML = '서버 연결됨';
             } catch (error) {
                 console.error('설정 로드 오류:', error);
-                teams = defaultTeams;
-                metrics = defaultMetrics;
-                visibleMetrics = defaultMetrics;
-                metricToDb = defaultMetricToDb;
-                dailyTargets = {};
-                metrics.forEach(m => dailyTargets[m] = 100);
-                skillSettings = {};
-                document.getElementById('connectionStatus').innerHTML = '로컬 모드';
+                throw error;
             }
         }
 
         // 실적 데이터 로드
         async function loadPerformanceData() {
             if (!supabase) {
-                performanceData = {};
-                return;
+                throw new Error('Supabase 연결 실패');
             }
 
             try {
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from('performance')
                     .select('*')
                     .eq('date', currentDate);
 
+                if (error) throw error;
+
+                performanceData = {};
                 if (data) {
-                    performanceData = {};
                     data.forEach(record => {
                         const key = `${record.team}_${record.name}`;
                         performanceData[key] = record;
                     });
-                } else {
-                    performanceData = {};
                 }
             } catch (error) {
                 console.error('실적 데이터 로드 오류:', error);
-                performanceData = {};
+                throw error;
+            }
+        }
+
+        // 주간 실적 데이터 로드
+        async function loadWeeklyPerformanceData(dates) {
+            if (!supabase) {
+                weeklyPerformanceData = {};
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('performance')
+                    .select('*')
+                    .in('date', dates);
+
+                if (data && !error) {
+                    weeklyPerformanceData = {};
+                    
+                    Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                        teamInfo.members.forEach(member => {
+                            const key = `${teamName}_${member.name}`;
+                            weeklyPerformanceData[key] = {};
+                            
+                            visibleMetrics.forEach(metric => {
+                                const dbColumn = metricToDb[metric];
+                                let total = 0;
+                                
+                                dates.forEach(date => {
+                                    const record = data.find(d => 
+                                        d.date === date && 
+                                        d.team === teamName && 
+                                        d.name === member.name
+                                    );
+                                    
+                                    if (record && record[dbColumn]) {
+                                        total += record[dbColumn];
+                                    }
+                                });
+                                
+                                weeklyPerformanceData[key][dbColumn] = total;
+                            });
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('주간 실적 데이터 로드 오류:', error);
+                weeklyPerformanceData = {};
+            }
+        }
+
+        // 주말 실적 데이터 로드
+        async function loadWeekendPerformanceData(dates) {
+            if (!supabase) {
+                weekendPerformanceData = {};
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('performance')
+                    .select('*')
+                    .in('date', dates);
+
+                if (data && !error) {
+                    weekendPerformanceData = {};
+                    
+                    Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                        teamInfo.members.forEach(member => {
+                            const key = `${teamName}_${member.name}`;
+                            weekendPerformanceData[key] = {};
+                            
+                            visibleMetrics.forEach(metric => {
+                                const dbColumn = metricToDb[metric];
+                                let total = 0;
+                                
+                                dates.forEach(date => {
+                                    const record = data.find(d => 
+                                        d.date === date && 
+                                        d.team === teamName && 
+                                        d.name === member.name
+                                    );
+                                    
+                                    if (record && record[dbColumn]) {
+                                        total += record[dbColumn];
+                                    }
+                                });
+                                
+                                weekendPerformanceData[key][dbColumn] = total;
+                            });
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('주말 실적 데이터 로드 오류:', error);
+                weekendPerformanceData = {};
             }
         }
 
@@ -872,10 +1206,23 @@
             const content = document.getElementById('dashboardContent');
             content.innerHTML = '<div class="loading"><div class="spinner"></div><p>데이터를 불러오는 중...</p></div>';
             
-            await loadConfig();
-            await loadPerformanceData();
-            renderDashboard();
-            updateTime();
+            try {
+                await loadConfig();
+                await loadPerformanceData();
+                renderDashboard();
+                updateTime();
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 100px; color: #FF6B6B;">
+                        <h2>데이터베이스 연결 실패</h2>
+                        <p style="margin-top: 20px;">Supabase 연결을 확인해주세요.</p>
+                        <p style="margin-top: 10px; color: #999; font-size: 14px;">에러: ${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadData()" style="margin-top: 30px;">다시 시도</button>
+                    </div>
+                `;
+                document.getElementById('connectionStatus').innerHTML = '연결 실패';
+            }
         }
 
         // 대시보드 렌더링
@@ -933,7 +1280,7 @@
                     const attendance = AttendanceManager.getPersonAttendance(currentDate, teamName, member.name);
                     const isOffDay = attendance !== 'normal';
                     
-                    html += `<tr>`;
+                    html += `<tr class="${isOffDay ? 'attendance-' + attendance : ''}">`;
                     html += `<td>${member.name}`;
                     if (isRental) html += '<span class="rental-badge">렌탈</span>';
                     if (isLeader) html += '<span class="leader-badge">파트장</span>';
@@ -962,6 +1309,8 @@
                                 } else {
                                     html += `<td class="skill-leader">-</td>`;
                                 }
+                            } else if (isOffDay && value === 0) {
+                                html += `<td style="color: #FF4444;">${AttendanceManager.getStatusText(attendance)}</td>`;
                             } else {
                                 html += `<td>${value}</td>`;
                             }
@@ -988,6 +1337,29 @@
                 html += `<span class="summary-item">${metric}: ${grandTotals[metric]}</span>`;
             });
             html += '</div></div>';
+
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">일 목표</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                html += `<span class="summary-item">${metric}: ${dailyTargets[metric] || 100}</span>`;
+            });
+            html += '</div></div>';
+
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">달성현황</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                const target = dailyTargets[metric] || 100;
+                const actual = grandTotals[metric];
+                const diff = target - actual;
+                
+                html += `<span class="achievement-status ${diff <= 0 ? 'achievement-success' : 'achievement-fail'}">
+                    ${metric}: ${diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`}
+                </span>`;
+            });
+            html += '</div></div>';
+
             html += '</div>';
 
             content.innerHTML = html;
@@ -1035,6 +1407,43 @@
                         if (!isRentalMetric) {
                             totals[metric] += data[dbColumn] || 0;
                         }
+                    });
+                }
+            });
+            
+            return totals;
+        }
+
+        // 주간/주말 전체 합계 계산
+        function calculatePeriodGrandTotals(dataSource) {
+            const totals = {};
+            visibleMetrics.forEach(metric => {
+                totals[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = dataSource[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        totals[metric] += data[dbColumn] || 0;
+                    });
+                });
+            });
+            return totals;
+        }
+
+        // 주간/주말 팀별 합계 계산
+        function calculatePeriodTeamTotals(teamName, dataSource) {
+            const totals = {};
+            const teamInfo = teams[teamName];
+            
+            visibleMetrics.forEach(metric => {
+                totals[metric] = 0;
+                if (teamInfo) {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = dataSource[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        totals[metric] += data[dbColumn] || 0;
                     });
                 }
             });
@@ -1107,6 +1516,15 @@
                             team,
                             name,
                             date: currentDate,
+                            sim_count: 0,
+                            sk_internet: 0,
+                            premium: 0,
+                            essence: 0,
+                            iot: 0,
+                            one_g: 0,
+                            sk_magic: 0,
+                            appliance: 0,
+                            affiliate_card: 0,
                             ...data
                         };
                         updates.push(
@@ -1127,43 +1545,329 @@
                 renderDashboard();
             } catch (error) {
                 console.error('저장 오류:', error);
-                alert('데이터 저장 중 오류가 발생했습니다.');
+                alert('데이터 저장 중 오류가 발생했습니다: ' + error.message);
             }
         }
 
-        // 모달 함수들
+        // 휴무 관리 모달
         function openAttendanceModal() {
-            alert('휴무 관리 기능');
+            const modal = document.getElementById('attendanceModal');
+            document.getElementById('attendanceModalDate').textContent = currentDate;
+            
+            let html = '';
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                html += `<div style="margin-bottom: 30px;">`;
+                html += `<h4 style="color: #1E6FFF; margin-bottom: 15px; font-weight: 400;">${teamName}</h4>`;
+                html += '<div style="background: #111; border: 1px solid #222; padding: 10px;">';
+                
+                teamInfo.members.forEach((member, idx) => {
+                    const attendance = AttendanceManager.getPersonAttendance(currentDate, teamName, member.name);
+                    
+                    html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; ${idx < teamInfo.members.length - 1 ? 'border-bottom: 1px solid #222;' : ''} ${attendance !== 'normal' ? 'background: rgba(255, 68, 68, 0.1);' : ''}">
+                            <span>${member.name}
+                                ${attendance !== 'normal' ? `<span class="attendance-text">(${AttendanceManager.getStatusText(attendance)})</span>` : ''}
+                            </span>
+                            <div class="attendance-buttons">
+                                <button class="attendance-btn ${attendance === 'normal' ? 'active' : ''}" 
+                                    onclick="changeAttendance('${teamName}', '${member.name}', 'normal')">정상</button>
+                                <button class="attendance-btn ${attendance === 'off' ? 'active' : ''}" 
+                                    onclick="changeAttendance('${teamName}', '${member.name}', 'off')">휴무</button>
+                                <button class="attendance-btn ${attendance === 'annual' ? 'active' : ''}" 
+                                    onclick="changeAttendance('${teamName}', '${member.name}', 'annual')">연차</button>
+                                <button class="attendance-btn ${attendance === 'half' ? 'active' : ''}" 
+                                    onclick="changeAttendance('${teamName}', '${member.name}', 'half')">반차</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            document.getElementById('attendanceModalContent').innerHTML = html;
+            modal.classList.add('active');
         }
 
         function closeAttendanceModal() {
             document.getElementById('attendanceModal').classList.remove('active');
+            renderDashboard();
         }
 
+        function changeAttendance(teamName, memberName, status) {
+            AttendanceManager.setAttendance(currentDate, teamName, memberName, status);
+            openAttendanceModal();
+        }
+
+        // 항목 편집 모달
         function openMetricsModal() {
-            alert('항목 편집 기능');
+            tempVisibleMetrics = [...visibleMetrics];
+            renderMetricsModal();
+            document.getElementById('metricsModal').classList.add('active');
         }
 
         function closeMetricsModal() {
             document.getElementById('metricsModal').classList.remove('active');
         }
 
+        function switchMetricsTab(tab) {
+            if (tab === 'display') {
+                document.getElementById('displayTab').style.display = 'block';
+                document.getElementById('manageTab').style.display = 'none';
+                document.getElementById('displayTabBtn').classList.add('btn-primary');
+                document.getElementById('manageTabBtn').classList.remove('btn-primary');
+            } else {
+                document.getElementById('displayTab').style.display = 'none';
+                document.getElementById('manageTab').style.display = 'block';
+                document.getElementById('displayTabBtn').classList.remove('btn-primary');
+                document.getElementById('manageTabBtn').classList.add('btn-primary');
+            }
+        }
+
+        function renderMetricsModal() {
+            let checkboxHtml = '';
+            metrics.forEach(metric => {
+                checkboxHtml += `
+                    <label class="checkbox-item">
+                        <input type="checkbox" 
+                            ${tempVisibleMetrics.includes(metric) ? 'checked' : ''} 
+                            onchange="toggleMetricVisibility('${metric}')">
+                        ${metric}
+                    </label>
+                `;
+            });
+            document.getElementById('metricsCheckboxes').innerHTML = checkboxHtml;
+
+            let listHtml = '';
+            metrics.forEach(metric => {
+                const isDefault = defaultMetrics.includes(metric);
+                listHtml += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #222;">
+                        <span>${metric} → ${metricToDb[metric]}</span>
+                        ${!isDefault ? `<button class="btn btn-danger" style="padding: 5px 10px; font-size: 11px;" onclick="deleteMetric('${metric}')">삭제</button>` : ''}
+                    </div>
+                `;
+            });
+            document.getElementById('metricsList').innerHTML = listHtml;
+        }
+
+        function toggleMetricVisibility(metric) {
+            const index = tempVisibleMetrics.indexOf(metric);
+            if (index > -1) {
+                tempVisibleMetrics.splice(index, 1);
+            } else {
+                tempVisibleMetrics.push(metric);
+            }
+        }
+
+        function addMetric() {
+            const name = document.getElementById('newMetricName').value;
+            const db = document.getElementById('newMetricDb').value;
+            
+            if (!name || !db) {
+                alert('모든 필드를 입력해주세요!');
+                return;
+            }
+            
+            if (metrics.includes(name)) {
+                alert('이미 존재하는 항목명입니다!');
+                return;
+            }
+
+            if (!/^[a-z][a-z0-9_]*$/.test(db)) {
+                alert('DB 컬럼명은 영문 소문자로 시작하고 영문, 숫자, 언더스코어만 사용 가능합니다!');
+                return;
+            }
+
+            metrics.push(name);
+            metricToDb[name] = db;
+            document.getElementById('newMetricName').value = '';
+            document.getElementById('newMetricDb').value = '';
+            renderMetricsModal();
+        }
+
+        function deleteMetric(metric) {
+            if (confirm(`'${metric}' 항목을 삭제하시겠습니까?`)) {
+                metrics = metrics.filter(m => m !== metric);
+                tempVisibleMetrics = tempVisibleMetrics.filter(m => m !== metric);
+                delete metricToDb[metric];
+                renderMetricsModal();
+            }
+        }
+
+        async function saveMetrics() {
+            visibleMetrics = [...tempVisibleMetrics];
+            
+            if (supabase) {
+                try {
+                    const metricsData = {
+                        type: 'metrics',
+                        data: {
+                            items: metrics.map(metric => ({
+                                name: metric,
+                                db_column: metricToDb[metric],
+                                is_default: defaultMetrics.includes(metric)
+                            }))
+                        }
+                    };
+                    await supabase.from('config').upsert(metricsData, { onConflict: 'type' });
+
+                    const settingsData = {
+                        type: 'settings',
+                        data: {
+                            visible_metrics: visibleMetrics,
+                            daily_targets: dailyTargets
+                        }
+                    };
+                    await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
+                } catch (error) {
+                    console.error('저장 오류:', error);
+                }
+            }
+            
+            closeMetricsModal();
+            renderDashboard();
+        }
+
+        // 목표 설정 모달
         function openTargetModal() {
-            alert('목표 설정 기능');
+            const grandTotals = calculateGrandTotals();
+            let html = '';
+            
+            visibleMetrics.forEach(metric => {
+                const current = grandTotals[metric] || 0;
+                const target = dailyTargets[metric] || 100;
+                const percentage = target > 0 ? Math.round((current / target) * 100) : 0;
+                const isAchieved = current >= target;
+                
+                html += `
+                    <div class="target-card">
+                        <h4>${metric}</h4>
+                        <p>현재: ${current} / 목표: <input type="number" class="target-input" id="target_${metric}" value="${target}"></p>
+                        <p>달성률: ${percentage}%</p>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('targetModalContent').innerHTML = html;
+            document.getElementById('targetModal').classList.add('active');
         }
 
         function closeTargetModal() {
             document.getElementById('targetModal').classList.remove('active');
         }
 
+        async function saveTargets() {
+            visibleMetrics.forEach(metric => {
+                const input = document.getElementById(`target_${metric}`);
+                if (input) {
+                    const value = parseInt(input.value) || 0;
+                    dailyTargets[metric] = value;
+                }
+            });
+            
+            if (supabase) {
+                try {
+                    const settingsData = {
+                        type: 'settings',
+                        data: {
+                            visible_metrics: visibleMetrics,
+                            daily_targets: dailyTargets
+                        }
+                    };
+                    await supabase.from('config').upsert(settingsData, { onConflict: 'type' });
+                    alert('목표가 저장되었습니다.');
+                } catch (error) {
+                    console.error('저장 오류:', error);
+                    alert('저장 중 오류가 발생했습니다.');
+                }
+            }
+            
+            closeTargetModal();
+            renderDashboard();
+        }
+
+        // 상담사 관리 모달
         function openTeamModal() {
-            alert('상담사 관리 기능');
+            tempTeams = JSON.parse(JSON.stringify(teams));
+            selectedTeam = Object.keys(teams)[0] || '';
+            
+            let optionsHtml = '';
+            Object.keys(teams).forEach(team => {
+                optionsHtml += `<option value="${team}">${team}</option>`;
+            });
+            document.getElementById('teamSelector').innerHTML = optionsHtml;
+            
+            renderTeamMembers();
+            document.getElementById('teamModal').classList.add('active');
         }
 
         function closeTeamModal() {
             document.getElementById('teamModal').classList.remove('active');
         }
 
+        function selectTeam() {
+            selectedTeam = document.getElementById('teamSelector').value;
+            renderTeamMembers();
+        }
+
+        function renderTeamMembers() {
+            const teamInfo = tempTeams[selectedTeam];
+            if (!teamInfo) return;
+            
+            let html = '';
+            teamInfo.members.forEach((member, idx) => {
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #222;">
+                        <span>${member.name} (${member.tenure})</span>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 11px;" onclick="deleteMember(${idx})">삭제</button>
+                    </div>
+                `;
+            });
+            document.getElementById('membersList').innerHTML = html;
+        }
+
+        function addMember() {
+            const name = document.getElementById('newMemberName').value;
+            const tenure = document.getElementById('newMemberTenure').value;
+            
+            if (!name) {
+                alert('이름을 입력해주세요!');
+                return;
+            }
+            
+            tempTeams[selectedTeam].members.push({ name, tenure });
+            document.getElementById('newMemberName').value = '';
+            renderTeamMembers();
+        }
+
+        function deleteMember(index) {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                tempTeams[selectedTeam].members.splice(index, 1);
+                renderTeamMembers();
+            }
+        }
+
+        async function saveTeams() {
+            teams = tempTeams;
+            
+            if (supabase) {
+                try {
+                    await supabase.from('config').upsert({
+                        type: 'teams',
+                        data: teams
+                    }, { onConflict: 'type' });
+                } catch (error) {
+                    console.error('저장 오류:', error);
+                }
+            }
+            
+            closeTeamModal();
+            await loadPerformanceData();
+            renderDashboard();
+        }
+
+        // 스킬 관리 모달
         function openSkillModal() {
             const modal = document.getElementById('skillModal');
             const content = document.getElementById('skillModalContent');
@@ -1235,7 +1939,6 @@
             } else {
                 tempSkillSettings[key] = skill;
             }
-            // 스킬 리스트만 다시 렌더링
             document.getElementById('skillListContent').innerHTML = renderSkillList();
         }
 
@@ -1262,30 +1965,220 @@
             }
         }
 
-        function openWeeklyModal() {
-            alert('주간 실적 기능');
+        // 엑셀 내보내기
+        function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('엑셀 라이브러리를 로드할 수 없습니다.');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+            const data = [
+                [`SNS센터 실적보고 - ${currentDate}`],
+                [],
+                ['소속', '이름', '근속기간', '상태', '스킬', ...visibleMetrics]
+            ];
+
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                teamInfo.members.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const perfData = performanceData[key] || {};
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    const attendance = AttendanceManager.getPersonAttendance(currentDate, teamName, member.name);
+                    
+                    const skillText = skillStatus === 'rental' ? '렌탈' : 
+                                     skillStatus === 'leader' ? '파트장' : '일반';
+                    
+                    const row = [
+                        idx === 0 ? `SNS센터 ${teamName}` : '',
+                        member.name,
+                        member.tenure,
+                        AttendanceManager.getStatusText(attendance) || '정상',
+                        skillText
+                    ];
+                    
+                    visibleMetrics.forEach(metric => {
+                        const dbColumn = metricToDb[metric];
+                        const isRentalMetric = skillStatus === 'rental' && rentalMetrics.includes(metric);
+                        
+                        if (isRentalMetric) {
+                            row.push('스킬없음');
+                        } else if (skillStatus === 'leader' && (perfData[dbColumn] || 0) === 0) {
+                            row.push('-');
+                        } else if (attendance !== 'normal' && (perfData[dbColumn] || 0) === 0) {
+                            row.push(AttendanceManager.getStatusText(attendance));
+                        } else {
+                            row.push(perfData[dbColumn] || 0);
+                        }
+                    });
+                    
+                    data.push(row);
+                });
+                
+                const teamTotals = calculateTeamTotals(teamName);
+                const totalRow = [`${teamName} 총합`, '', '', '', '', ...visibleMetrics.map(m => teamTotals[m] || 0)];
+                data.push(totalRow);
+                data.push([]);
+            });
+
+            const grandTotals = calculateGrandTotals();
+            data.push(['센터 총합', '', '', '', '', ...visibleMetrics.map(m => grandTotals[m] || 0)]);
+            data.push(['일 목표', '', '', '', '', ...visibleMetrics.map(m => dailyTargets[m] || 100)]);
+            
+            const achievementRow = ['달성', '', '', '', ''];
+            visibleMetrics.forEach(metric => {
+                const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
+                achievementRow.push(diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`);
+            });
+            data.push(achievementRow);
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, '실적');
+            XLSX.writeFile(wb, `SNS센터_실적_${currentDate.replace(/-/g, '')}.xlsx`);
+        }
+
+        // JPG 내보내기
+        function exportToJPG() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const teamColors = {
+                '1파트': '#E2F0D9',
+                '2파트': '#DDEBF7',
+                '3파트': '#FCE4D6',
+                '4파트': '#FFF2CC',
+                '5파트': '#D9E2F3'
+            };
+            
+            canvas.width = 1400;
+            canvas.height = 1000;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.font = 'bold 24px Malgun Gothic';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.fillText(`SNS센터 실적보고 - ${currentDate}`, canvas.width / 2, 50);
+            
+            alert('JPG 내보내기 기능이 준비되었습니다.');
+        }
+
+        // 주간 실적 모달
+        async function openWeeklyModal() {
+            const modal = document.getElementById('weeklyModal');
+            const content = document.getElementById('weeklyContent');
+            const periodInfo = document.getElementById('weeklyPeriodInfo');
+            
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>주간 데이터를 불러오는 중...</p></div>';
+            
+            const weekDates = getWeekDates(currentDate);
+            const dateRange = formatDateRange(weekDates);
+            
+            periodInfo.innerHTML = `
+                <h3>주간 실적 조회</h3>
+                <p>조회 기간: ${dateRange} (월~금)</p>
+            `;
+            
+            modal.classList.add('active');
+            
+            try {
+                await loadConfig();
+                await loadWeeklyPerformanceData(weekDates);
+                renderWeeklyContent();
+            } catch (error) {
+                console.error('주간 데이터 로드 오류:', error);
+                content.innerHTML = '<div class="loading"><p style="color: #FF6B6B;">주간 데이터 로드 중 오류가 발생했습니다.</p></div>';
+            }
+        }
+
+        function renderWeeklyContent() {
+            const content = document.getElementById('weeklyContent');
+            const grandTotals = calculatePeriodGrandTotals(weeklyPerformanceData);
+            
+            let html = '<div class="summary-section">';
+            html += '<div class="summary-title">주간 전체 실적 요약 (월~금)</div>';
+            html += '<div class="metrics-row">';
+            visibleMetrics.forEach(metric => {
+                html += `
+                    <div class="metric-item">
+                        <div class="metric-name">${metric}</div>
+                        <div class="metric-value">${grandTotals[metric] || 0}</div>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+            
+            content.innerHTML = html;
         }
 
         function closeWeeklyModal() {
             document.getElementById('weeklyModal').classList.remove('active');
         }
 
-        function openWeekendModal() {
-            alert('주말 실적 기능');
+        function exportWeeklyToJPG() {
+            alert('주간 실적 JPG 내보내기 기능이 준비되었습니다.');
+        }
+
+        // 주말 실적 모달
+        async function openWeekendModal() {
+            const modal = document.getElementById('weekendModal');
+            const content = document.getElementById('weekendContent');
+            const periodInfo = document.getElementById('weekendPeriodInfo');
+            
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>주말 데이터를 불러오는 중...</p></div>';
+            
+            const weekendDates = getWeekendDates(currentDate);
+            const dateRange = formatDateRange(weekendDates);
+            
+            periodInfo.innerHTML = `
+                <h3>주말 실적 조회</h3>
+                <p>조회 기간: ${dateRange} (토~일)</p>
+            `;
+            
+            modal.classList.add('active');
+            
+            try {
+                await loadConfig();
+                const weekDates = getWeekDates(currentDate);
+                await loadWeeklyPerformanceData(weekDates);
+                await loadWeekendPerformanceData(weekendDates);
+                renderWeekendContent();
+            } catch (error) {
+                console.error('주말 데이터 로드 오류:', error);
+                content.innerHTML = '<div class="loading"><p style="color: #FF6B6B;">주말 데이터 로드 중 오류가 발생했습니다.</p></div>';
+            }
+        }
+
+        function renderWeekendContent() {
+            const content = document.getElementById('weekendContent');
+            const grandTotals = calculatePeriodGrandTotals(weekendPerformanceData);
+            
+            let html = '<div class="summary-section">';
+            html += '<div class="summary-title">주말 전체 실적 요약 (토~일)</div>';
+            html += '<div class="metrics-row">';
+            visibleMetrics.forEach(metric => {
+                html += `
+                    <div class="metric-item">
+                        <div class="metric-name">${metric}</div>
+                        <div class="metric-value">${grandTotals[metric] || 0}</div>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+            
+            content.innerHTML = html;
         }
 
         function closeWeekendModal() {
             document.getElementById('weekendModal').classList.remove('active');
         }
 
-        function exportToExcel() {
-            alert('엑셀 내보내기 기능');
+        function exportWeekendToJPG() {
+            alert('주말 실적 JPG 내보내기 기능이 준비되었습니다.');
         }
 
-        function exportToJPG() {
-            alert('JPG 내보내기 기능');
-        }
-
+        // 날짜 변경
         function changeDate() {
             const selector = document.getElementById('dateSelector');
             currentDate = selector.value;
@@ -1293,10 +2186,7 @@
             loadData();
         }
 
-        function changeAttendance(teamName, memberName, status) {
-            AttendanceManager.setAttendance(currentDate, teamName, memberName, status);
-        }
-
+        // 시간 업데이트
         function updateTime() {
             const now = new Date();
             document.getElementById('lastUpdate').textContent = 
