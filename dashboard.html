@@ -6,7 +6,6 @@
     <title>SNS센터 실시간 대시보드</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -29,7 +28,6 @@
             padding: 40px 20px;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 50px;
@@ -78,7 +76,6 @@
             50% { opacity: 0.5; }
         }
 
-        /* Control Panel */
         .control-panel {
             display: flex;
             justify-content: center;
@@ -186,11 +183,6 @@
             font-family: inherit;
         }
 
-        .date-selector input:focus {
-            outline: none;
-        }
-
-        /* Summary Section */
         .summary-section {
             background: #000;
             border: 1px solid #222;
@@ -241,7 +233,6 @@
             color: #4A9EFF;
         }
 
-        /* Team Section */
         .team-section {
             background: #000;
             border: 1px solid #222;
@@ -300,13 +291,6 @@
             font-size: 16px;
         }
 
-        /* Attendance styles */
-        .attendance-off td,
-        .attendance-annual td,
-        .attendance-half td {
-            background: rgba(255, 107, 107, 0.15) !important;
-        }
-
         .attendance-text {
             color: #FF6B6B;
             font-size: 12px;
@@ -350,7 +334,6 @@
             font-weight: 500;
         }
 
-        /* Edit mode */
         .edit-input {
             width: 80px;
             padding: 6px;
@@ -378,7 +361,6 @@
             50% { opacity: 0.5; }
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -407,12 +389,6 @@
             width: 90%;
         }
 
-        .modal-content.wide {
-            max-width: 95vw;
-            width: 95vw;
-            max-height: 90vh;
-        }
-
         .modal-header {
             font-size: 28px;
             font-weight: 300;
@@ -434,37 +410,6 @@
             color: #fff;
         }
 
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #B0B0B0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 14px;
-            background: #111;
-            color: #fff;
-            border: 1px solid #444;
-            font-size: 15px;
-            font-family: inherit;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #1E6FFF;
-        }
-
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -483,319 +428,6 @@
             transition: all 0.3s;
             font-size: 14px;
             color: #E0E0E0;
-        }
-
-        .checkbox-item:hover {
-            border-color: #666;
-            background: #1A1A1A;
-        }
-
-        .checkbox-item input {
-            cursor: pointer;
-            width: 16px;
-            height: 16px;
-        }
-
-        /* Target Setting Modal Styles */
-        .target-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-            margin-bottom: 30px;
-            padding: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .target-cards-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            
-            .target-card {
-                padding: 20px;
-            }
-            
-            .stat-value {
-                font-size: 24px;
-            }
-            
-            .target-input {
-                font-size: 24px;
-            }
-            
-            .target-summary .summary-percentage {
-                font-size: 42px;
-            }
-        }
-
-        .target-card {
-            background: linear-gradient(135deg, #0A0A0A, #111);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 30px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .target-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #4A9EFF, transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
-        }
-
-        .target-card:hover::before {
-            transform: translateX(100%);
-        }
-
-        .target-card:hover {
-            border-color: #4A9EFF;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(74, 158, 255, 0.15);
-            background: linear-gradient(135deg, #0F0F0F, #1A1A1A);
-        }
-
-        .target-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #222;
-        }
-
-        .target-metric-name {
-            font-size: 18px;
-            color: #fff;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .target-status {
-            padding: 6px 14px;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-            border-radius: 20px;
-            position: relative;
-        }
-
-        .target-status.achieved {
-            background: linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(0, 200, 83, 0.2));
-            color: #4ADE80;
-            box-shadow: 0 0 15px rgba(74, 222, 128, 0.2);
-        }
-
-        .target-status.achieved::before {
-            content: '✓ ';
-            margin-right: 2px;
-        }
-
-        .target-status.pending {
-            background: linear-gradient(135deg, rgba(255, 179, 71, 0.2), rgba(255, 138, 101, 0.2));
-            color: #FFB347;
-            box-shadow: 0 0 15px rgba(255, 179, 71, 0.2);
-        }
-
-        .target-progress {
-            margin-bottom: 25px;
-            padding: 15px 0;
-        }
-
-        .progress-bar {
-            height: 10px;
-            background: #1A1A1A;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-bottom: 10px;
-            position: relative;
-        }
-
-        .progress-bar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #FFB347, #FF8A65);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 5px;
-            position: relative;
-            box-shadow: 0 0 10px rgba(255, 179, 71, 0.3);
-        }
-
-        .progress-fill.success {
-            background: linear-gradient(90deg, #4ADE80, #00C853);
-            box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
-        }
-
-        .progress-text {
-            text-align: right;
-            font-size: 13px;
-            color: #B0B0B0;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            transition: color 0.3s;
-        }
-
-        .target-card:hover .progress-text {
-            color: #E0E0E0;
-        }
-
-        .target-stats {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #222;
-        }
-
-        .stat-item {
-            flex: 1;
-            text-align: center;
-        }
-
-        .stat-label {
-            display: block;
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 12px;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 200;
-            color: #E0E0E0;
-            letter-spacing: -1px;
-        }
-
-        .stat-value.current {
-            background: linear-gradient(135deg, #4A9EFF, #5DADE2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 300;
-        }
-
-        .stat-divider {
-            width: 1px;
-            height: 50px;
-            background: linear-gradient(to bottom, transparent, #444, transparent);
-        }
-
-        .target-input {
-            width: 100%;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #333;
-            color: #fff;
-            font-size: 32px;
-            font-weight: 200;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            -moz-appearance: textfield;
-            border-radius: 8px;
-        }
-
-        .target-input::-webkit-outer-spin-button,
-        .target-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        .target-input:hover {
-            border-color: #555;
-            background: rgba(0, 0, 0, 0.7);
-        }
-
-        .target-input:focus {
-            outline: none;
-            border-color: #4A9EFF;
-            background: rgba(74, 158, 255, 0.05);
-            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
-            transform: scale(1.02);
-        }
-
-        .target-summary {
-            background: linear-gradient(135deg, #0A0A0A, #1A1A1A);
-            border: 2px solid #4A9EFF;
-            border-radius: 12px;
-            padding: 35px;
-            text-align: center;
-            margin-top: 30px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .target-summary::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(74, 158, 255, 0.1) 0%, transparent 70%);
-            animation: rotate 10s linear infinite;
-        }
-
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .target-summary .summary-title {
-            font-size: 14px;
-            color: #B0B0B0;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .target-summary .summary-percentage {
-            font-size: 56px;
-            font-weight: 200;
-            background: linear-gradient(135deg, #4A9EFF, #00C853);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 15px;
-            position: relative;
-            text-shadow: 0 0 30px rgba(74, 158, 255, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .target-summary .summary-detail {
-            font-size: 18px;
-            color: #E0E0E0;
-            position: relative;
-            font-weight: 300;
-            letter-spacing: 1px;
         }
 
         .attendance-buttons {
@@ -827,7 +459,6 @@
             color: #000;
         }
 
-        /* Loading */
         .loading {
             text-align: center;
             padding: 100px;
@@ -852,7 +483,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Bottom Summary */
         .bottom-summary {
             background: #000;
             border: 1px solid #333;
@@ -906,71 +536,6 @@
             background: #FF6B6B;
             color: #fff;
         }
-
-        /* Weekly/Weekend specific styles */
-        .period-info {
-            background: #111;
-            border: 1px solid #333;
-            padding: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .period-info h3 {
-            color: #4A9EFF;
-            font-size: 18px;
-            margin-bottom: 10px;
-            font-weight: 400;
-        }
-
-        .period-info p {
-            color: #B0B0B0;
-            font-size: 14px;
-        }
-
-        .weekly-modal .modal-content,
-        .weekend-modal .modal-content {
-            max-width: 95vw;
-            width: 95vw;
-            max-height: 90vh;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-container {
-                padding: 20px 10px;
-            }
-
-            .header h1 {
-                font-size: 36px;
-            }
-
-            .control-panel {
-                padding: 20px;
-            }
-
-            .btn {
-                font-size: 12px;
-                padding: 10px 20px;
-            }
-
-            .metric-item {
-                padding: 20px 10px;
-            }
-
-            .metric-value {
-                font-size: 28px;
-            }
-
-            .team-table th {
-                font-size: 11px;
-                padding: 15px 10px;
-            }
-
-            .team-table td {
-                font-size: 13px;
-                padding: 15px 10px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -997,12 +562,740 @@
             <button class="btn" onclick="openSkillModal()" style="color: #FF8A65; border-color: #FF8A65;">스킬관리</button>
             <button class="btn btn-info" onclick="exportToExcel()">엑셀</button>
             <button class="btn btn-success" onclick="exportToJPG()">JPG</button>
-            
-            <!-- 새로 추가된 주간/주말 버튼들 -->
             <button class="btn" onclick="openWeeklyModal()" style="color: #26C6DA; border-color: #26C6DA;">주간실적</button>
             <button class="btn" onclick="openWeekendModal()" style="color: #AB47BC; border-color: #AB47BC;">주말실적</button>
             
             <div class="date-selector">
                 <label>날짜:</label>
                 <input type="date" id="dateSelector" onchange="changeDate()">
-            </div
+            </div>
+            
+            <div id="editModeIndicator" class="edit-mode-indicator" style="display: none;">
+                수정 모드 활성화
+            </div>
+        </div>
+
+        <div id="dashboardContent">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>데이터를 불러오는 중...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달들 -->
+    <div id="attendanceModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeAttendanceModal()">×</span>
+            <div class="modal-header">휴무/연차 관리</div>
+            <div id="attendanceModalContent"></div>
+        </div>
+    </div>
+
+    <div id="metricsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeMetricsModal()">×</span>
+            <div class="modal-header">항목 관리</div>
+            <div id="metricsModalContent"></div>
+        </div>
+    </div>
+
+    <div id="targetModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeTargetModal()">×</span>
+            <div class="modal-header">목표 설정</div>
+            <div id="targetModalContent"></div>
+        </div>
+    </div>
+
+    <div id="teamModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeTeamModal()">×</span>
+            <div class="modal-header">상담사 관리</div>
+            <div id="teamModalContent"></div>
+        </div>
+    </div>
+
+    <div id="skillModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeSkillModal()">×</span>
+            <div class="modal-header">스킬 관리</div>
+            <div id="skillModalContent"></div>
+        </div>
+    </div>
+
+    <div id="weeklyModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeWeeklyModal()">×</span>
+            <div class="modal-header">주간 실적</div>
+            <div id="weeklyModalContent"></div>
+        </div>
+    </div>
+
+    <div id="weekendModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeWeekendModal()">×</span>
+            <div class="modal-header">주말 실적</div>
+            <div id="weekendModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase 초기화
+        const SUPABASE_URL = 'https://bhtqjipygkawoyieidgp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
+        
+        let supabase = null;
+        let isConnected = false;
+        
+        try {
+            if (window.supabase && window.supabase.createClient) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase 클라이언트 생성 성공');
+            }
+        } catch (e) {
+            console.error('Supabase 초기화 실패:', e);
+        }
+
+        // 전역 변수
+        let currentDate = new Date().toISOString().split('T')[0];
+        let editMode = false;
+        let editedData = {};
+        let performanceData = {};
+        let teams = {};
+        let metrics = [];
+        let visibleMetrics = [];
+        let metricToDb = {};
+        let dailyTargets = {};
+        let skillSettings = {};
+        let tempSkillSettings = {};
+
+        // 기본 데이터
+        const defaultTeams = {
+            '1파트': {
+                members: [
+                    { name: '이종민', tenure: '1년이상' },
+                    { name: '김민수', tenure: '6개월이상' },
+                    { name: '박지영', tenure: '3개월이상' }
+                ]
+            },
+            '2파트': {
+                members: [
+                    { name: '윤도우리', tenure: '1년이상' },
+                    { name: '최서연', tenure: '9개월이상' },
+                    { name: '정태호', tenure: '3개월미만' }
+                ]
+            }
+        };
+
+        const defaultMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', 'SK매직', '가전제품', '제휴카드'];
+        const defaultMetricToDb = {
+            '유심갯수': 'sim_count',
+            'SK 인터넷': 'sk_internet',
+            '프리미엄': 'premium',
+            '에센스': 'essence',
+            'IOT': 'iot',
+            '1G': 'one_g',
+            'SK매직': 'sk_magic',
+            '가전제품': 'appliance',
+            '제휴카드': 'affiliate_card'
+        };
+        const rentalMetrics = ['유심갯수', 'SK 인터넷', '프리미엄', '에센스', 'IOT', '1G', '가전제품'];
+
+        // 휴무 상태 관리
+        const AttendanceManager = {
+            getDateAttendance: (date) => {
+                const stored = localStorage.getItem('attendance_status');
+                if (!stored) return {};
+                const allData = JSON.parse(stored);
+                return allData[date] || {};
+            },
+            getPersonAttendance: (date, teamName, memberName) => {
+                const dateData = AttendanceManager.getDateAttendance(date);
+                const key = `${teamName}_${memberName}`;
+                return dateData[key] || 'normal';
+            },
+            setAttendance: (date, teamName, memberName, status) => {
+                const stored = localStorage.getItem('attendance_status');
+                const allData = stored ? JSON.parse(stored) : {};
+                
+                if (!allData[date]) {
+                    allData[date] = {};
+                }
+                
+                const key = `${teamName}_${memberName}`;
+                
+                if (status === 'normal') {
+                    delete allData[date][key];
+                } else {
+                    allData[date][key] = status;
+                }
+                
+                localStorage.setItem('attendance_status', JSON.stringify(allData));
+            },
+            getStatusText: (status) => {
+                const texts = {
+                    'off': '휴무',
+                    'annual': '연차',
+                    'half': '반차',
+                    'normal': ''
+                };
+                return texts[status] || '';
+            }
+        };
+
+        // 스킬 상태 관리
+        function getSkillStatus(teamName, memberName) {
+            const key = `${teamName}_${memberName}`;
+            return skillSettings[key] || 'normal';
+        }
+
+        // 설정 로드
+        async function loadConfig() {
+            if (!supabase) {
+                console.log('Supabase 연결 없음. 기본 설정 사용');
+                teams = defaultTeams;
+                metrics = defaultMetrics;
+                visibleMetrics = defaultMetrics;
+                metricToDb = defaultMetricToDb;
+                dailyTargets = {};
+                defaultMetrics.forEach(m => dailyTargets[m] = 100);
+                skillSettings = {};
+                return;
+            }
+
+            try {
+                const { data: teamsData } = await supabase
+                    .from('config')
+                    .select('*')
+                    .eq('type', 'teams')
+                    .single();
+
+                if (teamsData) {
+                    teams = teamsData.data;
+                } else {
+                    teams = defaultTeams;
+                }
+
+                const { data: metricsData } = await supabase
+                    .from('config')
+                    .select('*')
+                    .eq('type', 'metrics')
+                    .single();
+
+                if (metricsData) {
+                    const mapping = {};
+                    const metricsList = [];
+                    metricsData.data.items.forEach(item => {
+                        mapping[item.name] = item.db_column;
+                        metricsList.push(item.name);
+                    });
+                    metricToDb = mapping;
+                    metrics = metricsList;
+                } else {
+                    metrics = defaultMetrics;
+                    metricToDb = defaultMetricToDb;
+                }
+
+                const { data: settingsData } = await supabase
+                    .from('config')
+                    .select('*')
+                    .eq('type', 'settings')
+                    .single();
+
+                if (settingsData && settingsData.data) {
+                    visibleMetrics = settingsData.data.visible_metrics || metrics;
+                    dailyTargets = settingsData.data.daily_targets || {};
+                } else {
+                    visibleMetrics = metrics;
+                    dailyTargets = {};
+                    metrics.forEach(m => dailyTargets[m] = 100);
+                }
+
+                const { data: skillData } = await supabase
+                    .from('config')
+                    .select('*')
+                    .eq('type', 'skills')
+                    .single();
+
+                if (skillData && skillData.data) {
+                    skillSettings = skillData.data;
+                } else {
+                    skillSettings = {};
+                }
+
+                isConnected = true;
+                document.getElementById('connectionStatus').innerHTML = '서버 연결됨';
+            } catch (error) {
+                console.error('설정 로드 오류:', error);
+                teams = defaultTeams;
+                metrics = defaultMetrics;
+                visibleMetrics = defaultMetrics;
+                metricToDb = defaultMetricToDb;
+                dailyTargets = {};
+                metrics.forEach(m => dailyTargets[m] = 100);
+                skillSettings = {};
+                document.getElementById('connectionStatus').innerHTML = '로컬 모드';
+            }
+        }
+
+        // 실적 데이터 로드
+        async function loadPerformanceData() {
+            if (!supabase) {
+                performanceData = {};
+                return;
+            }
+
+            try {
+                const { data } = await supabase
+                    .from('performance')
+                    .select('*')
+                    .eq('date', currentDate);
+
+                if (data) {
+                    performanceData = {};
+                    data.forEach(record => {
+                        const key = `${record.team}_${record.name}`;
+                        performanceData[key] = record;
+                    });
+                } else {
+                    performanceData = {};
+                }
+            } catch (error) {
+                console.error('실적 데이터 로드 오류:', error);
+                performanceData = {};
+            }
+        }
+
+        // 데이터 로드
+        async function loadData() {
+            const content = document.getElementById('dashboardContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>데이터를 불러오는 중...</p></div>';
+            
+            await loadConfig();
+            await loadPerformanceData();
+            renderDashboard();
+            updateTime();
+        }
+
+        // 대시보드 렌더링
+        function renderDashboard() {
+            const content = document.getElementById('dashboardContent');
+            let html = '';
+
+            const grandTotals = calculateGrandTotals();
+            html += '<div class="summary-section">';
+            html += '<div class="summary-title">전체 실적 요약</div>';
+            html += '<div class="metrics-row">';
+            visibleMetrics.forEach(metric => {
+                html += `
+                    <div class="metric-item">
+                        <div class="metric-name">${metric}</div>
+                        <div class="metric-value">${grandTotals[metric] || 0}</div>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                const teamTotals = calculateTeamTotals(teamName);
+                
+                html += '<div class="summary-section">';
+                html += `<div class="summary-title">${teamName} 실적 요약</div>`;
+                html += '<div class="metrics-row">';
+                visibleMetrics.forEach(metric => {
+                    html += `
+                        <div class="metric-item">
+                            <div class="metric-name">${metric}</div>
+                            <div class="metric-value">${teamTotals[metric] || 0}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+
+                html += '<div class="team-section">';
+                html += `<div class="team-header">SNS센터 ${teamName}</div>`;
+                html += '<table class="team-table">';
+                html += '<thead><tr>';
+                html += '<th>이름</th><th>근속기간</th>';
+                visibleMetrics.forEach(metric => {
+                    html += `<th>${metric}</th>`;
+                });
+                html += '</tr></thead>';
+                html += '<tbody>';
+
+                teamInfo.members.forEach(member => {
+                    const key = `${teamName}_${member.name}`;
+                    const data = performanceData[key] || {};
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    const isRental = skillStatus === 'rental';
+                    const isLeader = skillStatus === 'leader';
+                    const attendance = AttendanceManager.getPersonAttendance(currentDate, teamName, member.name);
+                    const isOffDay = attendance !== 'normal';
+                    
+                    html += `<tr>`;
+                    html += `<td>${member.name}`;
+                    if (isRental) html += '<span class="rental-badge">렌탈</span>';
+                    if (isLeader) html += '<span class="leader-badge">파트장</span>';
+                    if (isOffDay) html += `<span class="attendance-text">(${AttendanceManager.getStatusText(attendance)})</span>`;
+                    html += '</td>';
+                    html += `<td>${member.tenure}</td>`;
+                    
+                    visibleMetrics.forEach(metric => {
+                        const dbColumn = metricToDb[metric];
+                        const value = data[dbColumn] || 0;
+                        const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                        
+                        if (editMode && !isRentalMetric && !isLeader) {
+                            html += `<td><input type="number" class="edit-input" 
+                                data-team="${teamName}" 
+                                data-member="${member.name}" 
+                                data-metric="${metric}"
+                                value="${value}" 
+                                onchange="updateValue(this)"></td>`;
+                        } else {
+                            if (isRentalMetric) {
+                                html += `<td class="skill-rental">스킬없음</td>`;
+                            } else if (isLeader) {
+                                if (value > 0) {
+                                    html += `<td>${value}</td>`;
+                                } else {
+                                    html += `<td class="skill-leader">-</td>`;
+                                }
+                            } else {
+                                html += `<td>${value}</td>`;
+                            }
+                        }
+                    });
+                    html += '</tr>';
+                });
+
+                html += '<tr class="team-total">';
+                html += `<td colspan="2">${teamName} 총합</td>`;
+                visibleMetrics.forEach(metric => {
+                    html += `<td>${teamTotals[metric] || 0}</td>`;
+                });
+                html += '</tr>';
+
+                html += '</tbody></table></div>';
+            });
+
+            html += '<div class="bottom-summary">';
+            html += '<div class="summary-row">';
+            html += '<div class="summary-label">센터 총합</div>';
+            html += '<div class="summary-values">';
+            visibleMetrics.forEach(metric => {
+                html += `<span class="summary-item">${metric}: ${grandTotals[metric]}</span>`;
+            });
+            html += '</div></div>';
+            html += '</div>';
+
+            content.innerHTML = html;
+        }
+
+        // 전체 합계 계산
+        function calculateGrandTotals() {
+            const totals = {};
+            visibleMetrics.forEach(metric => {
+                totals[metric] = 0;
+                Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = performanceData[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        const skillStatus = getSkillStatus(teamName, member.name);
+                        const isRental = skillStatus === 'rental';
+                        const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                        
+                        if (!isRentalMetric) {
+                            totals[metric] += data[dbColumn] || 0;
+                        }
+                    });
+                });
+            });
+            return totals;
+        }
+
+        // 팀별 합계 계산
+        function calculateTeamTotals(teamName) {
+            const totals = {};
+            const teamInfo = teams[teamName];
+            
+            visibleMetrics.forEach(metric => {
+                totals[metric] = 0;
+                if (teamInfo) {
+                    teamInfo.members.forEach(member => {
+                        const key = `${teamName}_${member.name}`;
+                        const data = performanceData[key] || {};
+                        const dbColumn = metricToDb[metric];
+                        const skillStatus = getSkillStatus(teamName, member.name);
+                        const isRental = skillStatus === 'rental';
+                        const isRentalMetric = isRental && rentalMetrics.includes(metric);
+                        
+                        if (!isRentalMetric) {
+                            totals[metric] += data[dbColumn] || 0;
+                        }
+                    });
+                }
+            });
+            
+            return totals;
+        }
+
+        // 수정 모드 토글
+        function toggleEditMode() {
+            if (editMode) {
+                if (Object.keys(editedData).length > 0) {
+                    if (confirm('수정한 데이터를 저장하시겠습니까?')) {
+                        saveData();
+                    }
+                } else {
+                    editMode = false;
+                    document.getElementById('editBtn').textContent = '수정모드';
+                    document.getElementById('editModeIndicator').style.display = 'none';
+                    renderDashboard();
+                }
+            } else {
+                editMode = true;
+                editedData = {};
+                document.getElementById('editBtn').textContent = '저장하기';
+                document.getElementById('editModeIndicator').style.display = 'block';
+                renderDashboard();
+            }
+        }
+
+        // 값 업데이트
+        function updateValue(input) {
+            const team = input.dataset.team;
+            const member = input.dataset.member;
+            const metric = input.dataset.metric;
+            const value = parseInt(input.value) || 0;
+            const dbColumn = metricToDb[metric];
+            const key = `${team}_${member}`;
+            
+            if (!editedData[key]) {
+                editedData[key] = {};
+            }
+            editedData[key][dbColumn] = value;
+        }
+
+        // 데이터 저장
+        async function saveData() {
+            if (!supabase) {
+                alert('데이터베이스 연결이 없어 저장할 수 없습니다.');
+                return;
+            }
+
+            try {
+                const updates = [];
+                
+                for (const [key, data] of Object.entries(editedData)) {
+                    const [team, ...nameParts] = key.split('_');
+                    const name = nameParts.join('_');
+                    const existingData = performanceData[key];
+                    
+                    if (existingData) {
+                        const updateData = { ...existingData, ...data };
+                        updates.push(
+                            supabase
+                                .from('performance')
+                                .update(updateData)
+                                .eq('id', existingData.id)
+                        );
+                    } else {
+                        const newRecord = {
+                            team,
+                            name,
+                            date: currentDate,
+                            ...data
+                        };
+                        updates.push(
+                            supabase
+                                .from('performance')
+                                .insert(newRecord)
+                        );
+                    }
+                }
+                
+                await Promise.all(updates);
+                alert('데이터가 저장되었습니다.');
+                editMode = false;
+                editedData = {};
+                document.getElementById('editBtn').textContent = '수정모드';
+                document.getElementById('editModeIndicator').style.display = 'none';
+                await loadPerformanceData();
+                renderDashboard();
+            } catch (error) {
+                console.error('저장 오류:', error);
+                alert('데이터 저장 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 모달 함수들
+        function openAttendanceModal() {
+            alert('휴무 관리 기능');
+        }
+
+        function closeAttendanceModal() {
+            document.getElementById('attendanceModal').classList.remove('active');
+        }
+
+        function openMetricsModal() {
+            alert('항목 편집 기능');
+        }
+
+        function closeMetricsModal() {
+            document.getElementById('metricsModal').classList.remove('active');
+        }
+
+        function openTargetModal() {
+            alert('목표 설정 기능');
+        }
+
+        function closeTargetModal() {
+            document.getElementById('targetModal').classList.remove('active');
+        }
+
+        function openTeamModal() {
+            alert('상담사 관리 기능');
+        }
+
+        function closeTeamModal() {
+            document.getElementById('teamModal').classList.remove('active');
+        }
+
+        function openSkillModal() {
+            const modal = document.getElementById('skillModal');
+            const content = document.getElementById('skillModalContent');
+            
+            tempSkillSettings = JSON.parse(JSON.stringify(skillSettings));
+            
+            let html = '<div style="margin-bottom: 20px; padding: 20px; background: #111; border: 1px solid #222;">';
+            html += '<p style="color: #FFA500;">⚠️ 렌탈: 지정 항목이 "스킬없음"으로 표시</p>';
+            html += '<p style="color: #4A9EFF;">⚠️ 파트장: 실적 0인 항목은 파란 음영</p>';
+            html += '</div>';
+            
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                html += `<div style="margin-bottom: 30px;">`;
+                html += `<h4 style="color: #1E6FFF;">${teamName}</h4>`;
+                html += '<div style="background: #111; border: 1px solid #222; padding: 10px;">';
+                
+                teamInfo.members.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const skillStatus = tempSkillSettings[key] || 'normal';
+                    
+                    html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+                            <span>${member.name}</span>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="attendance-btn ${skillStatus === 'normal' ? 'active' : ''}"
+                                    onclick="changeSkill('${teamName}', '${member.name}', 'normal')">일반</button>
+                                <button class="attendance-btn ${skillStatus === 'rental' ? 'active' : ''}"
+                                    onclick="changeSkill('${teamName}', '${member.name}', 'rental')">렌탈</button>
+                                <button class="attendance-btn ${skillStatus === 'leader' ? 'active' : ''}"
+                                    onclick="changeSkill('${teamName}', '${member.name}', 'leader')">파트장</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            html += '<div style="text-align: center; margin-top: 30px;">';
+            html += '<button class="btn btn-primary" onclick="saveSkillSettings()">저장</button>';
+            html += '<button class="btn" onclick="closeSkillModal()" style="margin-left: 10px;">취소</button>';
+            html += '</div>';
+            
+            content.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function closeSkillModal() {
+            document.getElementById('skillModal').classList.remove('active');
+        }
+
+        function changeSkill(teamName, memberName, skill) {
+            const key = `${teamName}_${memberName}`;
+            if (skill === 'normal') {
+                delete tempSkillSettings[key];
+            } else {
+                tempSkillSettings[key] = skill;
+            }
+            openSkillModal();
+        }
+
+        async function saveSkillSettings() {
+            if (!supabase) {
+                alert('데이터베이스 연결이 없어 저장할 수 없습니다.');
+                return;
+            }
+            
+            skillSettings = tempSkillSettings;
+            
+            try {
+                await supabase.from('config').upsert({
+                    type: 'skills',
+                    data: skillSettings
+                }, { onConflict: 'type' });
+                
+                alert('스킬 설정이 저장되었습니다.');
+                closeSkillModal();
+                renderDashboard();
+            } catch (error) {
+                console.error('스킬 설정 저장 오류:', error);
+                alert('스킬 설정 저장 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        function openWeeklyModal() {
+            alert('주간 실적 기능');
+        }
+
+        function closeWeeklyModal() {
+            document.getElementById('weeklyModal').classList.remove('active');
+        }
+
+        function openWeekendModal() {
+            alert('주말 실적 기능');
+        }
+
+        function closeWeekendModal() {
+            document.getElementById('weekendModal').classList.remove('active');
+        }
+
+        function exportToExcel() {
+            alert('엑셀 내보내기 기능');
+        }
+
+        function exportToJPG() {
+            alert('JPG 내보내기 기능');
+        }
+
+        function changeDate() {
+            const selector = document.getElementById('dateSelector');
+            currentDate = selector.value;
+            document.getElementById('currentDate').textContent = currentDate;
+            loadData();
+        }
+
+        function changeAttendance(teamName, memberName, status) {
+            AttendanceManager.setAttendance(currentDate, teamName, memberName, status);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        }
+
+        // 초기화
+        window.onload = function() {
+            currentDate = new Date().toISOString().split('T')[0];
+            document.getElementById('dateSelector').value = currentDate;
+            document.getElementById('currentDate').textContent = currentDate;
+            loadData();
+        };
+    </script>
+</body>
+</html>
