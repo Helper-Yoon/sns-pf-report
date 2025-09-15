@@ -3442,10 +3442,59 @@ function exportWeekendToJPG() {
     link.download = 'SNS센터_주말실적_' + currentDate.replace(/-/g, '') + '.jpg';
     link.href = canvas.toDataURL('image/jpeg', 0.95);
     link.click();
+
+// 주간 실적 JPG 내보내기
+window.exportWeeklyToJPG = function() {
+    console.log("주간 실적 JPG 생성 시작");
+    
+    const weekDates = getWeekDates(currentDate);
+    const dateRange = formatDateRange(weekDates);
+    
+    const teamColors = {
+        '1파트': '#E2F0D9',
+        '2파트': '#DDEBF7',
+        '3파트': '#FCE4D6',
+        '4파트': '#FFF2CC',
+        '5파트': '#D9E2F3'
+    };
+    
+    const teamLeaders = {
+        '1파트': '이종민',
+        '2파트': '윤도우리',
+        '3파트': '김진후',
+        '4파트': '이민주',
+        '5파트': '차정환'
+    };
+    
+    // Canvas 생성
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 여기에 나머지 코드 전부 붙여넣기...
+    // (콘솔에서 작동한 전체 코드)
+    
+    // 다운로드
+    const link = document.createElement('a');
+    link.download = 'SNS센터_주간실적_' + currentDate.replace(/-/g, '') + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+    
+    console.log("주간 실적 JPG 생성 완료");
+};
+
+// 주말 실적 JPG 내보내기
+window.exportWeekendToJPG = function() {
+    console.log("주말 실적 JPG 생성 시작");
+    // 주말 실적 코드...
+};
+
+console.log("JPG 내보내기 함수 로드 완료");
 }
+    
     </script>
 </body>
 </html>
+
 
 
 
