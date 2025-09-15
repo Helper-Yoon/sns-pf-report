@@ -1334,7 +1334,7 @@
             html += '<div class="summary-label">센터 총합</div>';
             html += '<div class="summary-values">';
             visibleMetrics.forEach(metric => {
-                html += `<span class="summary-item">${metric}: ${grandTotals[metric]}</span>`;
+                html += `<span class="summary-item">${metric}: ${grandTotals[metric] || 0}</span>`;
             });
             html += '</div></div>';
 
@@ -1351,7 +1351,7 @@
             html += '<div class="summary-values">';
             visibleMetrics.forEach(metric => {
                 const target = dailyTargets[metric] || 100;
-                const actual = grandTotals[metric];
+                const actual = grandTotals[metric] || 0;
                 const diff = target - actual;
                 
                 html += `<span class="achievement-status ${diff <= 0 ? 'achievement-success' : 'achievement-fail'}">
