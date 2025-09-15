@@ -2400,9 +2400,6 @@
             document.getElementById('weeklyModal').classList.remove('active');
         }
 
-        function exportWeeklyToJPG() {
-        }
-
         // 주말 실적 모달
         async function openWeekendModal() {
             const modal = document.getElementById('weekendModal');
@@ -2481,9 +2478,7 @@
             document.getElementById('dateSelector').value = currentDate;
             document.getElementById('currentDate').textContent = currentDate;
             loadData();
-
-// 주간 실적 JPG 내보내기 함수
-function exportWeeklyToJPG() {
+            
 // 주간 실적 JPG 내보내기 함수
 function exportWeeklyToJPG() {
     const weekDates = getWeekDates(currentDate);
@@ -3452,6 +3447,7 @@ function exportWeekendToJPG() {
     </script>
 </body>
 </html>
+
 
 
 
