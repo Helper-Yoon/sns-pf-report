@@ -1689,7 +1689,61 @@
                 ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                 ctx.fillStyle = 'black';
                 ctx.font = 'bold 18px Malgun Gothic, sans-serif';
-                ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                ctx.fillText((grandTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 기간별 목표 (일일 목표 x 기간)
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            const targetLabel = periodName === '주간' ? '주간 목표 (일일×5)' : '주말 목표 (일일×2)';
+            ctx.fillText(targetLabel, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            const multiplier = periodName === '주간' ? 5 : 2;
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                const periodTarget = (dailyTargets[metric] || 100) * multiplier;
+                ctx.fillText(periodTarget.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 달성 현황
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('달성 현황', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                const periodTarget = (dailyTargets[metric] || 100) * multiplier;
+                const actual = grandTotals[metric] || 0;
+                const diff = periodTarget - actual;
+                const isAchieved = diff <= 0;
+                
+                ctx.fillStyle = isAchieved ? '#C8E6C9' : '#FFCDD2';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = isAchieved ? 'darkgreen' : 'darkred';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`, x + colWidths[3 + i]/2, y + rowHeight/2);
                 x += colWidths[3 + i];
             });
             
@@ -2536,7 +2590,7 @@
                 ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                 ctx.fillStyle = 'black';
                 ctx.font = 'bold 18px Malgun Gothic, sans-serif';
-                ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                ctx.fillText((grandTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                 x += colWidths[3 + i];
             });
             
@@ -2577,7 +2631,7 @@
             
             visibleMetrics.forEach((metric, i) => {
                 const target = dailyTargets[metric] || 100;
-                const actual = grandTotals[metric];
+                const actual = grandTotals[metric] || 0;
                 const diff = target - actual;
                 const isAchieved = diff <= 0;
                 
