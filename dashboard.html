@@ -1693,7 +1693,7 @@
                 x += colWidths[3 + i];
             });
             
-            // 기간별 목표 (일일 목표 x 기간)
+            // 기간별 목표 계산
             y += rowHeight;
             x = xStart;
             ctx.fillStyle = '#FFCCCC';
@@ -1702,11 +1702,25 @@
             ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
             ctx.fillStyle = 'black';
             ctx.font = 'bold 15px Malgun Gothic, sans-serif';
-            const targetLabel = periodName === '주간' ? '주간 목표 (일일×5)' : '주말 목표 (일일×2)';
+            
+            let targetLabel, periodTargets;
+            if (periodName === '주간') {
+                targetLabel = '주간 목표 (일일×5)';
+                periodTargets = visibleMetrics.map(metric => (dailyTargets[metric] || 100) * 5);
+            } else {
+                targetLabel = '주말 목표 (주간목표-주간달성)';
+                // 주말 목표는 주간목표에서 주간달성량을 뺀 값
+                periodTargets = visibleMetrics.map(metric => {
+                    const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                    const weeklyAchieved = weeklyPerformanceData ? calculatePeriodGrandTotals(weeklyPerformanceData)[metric] || 0 : 0;
+                    const weekendTarget = Math.max(0, weeklyTarget - weeklyAchieved);
+                    return weekendTarget;
+                });
+            }
+            
             ctx.fillText(targetLabel, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
             x += colWidths[0] + colWidths[1] + colWidths[2];
             
-            const multiplier = periodName === '주간' ? 5 : 2;
             visibleMetrics.forEach((metric, i) => {
                 ctx.fillStyle = '#FFCCCC';
                 ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
@@ -1714,8 +1728,7 @@
                 ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                 ctx.fillStyle = 'black';
                 ctx.font = 'bold 16px Malgun Gothic, sans-serif';
-                const periodTarget = (dailyTargets[metric] || 100) * multiplier;
-                ctx.fillText(periodTarget.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                ctx.fillText(periodTargets[i].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                 x += colWidths[3 + i];
             });
             
@@ -1732,7 +1745,7 @@
             x += colWidths[0] + colWidths[1] + colWidths[2];
             
             visibleMetrics.forEach((metric, i) => {
-                const periodTarget = (dailyTargets[metric] || 100) * multiplier;
+                const periodTarget = periodTargets[i];
                 const actual = grandTotals[metric] || 0;
                 const diff = periodTarget - actual;
                 const isAchieved = diff <= 0;
