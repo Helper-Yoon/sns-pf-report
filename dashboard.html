@@ -766,7 +766,7 @@
                 </div>
             </div>
             <div style="margin-top: 30px; text-align: center;">
-                <button class="btn btn-success" onclick="exportWeeklyToJPG()" style="margin-right: 10px; padding: 14px 40px;">JPG 내보내기</button>
+                <button class="btn btn-success" onclick="if(window.exportWeeklyToJPG) exportWeeklyToJPG(); else alert('함수가 로드되지 않았습니다');">JPG 내보내기</button>
                 <button class="btn" onclick="closeWeeklyModal()" style="border-color: #666; color: #666; padding: 14px 40px;">닫기</button>
             </div>
         </div>
@@ -3446,6 +3446,7 @@ function exportWeekendToJPG() {
     </script>
 </body>
 </html>
+
 
 
 
