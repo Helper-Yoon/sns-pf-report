@@ -2484,6 +2484,8 @@
 
             // 주간 실적 JPG 내보내기 함수
 function exportWeeklyToJPG() {
+// 주간 실적 JPG 내보내기 함수
+function exportWeeklyToJPG() {
     const weekDates = getWeekDates(currentDate);
     const dateRange = formatDateRange(weekDates);
     
@@ -2963,8 +2965,251 @@ function exportWeekendToJPG() {
     link.href = canvas.toDataURL('image/jpeg', 0.95);
     link.click();
 }
+}
+
+// 주말 실적 JPG 내보내기 함수
+function exportWeekendToJPG() {
+    const weekendDates = getWeekendDates(currentDate);
+    const dateRange = formatDateRange(weekendDates);
+    
+    const teamColors = {
+        '1파트': '#E2F0D9',
+        '2파트': '#DDEBF7',
+        '3파트': '#FCE4D6',
+        '4파트': '#FFF2CC',
+        '5파트': '#D9E2F3'
+    };
+    
+    const teamLeaders = {
+        '1파트': '이종민',
+        '2파트': '윤도우리',
+        '3파트': '김진후',
+        '4파트': '이민주',
+        '5파트': '차정환'
+    };
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const colWidths = [160, 110, 110];
+    visibleMetrics.forEach(() => colWidths.push(95));
+    const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
+    const rowHeight = 35;
+    
+    let totalRows = 4;
+    Object.entries(teams).forEach(([teamName, team]) => {
+        let nonLeaderCount = 0;
+        team.members.forEach(member => {
+            const skillStatus = getSkillStatus(teamName, member.name);
+            if (skillStatus !== 'leader') {
+                nonLeaderCount++;
+            }
+        });
+        if (nonLeaderCount > 0) {
+            totalRows += nonLeaderCount + 1;
+        } else {
+            totalRows += 1;
+        }
+    });
+    totalRows += 4;
+    
+    canvas.width = totalWidth;
+    canvas.height = totalRows * rowHeight + 140;
+    
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.font = '13px Malgun Gothic, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    let y = 30;
+    const xStart = 40;
+    
+    ctx.font = 'bold 20px Malgun Gothic, sans-serif';
+    ctx.fillStyle = 'black';
+    ctx.fillText('SNS센터 주말 실적 (' + dateRange + ')', totalWidth / 2, y);
+    y += 50;
+    
+    ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+    const headers = ['소속', '이름', '근속기간'];
+    visibleMetrics.forEach(m => headers.push(m));
+    let x = xStart;
+    headers.forEach((header, i) => {
+        ctx.fillStyle = '#D9D9D9';
+        ctx.fillRect(x, y, colWidths[i], rowHeight);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(x, y, colWidths[i], rowHeight);
+        ctx.fillStyle = 'black';
+        ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
+        x += colWidths[i];
+    });
+    y += rowHeight;
+    
+    Object.entries(teams).forEach(([teamName, teamInfo]) => {
+        const teamColor = teamColors[teamName] || '#E2F0D9';
+        const leader = teamLeaders[teamName] || '';
+        const startY = y;
+        const teamTotals = calculatePeriodTeamTotals(teamName, weekendPerformanceData);
+        
+        const nonLeaderMembers = teamInfo.members.filter(member => {
+            const skillStatus = getSkillStatus(teamName, member.name);
+            return skillStatus !== 'leader';
+        });
+        
+        if (nonLeaderMembers.length === 0) {
+            x = xStart;
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+            ctx.fillText(teamName + ' 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 17px Malgun Gothic, sans-serif';
+                ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            y += rowHeight + 10;
+            return;
+        }
+        
+        nonLeaderMembers.forEach((member, idx) => {
+            const key = teamName + '_' + member.name;
+            const data = weekendPerformanceData[key] || {};
+            const skillStatus = getSkillStatus(teamName, member.name);
+            
+            x = xStart;
+            
+            if (idx === 0) {
+                const mergeHeight = nonLeaderMembers.length * rowHeight;
+                ctx.fillStyle = teamColor;
+                ctx.fillRect(x, y, colWidths[0], mergeHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0], mergeHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+                const teamText = teamName === '5파트' ? '의정부SNS센터' : 'SNS센터';
+                ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
+                ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
+                ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
+            }
+            x += colWidths[0];
+            
+            ctx.fillStyle = teamColor;
+            ctx.fillRect(x, y, colWidths[1], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[1], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = '13px Malgun Gothic, sans-serif';
+            
+            let nameText = member.name;
+            if (skillStatus === 'rental') nameText += ' (렌탈)';
+            ctx.fillText(nameText, x + colWidths[1]/2, y + rowHeight/2);
+            x += colWidths[1];
+            
+            ctx.fillStyle = teamColor;
+            ctx.fillRect(x, y, colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = '12px Malgun Gothic, sans-serif';
+            ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
+            x += colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                const dbColumn = metricToDb[metric];
+                const value = data[dbColumn] || 0;
+                const isRentalMetric = skillStatus === 'rental' && rentalMetrics.includes(metric);
+                
+                if (isRentalMetric) {
+                    ctx.fillStyle = '#FFE4B5';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = '#FF8C00';
+                    ctx.font = 'bold 12px Malgun Gothic, sans-serif';
+                    ctx.fillText('스킬없음', x + colWidths[3 + i]/2, y + rowHeight/2);
+                } else {
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                    ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                }
+                x += colWidths[3 + i];
+            });
+            
+            y += rowHeight;
+        });
+        
+        x = xStart;
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+        ctx.fillText(teamName + ' 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+        x += colWidths[0] + colWidths[1] + colWidths[2];
+        
+        visibleMetrics.forEach((metric, i) => {
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 17px Malgun Gothic, sans-serif';
+            ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+            x += colWidths[3 + i];
+        });
+        
+        y += rowHeight + 10;
+    });
+    
+    const grandTotals = calculatePeriodGrandTotals(weekendPerformanceData);
+    
+    y += 10;
+    x = xStart;
+    ctx.fillStyle = '#FFCCCC';
+    ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+    ctx.strokeStyle = 'black';
+    ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+    ctx.fillStyle = 'black';
+    ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+    ctx.fillText('주말 센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+    x += colWidths[0] + colWidths[1] + colWidths[2];
+    
+    visibleMetrics.forEach((metric, i) => {
+        ctx.fillStyle = '#FFCCCC';
+        ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 18px Malgun Gothic, sans-serif';
+        ctx.fillText(grandTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+        x += colWidths[3 + i];
+    });
+    
+    const link = document.createElement('a');
+    link.download = 'SNS센터_주말실적_' + currentDate.replace(/-/g, '') + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+}
         };
     </script>
 </body>
 </html>
+
 
