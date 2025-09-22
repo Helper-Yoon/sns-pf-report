@@ -825,7 +825,7 @@
         let weeklyPerformanceData = {};
         let weekendPerformanceData = {};
 
-        // 기본 데이터 (5개 파트로 변경)
+        // 기본 데이터 (5개 파트)
         const defaultTeams = {
             '1파트': {
                 members: [
@@ -1451,323 +1451,6 @@
             return totals;
         }
 
-        // 주간/주말 공통 JPG 내보내기 함수
-        function exportPeriodToJPG(dataSource, periodName, dates) {
-            const teamColors = {
-                '1파트': '#E2F0D9',
-                '2파트': '#DDEBF7',
-                '3파트': '#FCE4D6',
-                '4파트': '#FFF2CC',
-                '5파트': '#D9E2F3'
-            };
-            
-            const teamLeaders = {
-                '1파트': '이종민',
-                '2파트': '윤도우리',
-                '3파트': '김진후',
-                '4파트': '이민주',
-                '5파트': '차정환'
-            };
-            
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // 컬럼 너비 계산
-            const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
-            const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
-            const rowHeight = 35;
-            
-            // 총 행 수 계산 (파트장 제외)
-            let totalRows = 4; // 헤더 + 여백
-            Object.entries(teams).forEach(([teamName, team]) => {
-                let nonLeaderCount = 0;
-                team.members.forEach(member => {
-                    const skillStatus = getSkillStatus(teamName, member.name);
-                    if (skillStatus !== 'leader') {
-                        nonLeaderCount++;
-                    }
-                });
-                totalRows += nonLeaderCount + 1; // 파트장 제외한 팀원 + 팀 총합
-            });
-            totalRows += 6; // 센터총합, 일목표, 달성 + 여백
-            
-            canvas.width = totalWidth;
-            canvas.height = totalRows * rowHeight + 140;
-            
-            // 배경 색상
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // 폰트 설정
-            ctx.font = '13px Malgun Gothic, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            let y = 30;
-            const xStart = 40;
-            
-            // 제목
-            ctx.font = 'bold 20px Malgun Gothic, sans-serif';
-            ctx.fillStyle = 'black';
-            const dateRange = formatDateRange(dates);
-            ctx.fillText(`SNS센터 ${periodName} 실적보고 - ${dateRange}`, totalWidth / 2, y);
-            y += 50;
-            
-            // 헤더
-            ctx.font = 'bold 14px Malgun Gothic, sans-serif';
-            const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
-            let x = xStart;
-            headers.forEach((header, i) => {
-                ctx.fillStyle = '#D9D9D9';
-                ctx.fillRect(x, y, colWidths[i], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[i], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
-                x += colWidths[i];
-            });
-            y += rowHeight;
-            
-            // 팀별 데이터 (파트장 제외)
-            Object.entries(teams).forEach(([teamName, teamInfo]) => {
-                const teamColor = teamColors[teamName] || '#E2F0D9';
-                const leader = teamLeaders[teamName] || '';
-                const startY = y;
-                const teamTotals = calculatePeriodTeamTotals(teamName, dataSource);
-                
-                // 파트장이 아닌 멤버들만 필터링
-                const nonLeaderMembers = teamInfo.members.filter(member => {
-                    const skillStatus = getSkillStatus(teamName, member.name);
-                    return skillStatus !== 'leader';
-                });
-                
-                if (nonLeaderMembers.length === 0) {
-                    // 모두 파트장인 경우 팀 총합만 표시
-                    x = xStart;
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 14px Malgun Gothic, sans-serif';
-                    ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                    x += colWidths[0] + colWidths[1] + colWidths[2];
-                    
-                    visibleMetrics.forEach((metric, i) => {
-                        ctx.fillStyle = '#FFD700';
-                        ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = 'bold 17px Malgun Gothic, sans-serif';
-                        ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                        x += colWidths[3 + i];
-                    });
-                    
-                    y += rowHeight + 10;
-                    return;
-                }
-                
-                nonLeaderMembers.forEach((member, idx) => {
-                    const key = `${teamName}_${member.name}`;
-                    const data = dataSource[key] || {};
-                    const skillStatus = getSkillStatus(teamName, member.name);
-                    
-                    x = xStart;
-                    
-                    // 소속 (첫 행만)
-                    if (idx === 0) {
-                        const mergeHeight = nonLeaderMembers.length * rowHeight;
-                        ctx.fillStyle = teamColor;
-                        ctx.fillRect(x, y, colWidths[0], mergeHeight);
-                        ctx.strokeStyle = 'black';
-                        ctx.strokeRect(x, y, colWidths[0], mergeHeight);
-                        ctx.fillStyle = 'black';
-                        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
-                        const teamText = teamName === '5파트' ? `의정부SNS센터` : `SNS센터`;
-                        ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
-                        ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
-                        ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
-                    }
-                    x += colWidths[0];
-                    
-                    // 이름
-                    ctx.fillStyle = teamColor;
-                    ctx.fillRect(x, y, colWidths[1], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[1], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = '13px Malgun Gothic, sans-serif';
-                    
-                    let nameText = member.name;
-                    if (skillStatus === 'rental') nameText += ' (렌탈)';
-                    ctx.fillText(nameText, x + colWidths[1]/2, y + rowHeight/2);
-                    x += colWidths[1];
-                    
-                    // 근속기간
-                    ctx.fillStyle = teamColor;
-                    ctx.fillRect(x, y, colWidths[2], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[2], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = '12px Malgun Gothic, sans-serif';
-                    ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
-                    x += colWidths[2];
-                    
-                    // 실적 데이터
-                    visibleMetrics.forEach((metric, i) => {
-                        const dbColumn = metricToDb[metric];
-                        const value = data[dbColumn] || 0;
-                        const isRentalMetric = skillStatus === 'rental' && rentalMetrics.includes(metric);
-                        
-                        if (isRentalMetric) {
-                            ctx.fillStyle = '#FFE4B5';
-                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                            ctx.strokeStyle = 'black';
-                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                            ctx.fillStyle = '#FF8C00';
-                            ctx.font = 'bold 12px Malgun Gothic, sans-serif';
-                            ctx.fillText('스킬없음', x + colWidths[3 + i]/2, y + rowHeight/2);
-                        } else {
-                            ctx.fillStyle = 'white';
-                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                            ctx.strokeStyle = 'black';
-                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                            ctx.fillStyle = 'black';
-                            ctx.font = 'bold 16px Malgun Gothic, sans-serif';
-                            ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                        }
-                        x += colWidths[3 + i];
-                    });
-                    
-                    y += rowHeight;
-                });
-                
-                // 팀 총합
-                x = xStart;
-                ctx.fillStyle = '#FFD700';
-                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 14px Malgun Gothic, sans-serif';
-                ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-                x += colWidths[0] + colWidths[1] + colWidths[2];
-                
-                visibleMetrics.forEach((metric, i) => {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 17px Malgun Gothic, sans-serif';
-                    ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                    x += colWidths[3 + i];
-                });
-                
-                y += rowHeight + 10;
-            });
-            
-            const grandTotals = calculatePeriodGrandTotals(dataSource);
-            
-            // 센터 총합
-            y += 10;
-            x = xStart;
-            ctx.fillStyle = '#FFCCCC';
-            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-            ctx.strokeStyle = 'black';
-            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-            ctx.fillStyle = 'black';
-            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
-            ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-            x += colWidths[0] + colWidths[1] + colWidths[2];
-            
-            visibleMetrics.forEach((metric, i) => {
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 18px Malgun Gothic, sans-serif';
-                ctx.fillText((grandTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                x += colWidths[3 + i];
-            });
-            
-            // 기간별 목표 계산
-            y += rowHeight;
-            x = xStart;
-            ctx.fillStyle = '#FFCCCC';
-            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-            ctx.strokeStyle = 'black';
-            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-            ctx.fillStyle = 'black';
-            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
-            
-            let targetLabel, periodTargets;
-            if (periodName === '주간') {
-                targetLabel = '주간 목표 (일일×5)';
-                periodTargets = visibleMetrics.map(metric => (dailyTargets[metric] || 100) * 5);
-            } else {
-                targetLabel = '주말 목표 (주간목표-주간달성)';
-                // 주말 목표는 주간목표에서 주간달성량을 뺀 값
-                periodTargets = visibleMetrics.map(metric => {
-                    const weeklyTarget = (dailyTargets[metric] || 100) * 5;
-                    const weeklyAchieved = weeklyPerformanceData ? calculatePeriodGrandTotals(weeklyPerformanceData)[metric] || 0 : 0;
-                    const weekendTarget = Math.max(0, weeklyTarget - weeklyAchieved);
-                    return weekendTarget;
-                });
-            }
-            
-            ctx.fillText(targetLabel, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-            x += colWidths[0] + colWidths[1] + colWidths[2];
-            
-            visibleMetrics.forEach((metric, i) => {
-                ctx.fillStyle = '#FFCCCC';
-                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
-                ctx.fillText(periodTargets[i].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
-                x += colWidths[3 + i];
-            });
-            
-            // 달성 현황
-            y += rowHeight;
-            x = xStart;
-            ctx.fillStyle = '#FFCCCC';
-            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-            ctx.strokeStyle = 'black';
-            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
-            ctx.fillStyle = 'black';
-            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
-            ctx.fillText('달성 현황', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
-            x += colWidths[0] + colWidths[1] + colWidths[2];
-            
-            visibleMetrics.forEach((metric, i) => {
-                const periodTarget = periodTargets[i];
-                const actual = grandTotals[metric] || 0;
-                const diff = periodTarget - actual;
-                const isAchieved = diff <= 0;
-                
-                ctx.fillStyle = isAchieved ? '#C8E6C9' : '#FFCDD2';
-                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
-                ctx.fillStyle = isAchieved ? 'darkgreen' : 'darkred';
-                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
-                ctx.fillText(diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`, x + colWidths[3 + i]/2, y + rowHeight/2);
-                x += colWidths[3 + i];
-            });
-            
-            // 다운로드
-            const link = document.createElement('a');
-            const dateStr = dates.join('_').replace(/-/g, '');
-            link.download = `SNS센터_${periodName}_실적_${dateStr}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 0.95);
-            link.click();
-        }
-
         // 수정 모드 토글
         function toggleEditMode() {
             if (editMode) {
@@ -2344,7 +2027,7 @@
             
             const achievementRow = ['달성', '', '', '', ''];
             visibleMetrics.forEach(metric => {
-                const diff = (dailyTargets[metric] || 100) - grandTotals[metric];
+                const diff = (dailyTargets[metric] || 100) - (grandTotals[metric] || 0);
                 achievementRow.push(diff > 0 ? `-${diff}` : `+${Math.abs(diff)}`);
             });
             data.push(achievementRow);
@@ -2462,7 +2145,7 @@
                         ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                         ctx.fillStyle = 'black';
                         ctx.font = 'bold 17px Malgun Gothic, sans-serif';
-                        ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                        ctx.fillText((teamTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                         x += colWidths[3 + i];
                     });
                     
@@ -2575,7 +2258,7 @@
                     ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
                     ctx.fillStyle = 'black';
                     ctx.font = 'bold 17px Malgun Gothic, sans-serif';
-                    ctx.fillText(teamTotals[metric].toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                    ctx.fillText((teamTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
                     x += colWidths[3 + i];
                 });
                 
@@ -2741,6 +2424,321 @@
             exportPeriodToJPG(weeklyPerformanceData, '주간', weekDates);
         }
 
+        // 주간/주말 공통 JPG 내보내기 함수
+        function exportPeriodToJPG(dataSource, periodName, dates) {
+            const teamColors = {
+                '1파트': '#E2F0D9',
+                '2파트': '#DDEBF7',
+                '3파트': '#FCE4D6',
+                '4파트': '#FFF2CC',
+                '5파트': '#D9E2F3'
+            };
+            
+            const teamLeaders = {
+                '1파트': '이종민',
+                '2파트': '윤도우리',
+                '3파트': '김진후',
+                '4파트': '이민주',
+                '5파트': '차정환'
+            };
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 컬럼 너비 계산
+            const colWidths = [160, 110, 110, ...visibleMetrics.map(() => 95)];
+            const totalWidth = colWidths.reduce((a, b) => a + b, 0) + 80;
+            const rowHeight = 35;
+            
+            // 총 행 수 계산 (파트장 제외)
+            let totalRows = 4; // 헤더 + 여백
+            Object.entries(teams).forEach(([teamName, team]) => {
+                let nonLeaderCount = 0;
+                team.members.forEach(member => {
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    if (skillStatus !== 'leader') {
+                        nonLeaderCount++;
+                    }
+                });
+                totalRows += nonLeaderCount + 1; // 파트장 제외한 팀원 + 팀 총합
+            });
+            totalRows += 6; // 센터총합, 목표, 달성 + 여백
+            
+            canvas.width = totalWidth;
+            canvas.height = totalRows * rowHeight + 140;
+            
+            // 배경 색상
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 폰트 설정
+            ctx.font = '13px Malgun Gothic, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            let y = 30;
+            const xStart = 40;
+            
+            // 제목
+            ctx.font = 'bold 20px Malgun Gothic, sans-serif';
+            ctx.fillStyle = 'black';
+            const dateRange = formatDateRange(dates);
+            ctx.fillText(`SNS센터 ${periodName} 실적보고 - ${dateRange}`, totalWidth / 2, y);
+            y += 50;
+            
+            // 헤더
+            ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+            const headers = ['소속', '이름', '근속기간', ...visibleMetrics];
+            let x = xStart;
+            headers.forEach((header, i) => {
+                ctx.fillStyle = '#D9D9D9';
+                ctx.fillRect(x, y, colWidths[i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.fillText(header, x + colWidths[i]/2, y + rowHeight/2);
+                x += colWidths[i];
+            });
+            y += rowHeight;
+            
+            // 팀별 데이터 (파트장 제외)
+            Object.entries(teams).forEach(([teamName, teamInfo]) => {
+                const teamColor = teamColors[teamName] || '#E2F0D9';
+                const leader = teamLeaders[teamName] || '';
+                const startY = y;
+                const teamTotals = calculatePeriodTeamTotals(teamName, dataSource);
+                
+                // 파트장이 아닌 멤버들만 필터링
+                const nonLeaderMembers = teamInfo.members.filter(member => {
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    return skillStatus !== 'leader';
+                });
+                
+                if (nonLeaderMembers.length === 0) {
+                    // 모두 파트장인 경우 팀 총합만 표시
+                    x = xStart;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+                    ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                    x += colWidths[0] + colWidths[1] + colWidths[2];
+                    
+                    visibleMetrics.forEach((metric, i) => {
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'bold 17px Malgun Gothic, sans-serif';
+                        ctx.fillText((teamTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                        x += colWidths[3 + i];
+                    });
+                    
+                    y += rowHeight + 10;
+                    return;
+                }
+                
+                nonLeaderMembers.forEach((member, idx) => {
+                    const key = `${teamName}_${member.name}`;
+                    const data = dataSource[key] || {};
+                    const skillStatus = getSkillStatus(teamName, member.name);
+                    
+                    x = xStart;
+                    
+                    // 소속 (첫 행만)
+                    if (idx === 0) {
+                        const mergeHeight = nonLeaderMembers.length * rowHeight;
+                        ctx.fillStyle = teamColor;
+                        ctx.fillRect(x, y, colWidths[0], mergeHeight);
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(x, y, colWidths[0], mergeHeight);
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+                        const teamText = teamName === '5파트' ? `의정부SNS센터` : `SNS센터`;
+                        ctx.fillText(teamText, x + colWidths[0]/2, startY + mergeHeight/2 - 25);
+                        ctx.fillText(teamName, x + colWidths[0]/2, startY + mergeHeight/2);
+                        ctx.fillText(leader, x + colWidths[0]/2, startY + mergeHeight/2 + 25);
+                    }
+                    x += colWidths[0];
+                    
+                    // 이름
+                    ctx.fillStyle = teamColor;
+                    ctx.fillRect(x, y, colWidths[1], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[1], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = '13px Malgun Gothic, sans-serif';
+                    
+                    let nameText = member.name;
+                    if (skillStatus === 'rental') nameText += ' (렌탈)';
+                    ctx.fillText(nameText, x + colWidths[1]/2, y + rowHeight/2);
+                    x += colWidths[1];
+                    
+                    // 근속기간
+                    ctx.fillStyle = teamColor;
+                    ctx.fillRect(x, y, colWidths[2], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[2], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = '12px Malgun Gothic, sans-serif';
+                    ctx.fillText(member.tenure, x + colWidths[2]/2, y + rowHeight/2);
+                    x += colWidths[2];
+                    
+                    // 실적 데이터
+                    visibleMetrics.forEach((metric, i) => {
+                        const dbColumn = metricToDb[metric];
+                        const value = data[dbColumn] || 0;
+                        const isRentalMetric = skillStatus === 'rental' && rentalMetrics.includes(metric);
+                        
+                        if (isRentalMetric) {
+                            ctx.fillStyle = '#FFE4B5';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = '#FF8C00';
+                            ctx.font = 'bold 12px Malgun Gothic, sans-serif';
+                            ctx.fillText('스킬없음', x + colWidths[3 + i]/2, y + rowHeight/2);
+                        } else {
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                            ctx.fillStyle = 'black';
+                            ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                            ctx.fillText(value.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                        }
+                        x += colWidths[3 + i];
+                    });
+                    
+                    y += rowHeight;
+                });
+                
+                // 팀 총합
+                x = xStart;
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+                ctx.fillText(`${teamName} 총합`, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                visibleMetrics.forEach((metric, i) => {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 17px Malgun Gothic, sans-serif';
+                    ctx.fillText((teamTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                    x += colWidths[3 + i];
+                });
+                
+                y += rowHeight + 10;
+            });
+            
+            const grandTotals = calculatePeriodGrandTotals(dataSource);
+            
+            // 센터 총합
+            y += 10;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('센터 총합', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 18px Malgun Gothic, sans-serif';
+                ctx.fillText((grandTotals[metric] || 0).toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 기간별 목표 계산
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            
+            const targetLabel = periodName === '주간' ? '주간 목표 (일일×5)' : '주말 목표 (주간목표-주간달성)';
+            ctx.fillText(targetLabel, x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            const periodTargets = [];
+            visibleMetrics.forEach((metric, i) => {
+                let periodTarget;
+                if (periodName === '주간') {
+                    periodTarget = (dailyTargets[metric] || 100) * 5;
+                } else {
+                    // 주말 목표는 주간목표에서 주간달성량을 뺀 값
+                    const weeklyTarget = (dailyTargets[metric] || 100) * 5;
+                    const weeklyAchieved = weeklyPerformanceData ? calculatePeriodGrandTotals(weeklyPerformanceData)[metric] || 0 : 0;
+                    periodTarget = Math.max(0, weeklyTarget - weeklyAchieved);
+                }
+                periodTargets.push(periodTarget);
+                
+                ctx.fillStyle = '#FFCCCC';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(periodTarget.toString(), x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 달성 현황
+            y += rowHeight;
+            x = xStart;
+            ctx.fillStyle = '#FFCCCC';
+            ctx.fillRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+            ctx.fillText('달성 현황', x + (colWidths[0] + colWidths[1] + colWidths[2])/2, y + rowHeight/2);
+            x += colWidths[0] + colWidths[1] + colWidths[2];
+            
+            visibleMetrics.forEach((metric, i) => {
+                const periodTarget = periodTargets[i];
+                const actual = grandTotals[metric] || 0;
+                const diff = periodTarget - actual;
+                const isAchieved = diff <= 0;
+                
+                ctx.fillStyle = isAchieved ? '#C8E6C9' : '#FFCDD2';
+                ctx.fillRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(x, y, colWidths[3 + i], rowHeight);
+                ctx.fillStyle = isAchieved ? 'darkgreen' : 'darkred';
+                ctx.font = 'bold 16px Malgun Gothic, sans-serif';
+                ctx.fillText(diff <= 0 ? `+${Math.abs(diff)}` : `-${diff}`, x + colWidths[3 + i]/2, y + rowHeight/2);
+                x += colWidths[3 + i];
+            });
+            
+            // 다운로드
+            const link = document.createElement('a');
+            const dateStr = dates.join('_').replace(/-/g, '');
+            link.download = `SNS센터_${periodName}_실적_${dateStr}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }
+
         // 주말 실적 모달
         async function openWeekendModal() {
             const modal = document.getElementById('weekendModal');
@@ -2761,6 +2759,8 @@
             
             try {
                 await loadConfig();
+                const weekDates = getWeekDates(currentDate);
+                await loadWeeklyPerformanceData(weekDates);
                 await loadWeekendPerformanceData(weekendDates);
                 renderWeekendContent();
             } catch (error) {
@@ -2812,9 +2812,18 @@
         }
 
         // 주말 실적 JPG 내보내기
-        function exportWeekendToJPG() {
+        async function exportWeekendToJPG() {
             const weekendDates = getWeekendDates(currentDate);
-            exportPeriodToJPG(weekendPerformanceData, '주말', weekendDates);
+            const weekDates = getWeekDates(currentDate);
+            
+            try {
+                // 주말 목표 계산을 위해 주간 데이터 먼저 로드
+                await loadWeeklyPerformanceData(weekDates);
+                exportPeriodToJPG(weekendPerformanceData, '주말', weekendDates);
+            } catch (error) {
+                console.error('주말 JPG 내보내기 오류:', error);
+                alert('주말 JPG 내보내기 중 오류가 발생했습니다.');
+            }
         }
 
         // 날짜 변경
